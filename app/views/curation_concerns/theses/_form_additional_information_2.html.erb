@@ -1,0 +1,13 @@
+<fieldset class="optional prompt">
+  <%= f.input :abstract, as: :multi_value, input_html: { rows: '14', type: 'textarea'} %>
+  <%= f.input :keyword, as: :multi_value, input_html: { class: 'form-control' } %>
+  <%= f.input :language, as: :multi_value, input_html: { class: 'form-control' } %>
+  <%= f.input :rights_holder, as: :multi_value %>
+  <% or_service = AuthorityService::CurrentOrganisationService.new %>
+  <%= f.input :awarding_institution_resource_ids, as: :multi_value_select,
+              label: 'Awarding institution',
+              collection: or_service.select_all_options,
+              include_blank: show_blank(curation_concern),
+              item_helper: or_service.method(:include_current_value),
+              input_html: { class: 'form-control' } %>
+</fieldset>

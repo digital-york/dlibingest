@@ -1,0 +1,10 @@
+terms:
+    - id: Masters (Postgraduate)
+      term: Masters (Postgraduate)
+      active: true
+    - id: Bachelors (Undergraduate)
+      term: Bachelors (Undergraduate)
+      active: true
+    - id: Doctoral (Postgraduate)
+      term: Doctoral (Postgraduate)
+      active: true
