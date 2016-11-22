@@ -1,5 +1,7 @@
-PATH
-  remote: ~/Dropbox/code/rails/dlibhydra
+GIT
+  remote: https://github.com/digital-york/dlibhydra.git
+  revision: cd5f7393ab9cadf18ced72aa80744bc0a932624d
+  branch: latest_dlibhydra
   specs:
     dlibhydra (0.1.0)
       curation_concerns
@@ -224,7 +226,7 @@ GEM
     hydra-core (10.3.2)
       hydra-access-controls (= 10.3.2)
       railties (>= 4.0.0, < 6)
-    hydra-derivatives (3.2.0)
+    hydra-derivatives (3.2.1)
       active-fedora (>= 9.0, < 12)
       activesupport (>= 4.0, < 6)
       deprecation
@@ -283,7 +285,7 @@ GEM
       rdf-turtle
       rdf-vocab (>= 0.8)
       slop
-    libv8 (3.16.14.15)
+    libv8 (3.16.14.17)
     link_header (0.0.8)
     listen (3.0.8)
       rb-fsevent (~> 0.9, >= 0.9.4)
@@ -329,7 +331,7 @@ GEM
     parslet (1.7.1)
       blankslate (>= 2.0, <= 4.0)
     public_suffix (2.0.4)
-    puma (3.6.0)
+    puma (3.6.1)
     qa (0.10.2)
       activerecord-import
       deprecation

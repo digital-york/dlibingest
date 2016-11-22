@@ -4,22 +4,22 @@ class CatalogController < ApplicationController
     # config.search_builder_class = ::SearchBuilder
     ## Default parameters to send to solr for all search-like requests. See also SolrHelper#solr_search_params
     config.default_solr_params = {
-      qf: %w(title_tesim name_tesim),
-      qt: 'search',
-      rows: 10
+        qf: %w(title_tesim name_tesim),
+        qt: 'search',
+        rows: 10
     }
 
     # solr field configuration for search results/index views
     config.index.title_field = solr_name('title', :stored_searchable)
-	config.index.creator_field = solr_name('creator', :stored_searchable)#added 12 august
-	config.index.advisor_field = solr_name('advisor', :stored_searchable)#added 12 august
-	config.index.date_of_award_field = solr_name('date_of_award', :stored_searchable)#added 12 august    
+    config.index.creator_field = solr_name('creator', :stored_searchable)#added 12 august
+    config.index.advisor_field = solr_name('advisor', :stored_searchable)#added 12 august
+    config.index.date_of_award_field = solr_name('date_of_award', :stored_searchable)#added 12 august
     config.index.display_type_field = solr_name('has_model', :symbol)
-	config.index.abstract_field = solr_name('abstract', :stored_searchable)#added 12 august
-	config.index.rights_holder_field = solr_name('rights_holder', :stored_searchable)#added 13 august
-	config.index.former_id_field = solr_name('former_id', :stored_searchable)#added 25 oct new dlibhydra models
-	config.index.mainfile_ids_field = solr_name('mainfile_ids', :stored_searchable)#added 25 oct new dlibhydra models
-	config.index.preflabel_field = solr_name('preflabel', :stored_searchable)# 26 sept
+    config.index.abstract_field = solr_name('abstract', :stored_searchable)#added 12 august
+    config.index.rights_holder_field = solr_name('rights_holder', :stored_searchable)#added 13 august
+    config.index.former_id_field = solr_name('former_id', :stored_searchable)#added 25 oct new dlibhydra models
+    config.index.mainfile_ids_field = solr_name('mainfile_ids', :stored_searchable)#added 25 oct new dlibhydra models
+    config.index.preflabel_field = solr_name('preflabel', :stored_searchable)# 26 sept
 
     config.index.thumbnail_field = 'thumbnail_path_ss'
     config.index.partials.delete(:thumbnail) # we render this inside _index_default.html.erb
@@ -33,33 +33,33 @@ class CatalogController < ApplicationController
     #   The ordering of the field names is the order of the display
     config.add_facet_field solr_name('human_readable_type', :facetable)
     config.add_facet_field solr_name('creator', :facetable), limit: 5
-	config.add_facet_field solr_name('advisor', :facetable), limit: 5
+    config.add_facet_field solr_name('advisor', :facetable), limit: 5
     config.add_facet_field solr_name('keyword', :facetable), limit: 5
     config.add_facet_field solr_name('subject_value', :facetable), limit: 5
     config.add_facet_field solr_name('language', :facetable), limit: 5
     # config.add_facet_field solr_name('based_near', :facetable), limit: 5
     # config.add_facet_field solr_name('publisher', :facetable), limit: 5
-	config.add_facet_field solr_name('date_of_award', :facetable), limit: 1 #added 12 august
-	config.add_facet_field solr_name('abstract', :facetable), limit: 1 #added 12 august
-	config.add_facet_field solr_name('qualification_level', :facetable)
-	config.add_facet_field solr_name('department', :facetable)
+    config.add_facet_field solr_name('date_of_award', :facetable), limit: 1 #added 12 august
+    config.add_facet_field solr_name('abstract', :facetable), limit: 1 #added 12 august
+    config.add_facet_field solr_name('qualification_level', :facetable)
+    config.add_facet_field solr_name('department', :facetable)
     config.add_facet_field 'generic_type_sim', show: false, single: true
 
     # Have BL send all facet field names to Solr, which has been the default
     # previously. Simply remove these lines if you'd rather use Solr request
     # handler defaults, or have no facets.
     config.add_facet_fields_to_solr_request!
-    
-	#This is it for the search display!!!
+
+    #This is it for the search display!!!
     # solr fields to be displayed in the index (search results) view
     #   The ordering of the field names is the order of the display
     # config.add_index_field solr_name('description', :stored_searchable)
     config.add_index_field solr_name('keyword', :stored_searchable)
     config.add_index_field solr_name('subject_value', :stored_searchable)
-	#config.add_index_field solr_name('subject_header', :stored_searchable)  #CHOSS
+    #config.add_index_field solr_name('subject_header', :stored_searchable)  #CHOSS
     config.add_index_field solr_name('creator', :stored_searchable)
     # config.add_index_field solr_name('contributor', :stored_searchable)
-	config.add_index_field solr_name('advisor', :stored_searchable)
+    config.add_index_field solr_name('advisor', :stored_searchable)
     # config.add_index_field solr_name('publisher', :stored_searchable)
     # config.add_index_field solr_name('based_near', :stored_searchable)
     config.add_index_field solr_name('language', :stored_searchable)
@@ -70,23 +70,23 @@ class CatalogController < ApplicationController
     config.add_index_field solr_name('human_readable_type', :stored_searchable)
     # config.add_index_field solr_name('format', :stored_searchable)
     config.add_index_field solr_name('identifier', :stored_searchable)
-	#new uns
-	
-	config.add_index_field solr_name('date_of_award', :stored_searchable)
-	config.add_index_field solr_name('qualification_name', :stored_searchable)
-	config.add_index_field solr_name('qualification_level', :stored_searchable)
-	config.add_index_field solr_name('awarding_institution', :stored_searchable)
-	config.add_index_field solr_name('department', :stored_searchable)	
-	config.add_index_field solr_name('license', :stored_searchable)#new 13thsept
-	config.add_index_field solr_name('rights_holder', :stored_searchable)
-	#remove once have got edits working. this did work, but now  "attempted to set the property `abstract' to an enumerable value. However, this property is declared as singular"
-	config.add_index_field solr_name('abstract', :stored_searchable) #works but only for main index
-	
-	#new configs for latest dlibhydra model 24th oct
-	config.add_index_field solr_name('former_id', :stored_searchable)
-	config.add_index_field solr_name('mainfile_ids', :stored_searchable)
-	config.add_index_field solr_name('preflabel', :stored_searchable)#26th oct
-	
+    #new uns
+
+    config.add_index_field solr_name('date_of_award', :stored_searchable)
+    config.add_index_field solr_name('qualification_name', :stored_searchable)
+    config.add_index_field solr_name('qualification_level', :stored_searchable)
+    config.add_index_field solr_name('awarding_institution', :stored_searchable)
+    config.add_index_field solr_name('department', :stored_searchable)
+    config.add_index_field solr_name('license', :stored_searchable)#new 13thsept
+    config.add_index_field solr_name('rights_holder', :stored_searchable)
+    #remove once have got edits working. this did work, but now  "attempted to set the property `abstract' to an enumerable value. However, this property is declared as singular"
+    config.add_index_field solr_name('abstract', :stored_searchable) #works but only for main index
+
+    #new configs for latest dlibhydra model 24th oct
+    config.add_index_field solr_name('former_id', :stored_searchable)
+    config.add_index_field solr_name('mainfile_ids', :stored_searchable)
+    config.add_index_field solr_name('preflabel', :stored_searchable)#26th oct
+
 
     # "fielded" search configuration. Used by pulldown among other places.
     # For supported keys in hash, see rdoc for Blacklight::SearchFields
@@ -110,8 +110,8 @@ class CatalogController < ApplicationController
       label_name = solr_name('title', :stored_searchable, type: :string)
       contributor_name = solr_name('contributor', :stored_searchable, type: :string)
       field.solr_parameters = {
-        qf: "#{title_name} #{label_name} #{contributor_name}",
-        pf: title_name.to_s
+          qf: "#{title_name} #{label_name} #{contributor_name}",
+          pf: title_name.to_s
       }
     end
 
@@ -120,46 +120,46 @@ class CatalogController < ApplicationController
     # of Solr search fields.
     # creator, title, description, publisher, date_created,
     # subject, language, resource_type, format, identifier, based_near,
-    
-      # solr_parameters hash are sent to Solr as ordinary url query params.
 
-      # :solr_local_parameters will be sent using Solr LocalParams
-      # syntax, as eg {! qf=$title_qf }. This is neccesary to use
-      # Solr parameter de-referencing like $title_qf.
-      # See: http://wiki.apache.org/solr/LocalParams
-	 config.add_search_field('advisor') do |field|
+    # solr_parameters hash are sent to Solr as ordinary url query params.
+
+    # :solr_local_parameters will be sent using Solr LocalParams
+    # syntax, as eg {! qf=$title_qf }. This is neccesary to use
+    # Solr parameter de-referencing like $title_qf.
+    # See: http://wiki.apache.org/solr/LocalParams
+    config.add_search_field('advisor') do |field|
       solr_name = solr_name('advisor', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
     config.add_search_field('creator') do |field|
       solr_name = solr_name('creator', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
     config.add_search_field('title') do |field|
       solr_name = solr_name('title', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
-	
-	config.add_search_field('preflabel') do |field|
-	field.label = 'Preflabel'
+
+    config.add_search_field('preflabel') do |field|
+      field.label = 'Preflabel'
       solr_name = solr_name('preflabel', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
-	
+
 
     # config.add_search_field('description') do |field|
     #   field.label = 'Abstract or Summary'
@@ -181,35 +181,35 @@ class CatalogController < ApplicationController
     config.add_search_field('date_created') do |field|
       solr_name = solr_name('created', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
     config.add_search_field('subject') do |field|
       #solr_name = solr_name('subject', :stored_searchable, type: :string)   #CHOSS
-	  solr_name = solr_name('subject_value', :stored_searchable, type: :string)
+      solr_name = solr_name('subject_value', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
-	
-	#CHOSS
+
+    #CHOSS
 
     config.add_search_field('language') do |field|
       solr_name = solr_name('language', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
     config.add_search_field('human_readable_type') do |field|
       solr_name = solr_name('human_readable_type', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
@@ -226,8 +226,8 @@ class CatalogController < ApplicationController
       field.include_in_advanced_search = false
       solr_name = solr_name('id', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
@@ -243,49 +243,49 @@ class CatalogController < ApplicationController
     config.add_search_field('keyword') do |field|
       solr_name = solr_name('keyword', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
     config.add_search_field('depositor') do |field|
       solr_name = solr_name('depositor', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
-	
-	config.add_search_field('rights_holder') do |field|
+
+    config.add_search_field('rights_holder') do |field|
       solr_name = solr_name('rights_holder', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
     config.add_search_field('rights') do |field|
       solr_name = solr_name('rights', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
-		
-	config.add_search_field('former_id') do |field|
+
+    config.add_search_field('former_id') do |field|
       solr_name = solr_name('former_id', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
-	
-	# new 24 oct new dlibhydra models
-	config.add_search_field('mainfile_ids') do |field|
+
+    # new 24 oct new dlibhydra models
+    config.add_search_field('mainfile_ids') do |field|
       solr_name = solr_name('mainfile_ids', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
