@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/digital-york/dlibhydra.git
-  revision: cd5f7393ab9cadf18ced72aa80744bc0a932624d
+  revision: cdd50dc88d18c2db128930dfcd0b4eef7f36e00c
   branch: latest_dlibhydra
   specs:
     dlibhydra (0.1.0)
