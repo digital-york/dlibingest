@@ -1,22 +1,18 @@
   <%#list order determines display order%>
   <%#label changes the display label to whatever you put%>
-  <%#render_as: :linked  makes it into a link - would need a few more items in to see how this worked%>
+  <%#render_as: :linked  makes it into a link%>
+  <%= presenter.attribute_to_html(:title, render_as: :linked) %>
   <%= presenter.attribute_to_html(:creator, render_as: :linked) %>
   <%= presenter.attribute_to_html(:advisor, render_as: :linked) %>
-  <%= presenter.attribute_to_html(:abstract) %>
+  <%= presenter.attribute_to_html(:date_of_award) %>
+  <%= presenter.attribute_to_html(:department) %>
   <%= presenter.attribute_to_html(:qualification_name) %>
   <%= presenter.attribute_to_html(:qualification_level) %>
-  <%#= presenter.attribute_to_html(:description) %>
-  <%#= presenter.attribute_to_html(:contributor, label: 'Contributors', render_as: :linked) %>
-  <%#= presenter.attribute_to_html(:publisher) %>
-  <%#= presenter.attribute_to_html(:language) %>
-  <%= presenter.attribute_to_html(:date_of_award) %>
+  <%= presenter.attribute_to_html(:abstract) %>
+  <%= presenter.attribute_to_html(:language) %>
   <%= presenter.attribute_to_html(:keyword, render_as: :linked ) %>
   <%= presenter.attribute_to_html(:subject, render_as: :linked) %>
   <%= presenter.attribute_to_html(:former_id) %>
   <%= presenter.attribute_to_html(:awarding_institution) %>
-  <%= presenter.attribute_to_html(:department) %>
+
   <%= presenter.attribute_to_html(:rights_holder) %>
-  <%#= presenter.attribute_to_html(:license) %>
-  <%#= presenter.attribute_to_html(:rights) %>
-  <%#= presenter.attribute_to_html(:source) %>
