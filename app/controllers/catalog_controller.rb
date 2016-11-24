@@ -18,8 +18,9 @@ class CatalogController < ApplicationController
     config.index.abstract_field = solr_name('abstract', :stored_searchable)#added 12 august
     config.index.rights_holder_field = solr_name('rights_holder', :stored_searchable)#added 13 august
     config.index.former_id_field = solr_name('former_id', :stored_searchable)#added 25 oct new dlibhydra models
+    config.index.module_code_field = solr_name('module_code', :stored_searchable)
     config.index.mainfile_ids_field = solr_name('mainfile_ids', :stored_searchable)#added 25 oct new dlibhydra models
-    config.index.preflabel_field = solr_name('preflabel', :stored_searchable)# 26 sept
+    #config.index.preflabel_field = solr_name('preflabel', :stored_searchable)# 26 sept
 
     config.index.thumbnail_field = 'thumbnail_path_ss'
     config.index.partials.delete(:thumbnail) # we render this inside _index_default.html.erb
@@ -31,7 +32,7 @@ class CatalogController < ApplicationController
 
     # solr fields that will be treated as facets by the blacklight application
     #   The ordering of the field names is the order of the display
-    config.add_facet_field solr_name('human_readable_type', :facetable)
+    config.add_facet_field solr_name('human_readable_type', :facetable), limit: 5
     config.add_facet_field solr_name('creator', :facetable), limit: 5
     config.add_facet_field solr_name('advisor', :facetable), limit: 5
     config.add_facet_field solr_name('keyword', :facetable), limit: 5
@@ -86,6 +87,7 @@ class CatalogController < ApplicationController
     config.add_index_field solr_name('rights_holder', :stored_searchable)
     #remove once have got edits working. this did work, but now  "attempted to set the property `abstract' to an enumerable value. However, this property is declared as singular"
     config.add_index_field solr_name('abstract', :stored_searchable) #works but only for main index
+    config.add_index_field solr_name('module_code', :stored_searchable)
 
     #new configs for latest dlibhydra model 24th oct
     config.add_index_field solr_name('former_id', :stored_searchable)
@@ -279,6 +281,14 @@ class CatalogController < ApplicationController
 
     config.add_search_field('former_id') do |field|
       solr_name = solr_name('former_id', :stored_searchable, type: :string)
+      field.solr_local_parameters = {
+          qf: solr_name,
+          pf: solr_name
+      }
+    end
+
+    config.add_search_field('module_code') do |field|
+      solr_name = solr_name('module_code', :stored_searchable, type: :string)
       field.solr_local_parameters = {
           qf: solr_name,
           pf: solr_name

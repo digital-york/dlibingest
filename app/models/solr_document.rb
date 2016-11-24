@@ -29,6 +29,8 @@ class SolrDocument
     self[Solrizer.solr_name('advisor')]
   end
 
+
+
   #added 17th nov for SHOW page
   def keyword
     self[Solrizer.solr_name('keyword')]
@@ -77,6 +79,10 @@ end
 
   def rights_holder
     self[Solrizer.solr_name('rights_holder')]
+  end
+
+  def module_code
+    self[Solrizer.solr_name('module_code')]
   end
 
   # not needed - already in cc
