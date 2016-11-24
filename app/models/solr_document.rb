@@ -54,6 +54,14 @@ class SolrDocument
     self[Solrizer.solr_name('department')]
   end
 
+  def date
+    self[Solrizer.solr_name('date')]
+  end
+
+  def rights_holder
+    self[Solrizer.solr_name('rights_holder')]
+  end
+
   #maybe this is needed...not sure
   def subject
     self[Solrizer.solr_name('subject_value')]

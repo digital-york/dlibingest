@@ -183,7 +183,7 @@ en:
           # license_sim: "License"
           # abstract_sim: "Abstract"
           # preflabel_sim: "Preflabel"
-          # former_id_sim: "Former identifier"
+          date: "Date"
         index:
           human_readable_type_tesim: "Type of work"
           keyword_tesim: "Keyword"
@@ -197,6 +197,7 @@ en:
           former_id_tesim: "Former identifier"
           abstract_tesim: "Abstract"
           rights_holder_tesim: "Rights Holder"
+          date_tesim: "Date"
         show:
           subject: "Subject heading"
           advisor: "Supervisor"

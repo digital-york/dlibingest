@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/digital-york/dlibhydra.git
-  revision: cdd50dc88d18c2db128930dfcd0b4eef7f36e00c
+  revision: 308518ebb240a4307d14b71d5cd2f6e0916f079a
   branch: latest_dlibhydra
   specs:
     dlibhydra (0.1.0)
@@ -168,7 +168,7 @@ GEM
     diff-lcs (1.2.5)
     dropbox-sdk (1.6.5)
       json
-    ebnf (1.0.1)
+    ebnf (1.0.2)
       rdf (~> 2.0)
       sxp (~> 1.0)
     erubis (2.7.0)
@@ -331,7 +331,7 @@ GEM
     parslet (1.7.1)
       blankslate (>= 2.0, <= 4.0)
     public_suffix (2.0.4)
-    puma (3.6.1)
+    puma (3.6.2)
     qa (0.10.2)
       activerecord-import
       deprecation

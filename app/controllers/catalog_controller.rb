@@ -41,6 +41,8 @@ class CatalogController < ApplicationController
     config.add_facet_field solr_name('qualification_level', :facetable)
     config.add_facet_field solr_name('qualification_name', :facetable)
     config.add_facet_field solr_name('department', :facetable)
+    config.add_facet_field solr_name('publisher', :facetable)
+    # JA note - what's this?
     config.add_facet_field 'generic_type_sim', show: false, single: true
     # config.add_facet_field solr_name('based_near', :facetable), limit: 5
     # config.add_facet_field solr_name('publisher', :facetable), limit: 5
@@ -55,14 +57,13 @@ class CatalogController < ApplicationController
     #This is it for the search display!!!
     # solr fields to be displayed in the index (search results) view
     #   The ordering of the field names is the order of the display
-    # config.add_index_field solr_name('description', :stored_searchable)
+    config.add_index_field solr_name('description', :stored_searchable)
     config.add_index_field solr_name('keyword', :stored_searchable)
     config.add_index_field solr_name('subject_value', :stored_searchable)
-    #config.add_index_field solr_name('subject_header', :stored_searchable)  #CHOSS
     config.add_index_field solr_name('creator', :stored_searchable)
     # config.add_index_field solr_name('contributor', :stored_searchable)
     config.add_index_field solr_name('advisor', :stored_searchable)
-    # config.add_index_field solr_name('publisher', :stored_searchable)
+    config.add_index_field solr_name('publisher', :stored_searchable)
     # config.add_index_field solr_name('based_near', :stored_searchable)
     config.add_index_field solr_name('language', :stored_searchable)
     #config.add_index_field solr_name('date_uploaded', :stored_sortable)
@@ -72,8 +73,10 @@ class CatalogController < ApplicationController
     config.add_index_field solr_name('human_readable_type', :stored_searchable)
     # config.add_index_field solr_name('format', :stored_searchable)
     config.add_index_field solr_name('identifier', :stored_searchable)
+
     #new uns
 
+    config.add_index_field solr_name('date', :stored_searchable)
     config.add_index_field solr_name('date_of_award', :stored_searchable)
     config.add_index_field solr_name('qualification_name', :stored_searchable)
     config.add_index_field solr_name('qualification_level', :stored_searchable)
@@ -137,13 +140,13 @@ class CatalogController < ApplicationController
       }
     end
 
-    config.add_search_field('creator') do |field|
-      solr_name = solr_name('creator', :stored_searchable, type: :string)
-      field.solr_local_parameters = {
-          qf: solr_name,
-          pf: solr_name
-      }
-    end
+    # config.add_search_field('creator') do |field|
+    #   solr_name = solr_name('creator', :stored_searchable, type: :string)
+    #   field.solr_local_parameters = {
+    #       qf: solr_name,
+    #       pf: solr_name
+    #   }
+    # end
 
     config.add_search_field('title') do |field|
       solr_name = solr_name('title', :stored_searchable, type: :string)
