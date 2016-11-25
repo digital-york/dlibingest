@@ -3,7 +3,9 @@
 
   <%= f.input :title, as: :multi_value %>
 
-  <%= f.input :creator, as: :multi_value %>
+  <%= f.input :creator_string, as: :multi_value, label: "Creator (string)" %>
+
+  <%= f.input :creator_resource_ids, as: :multi_value, label: "Creator (resource)" %>
 
   <%= f.input :description, as: :multi_value, input_html: { rows: '14', type: 'textarea'} %>
 </fieldset>

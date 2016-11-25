@@ -177,6 +177,7 @@ en:
           subject_value_sim: "Subject Heading"
           date_sim: "Date"
           department_sim: "Department"
+          creator_value_sim: "Creator"
         index:
           human_readable_type_tesim: "Type of work"
           keyword_tesim: "Keyword"

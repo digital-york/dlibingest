@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/digital-york/dlibhydra.git
-  revision: 2346c35233bb9f68a8cbac064de6201caa176724
+  revision: 287cf793d3db8550d8c7b659c1f424f976d3602a
   branch: latest_dlibhydra
   specs:
     dlibhydra (0.1.0)
@@ -128,7 +128,7 @@ GEM
     coffee-script (2.4.1)
       coffee-script-source
       execjs
-    coffee-script-source (1.10.0)
+    coffee-script-source (1.11.1)
     concurrent-ruby (1.0.2)
     curation_concerns (1.6.3)
       active-fedora (>= 10.3.0.rc1)
