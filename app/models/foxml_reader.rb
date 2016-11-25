@@ -333,16 +333,55 @@ end
 
 
 def testme
+#new collection(extending dlibhydra but including CurationConcerns::WorkBehaviour) id t722h880z
 
 puts "starting test of migration scripts"
 t= Object::Thesis.create
-t.title = ["my script made this thesis"]
+mfset = Object::FileSet.new  
+t.title = ["test 5"]
+t.former_id = ["york:999"]
+t.creator = ["Suleiman the Magnificent"]
+t.abstract = ["wondrous things"]
+t.date_of_award = "2017"
+t.advisor = ["imaginary friend3"]
+
+# t.department # LOOKUP!
+# t.awarding_institution # LOOKUP!
+# t.qualification_name # LOOKUP!
+# t.qualification_level # LOOKUP!
+# t.subject # LOOKUP!
+t.language=["pirate english"]
+t.keyword = ["rhinoceros"]
+t.rights_holder = ["me"]
+t.rights = ["http://dlib.york.ac.uk/licences#yorkrestricted"] #NOW MULTIVALUED
+
 t.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	t.depositor = "ps552@york.ac.uk"	
 	#save	
 	t.save!	
 	id = t.id
 	puts "thesis id was " +id 
+	col = Object::Collection.find("t722h880z")  #see line 901 in this file
+	puts "id of col was:" +col.id
+	puts "got collection ok " + col.title[0].to_s
+	col.members << t  
+	col.save!
+	
+	users = Object::User.all 
+	user = users[0]	
+	mfset.title = ["THESIS_MAIN"]
+	mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	mfset.depositor = "ps552@york.ac.uk"
+	mfset.save!
+	contentfile = open("/vagrant/files_to_test/testpdf.pdf")
+	actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
+	actor.create_metadata(t)
+	puts "created metadata" 
+	actor.create_content(contentfile, relation = 'original_file' )
+	puts "created content"
+	mfset.save!
+    t.mainfile << mfset
+	puts "done test"
 
 end 
 
@@ -401,7 +440,7 @@ puts "migrating"
 	#abstract is currently the description. optional field so test presence
 	thesis_abstract = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
 	if thesis_abstract.length > 0
-	thesis.abstract = thesis_abstract
+	thesis.abstract = [thesis_abstract] #now multivalued
 	end
 	
 	#date_of_award (dateAccepted in the dc created by the model) 1 only
@@ -561,7 +600,7 @@ end
 	thesis_rights = defaultLicence
 	thesis_rights = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[contains(.,'http')]",ns).to_s
 	#thesis.license = thesis_rights.to_s
-	thesis.rights = thesis_rights.to_s
+	thesis.rights = [thesis_rights.to_s] #now multivalued
 	puts "found thesis rights "
 	#rdf:type is boilerplate.dont need to add this 
 	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
@@ -718,7 +757,7 @@ puts "migrating a thesis"
 	#abstract is currently the description. optional field so test presence
 	thesis_abstract = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
 	if thesis_abstract.length > 0
-	thesis.abstract = thesis_abstract
+	thesis.abstract = [thesis_abstract] #now multivalued
 	end
 	
 	#date_of_award (dateAccepted in the dc created by the model) 1 only
