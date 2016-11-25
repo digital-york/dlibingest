@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'latest_dlibhydra'
+#gem 'dlibhydra'
 gem 'curation_concerns'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
@@ -50,13 +51,13 @@ end
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 group :development, :test do
-  gem 'solr_wrapper', '>= 0.3'
+  #gem 'solr_wrapper', '>= 0.3'
 end
 
 gem 'rsolr', '~> 1.0'
 gem 'devise'
 gem 'devise-guests', '~> 0.5'
 group :development, :test do
-  gem 'fcrepo_wrapper'
+  #gem 'fcrepo_wrapper'
   gem 'rspec-rails'
 end
