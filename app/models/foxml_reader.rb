@@ -11,6 +11,7 @@ include ::Dlibhydra
 include ::CurationConcerns
 include ::Hydra
 
+
 =begin
 *list of possible collections under theses is quite extensive - get it from an risearch query
 *thesescollections.txt contains all the returned data from risearch for all levels
@@ -338,12 +339,12 @@ def testme
 puts "starting test of migration scripts"
 t= Object::Thesis.create
 mfset = Object::FileSet.new  
-t.title = ["test 5"]
-t.former_id = ["york:999"]
+t.title = ["Five go mad on Ruby Island"]
+t.former_id = ["york:123456"]
 t.creator = ["Suleiman the Magnificent"]
-t.abstract = ["wondrous things"]
+t.abstract = ["wondrous things that I have learnt"]
 t.date_of_award = "2017"
-t.advisor = ["imaginary friend3"]
+t.advisor = ["my imaginary friends"]
 
 # t.department # LOOKUP!
 # t.awarding_institution # LOOKUP!
