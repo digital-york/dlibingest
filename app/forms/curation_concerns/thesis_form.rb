@@ -9,7 +9,11 @@ module CurationConcerns
     # TODO creator, advisory, awarding institution and subject
     self.terms += [:abstract, :department_resource_ids, :qualification_name_resource_ids, :qualification_level,
                    :date_of_award, :advisor, :keyword, :awarding_institution_resource_ids,
+<<<<<<< HEAD
                    :rights_holder, :subject_resource_ids, :creator, :former_id]
+=======
+                   :rights_holder, :subject_resource_ids, :creator_resource_id, :advisor_resource_id]
+>>>>>>> origin/new_works
 
     self.required_fields = [:title, :creator, :department_resource_ids, :date_of_award]
   end

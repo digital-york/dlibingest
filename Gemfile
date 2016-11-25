@@ -1,7 +1,11 @@
 source 'https://rubygems.org'
 
+
 #gem 'dlibhydra', path: "/vagrant/code/rails/dlibhydra" #git: 'https://github.com/digital-york/dlibhydra.git'
 gem 'dlibhydra'
+
+#gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'latest_dlibhydra'
+
 gem 'curation_concerns'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'

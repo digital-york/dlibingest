@@ -1,0 +1,10 @@
+<fieldset class="optional prompt">
+  <%= f.input :description, as: :multi_value, input_html: { rows: '14', type: 'textarea'} %>
+  <% lang_service = AuthorityService::LanguagesService.new %>
+  <%= f.input :language, as: :multi_value_select,
+              collection: lang_service.select_all_options,
+              include_blank: show_blank(curation_concern),
+              item_helper: lang_service.method(:include_current_value),
+              input_html: { class: 'form-control' } %>
+  <%= f.input :rights_holder, as: :multi_value %>
+</fieldset>

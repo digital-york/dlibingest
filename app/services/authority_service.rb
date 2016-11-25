@@ -24,6 +24,12 @@ module AuthorityService
 			super('licenses')
 		end
 	end
+	class LanguagesService < CurationConcerns::QaSelectService
+	include ::FileAuthorityConcern
+		def initialize
+			super('languages')
+		end
+	end
 	class QualificationLevelsService < CurationConcerns::QaSelectService
 	include ::FileAuthorityConcern
 		def initialize

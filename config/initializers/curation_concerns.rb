@@ -1,4 +1,6 @@
 CurationConcerns.configure do |config|
+  # Injected via `rails g curation_concerns:work ExamPaper`
+  config.register_curation_concern :exam_paper
   # Injected via `rails g curation_concerns:work Thesis`
   config.register_curation_concern :thesis
   # Should schema.org microdata be displayed?

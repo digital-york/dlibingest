@@ -1,0 +1,12 @@
+<fieldset class="required">
+  <%= f.input :title, as: :multi_value %>
+  <% service = AuthorityService::DepartmentService.new %>
+  <%= f.input :creator_resource_ids, as: :multi_value_select,
+              label: 'Creator',
+              collection: service.select_all_options,
+              include_blank: true,
+              item_helper: service.method(:include_current_value),
+              input_html: { class: 'form-control' } %>
+  <%= f.input :date %>
+
+</fieldset>
