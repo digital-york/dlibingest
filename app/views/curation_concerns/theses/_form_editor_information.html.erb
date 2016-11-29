@@ -3,7 +3,7 @@
   <%= render "form_rights", f: f %>
   <% qn_service = AuthorityService::SubjectService.new %>
   <%= f.input :subject_resource_ids, as: :multi_value_select,
-              label: 'Subject heading',
+              label: 'Subject Heading',
               collection: qn_service.select_all_options,
               include_blank: show_blank(curation_concern),
               item_helper: qn_service.method(:include_current_value),

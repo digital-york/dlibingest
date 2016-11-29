@@ -4,15 +4,15 @@
   <%= presenter.attribute_to_html(:title, render_as: :linked) %>
   <%= presenter.attribute_to_html(:creator, render_as: :linked) %>
   <%= presenter.attribute_to_html(:advisor, render_as: :linked) %>
-  <%= presenter.attribute_to_html(:date_of_award) %>
+  <%= presenter.attribute_to_html(:date_of_award, label: 'Date of Award') %>
   <%= presenter.attribute_to_html(:department) %>
-  <%= presenter.attribute_to_html(:qualification_name) %>
-  <%= presenter.attribute_to_html(:qualification_level) %>
+  <%= presenter.attribute_to_html(:qualification_name, label: 'Degree') %>
+  <%= presenter.attribute_to_html(:qualification_level, label: 'Degree Level') %>
   <%= presenter.attribute_to_html(:abstract) %>
   <%= presenter.attribute_to_html(:language) %>
   <%= presenter.attribute_to_html(:keyword, render_as: :linked ) %>
-  <%= presenter.attribute_to_html(:subject, render_as: :linked) %>
+  <%= presenter.attribute_to_html(:subject, render_as: :linked, label: 'Subject Heading') %>
   <%= presenter.attribute_to_html(:former_id) %>
-  <%= presenter.attribute_to_html(:awarding_institution) %>
+  <%= presenter.attribute_to_html(:awarding_institution, label: 'Awarding Institution' ) %>
 
-  <%= presenter.attribute_to_html(:rights_holder) %>
+  <%= presenter.attribute_to_html(:rights_holder, label: 'Rights Holder') %>
