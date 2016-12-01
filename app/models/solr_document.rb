@@ -51,18 +51,6 @@ def department
   self[Solrizer.solr_name('department')]
 end
 
-#maybe this is needed...not sure
-def subject
-  self[Solrizer.solr_name('subject_value')]
-end
-#CHOSS
-#maybe this is needed...not sure
-=begin
-def subject
-  self[Solrizer.solr_name('subject')]
-end
-=end
-
 def rights_holder
   self[Solrizer.solr_name('rights_holder')]
 end
@@ -150,6 +138,15 @@ end
   def subject
     self[Solrizer.solr_name('subject_value')]
   end
+  
+  #CHOSS
+  def language
+    self[Solrizer.solr_name('language_value')]
+  end
+  
+  
+  
+  
 
   # Do content negotiation for AF models. 
 

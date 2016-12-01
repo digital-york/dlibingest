@@ -126,6 +126,12 @@
        </str>
        <str name="subject_pf">
        </str>
+       <!-- CHOSS -->
+       <str name="language_qf">
+          language_value_tesim
+       </str>
+       <str name="subject_pf">
+       </str>
 
        <str name="fl">
          *,

@@ -37,7 +37,7 @@ module CurationConcerns
 
     # Metadata Methods
     delegate :title, :date_created, :date_modified, :date_uploaded, :abstract,
-             :creator, :advisor, :subject, :keyword, :qualification_level, :awarding_institution, :department, :qualification_name, :date_of_award, :language, :former_id, :embargo_release_date,
+             :creator, :advisor, :subject, :keyword, :qualification_level, :awarding_institution, :department, :qualification_name, :date_of_award, :language,  :former_id, :embargo_release_date,
              :lease_expiration_date, :rights, :rights_holder, :source, :thumbnail_id, :representative_id,
              to: :solr_document
 

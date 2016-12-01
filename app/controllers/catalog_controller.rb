@@ -47,6 +47,7 @@ class CatalogController < ApplicationController
     config.add_facet_field solr_name('keyword', :facetable), limit: 5
     config.add_facet_field solr_name('subject_value', :facetable), limit: 5
     config.add_facet_field solr_name('language', :facetable), limit: 5
+	config.add_facet_field solr_name('language_value', :facetable), limit: 5 #CHOSS
     config.add_facet_field solr_name('qualification_level', :facetable)
     config.add_facet_field solr_name('qualification_name', :facetable)
 
@@ -72,6 +73,7 @@ class CatalogController < ApplicationController
     config.add_index_field solr_name('qualification_level', :stored_searchable)
     config.add_index_field solr_name('awarding_institution', :stored_searchable)
     config.add_index_field solr_name('language', :stored_searchable)
+	config.add_index_field solr_name('language_value', :stored_searchable)#CHOSS
     config.add_index_field solr_name('keyword', :stored_searchable)
     config.add_index_field solr_name('subject_value', :stored_searchable)
     config.add_index_field solr_name('module_code', :stored_searchable)
@@ -188,7 +190,8 @@ class CatalogController < ApplicationController
     end
 
     config.add_search_field('language') do |field|
-      solr_name = solr_name('language', :stored_searchable, type: :string)
+      #solr_name = solr_name('language', :stored_searchable, type: :string) #CHOSS
+	  solr_name = solr_name('language_value', :stored_searchable, type: :string)
       field.solr_local_parameters = {
           qf: solr_name,
           pf: solr_name

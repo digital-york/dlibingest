@@ -1,6 +1,6 @@
 <fieldset class="required">
   <%= f.input :title, as: :multi_value %>
-  <%#= f.input :creator, as: :multi_value %>
+  <%= f.input :creator_string, as: :multi_value, label: 'Creator'  %>
   <%= f.input :creator_resource_ids, label: 'Creator Resource IDs', as: :multi_value %>
   <%= f.input :date_of_award, label: 'Date Of Award'%>
   <% service = AuthorityService::DepartmentService.new %>

@@ -18,24 +18,6 @@ module AuthorityService
 	end
 
 # File based
-	class LicensesService < CurationConcerns::QaSelectService
-	include ::FileAuthorityConcern
-		def initialize
-			super('licenses')
-		end
-	end
-	class LanguagesService < CurationConcerns::QaSelectService
-	include ::FileAuthorityConcern
-		def initialize
-			super('languages')
-		end
-	end
-	class QualificationLevelsService < CurationConcerns::QaSelectService
-	include ::FileAuthorityConcern
-		def initialize
-			super('qualification_levels')
-		end
-	end
 	class RightsStatementsService < CurationConcerns::QaSelectService
 	include ::FileAuthorityConcern
 		def initialize
@@ -46,6 +28,24 @@ module AuthorityService
 	include ::FileAuthorityConcern
 		def initialize
 			super('resource_types')
+		end
+	end
+	class QualificationLevelsService < CurationConcerns::QaSelectService
+	include ::FileAuthorityConcern
+		def initialize
+			super('qualification_levels')
+		end
+	end
+	class LicensesService < CurationConcerns::QaSelectService
+	include ::FileAuthorityConcern
+		def initialize
+			super('licenses')
+		end
+	end
+	class LanguagesService < CurationConcerns::QaSelectService
+	include ::FileAuthorityConcern
+		def initialize
+			super('languages')
 		end
 	end
 

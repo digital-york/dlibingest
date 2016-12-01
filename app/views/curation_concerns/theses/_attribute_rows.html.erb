@@ -1,8 +1,8 @@
   <%#list order determines display order%>
   <%#label changes the display label to whatever you put%>
   <%#render_as: :linked  makes it into a link%>
-  <%= presenter.attribute_to_html(:title, render_as: :linked) %>
-  <%= presenter.attribute_to_html(:creator, render_as: :linked) %>
+  <%= presenter.attribute_to_html(:title, render_as: :linked ) %>
+  <%= presenter.attribute_to_html(:creator, render_as: :linked, label: 'Creator') %>
   <%= presenter.attribute_to_html(:advisor, render_as: :linked) %>
   <%= presenter.attribute_to_html(:date_of_award, label: 'Date of Award') %>
   <%= presenter.attribute_to_html(:department) %>
@@ -10,9 +10,10 @@
   <%= presenter.attribute_to_html(:qualification_level, label: 'Degree Level') %>
   <%= presenter.attribute_to_html(:abstract) %>
   <%= presenter.attribute_to_html(:language) %>
+  <%#= presenter.attribute_to_html(:language_value) %>
   <%= presenter.attribute_to_html(:keyword, render_as: :linked ) %>
   <%= presenter.attribute_to_html(:subject, render_as: :linked, label: 'Subject Heading') %>
   <%= presenter.attribute_to_html(:former_id) %>
-  <%= presenter.attribute_to_html(:awarding_institution, label: 'Awarding Institution' ) %>
-
+  <%= presenter.attribute_to_html(:awarding_institution, label: 'Awarding Institution' ) %>  
+  <%= presenter.attribute_to_html(:human_readable_type, label: 'Type of Work' ) %>
   <%= presenter.attribute_to_html(:rights_holder, label: 'Rights Holder') %>
