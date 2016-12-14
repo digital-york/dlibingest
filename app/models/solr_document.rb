@@ -151,7 +151,15 @@ end
     self[Solrizer.solr_name('subject_value')]
   end
 
+  def language_string
+    self[Solrizer.solr_name('language_string')]
+  end
+
   # Do content negotiation for AF models. 
 
   use_extension(Hydra::ContentNegotiation)
+
+  # Do content negotiation for AF models. 
+
+  use_extension( Hydra::ContentNegotiation )
 end

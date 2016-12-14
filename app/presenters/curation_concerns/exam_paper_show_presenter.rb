@@ -6,6 +6,7 @@ module CurationConcerns
     delegate :qualification_level, :qualification_name, :date, :former_id, :rights_holder,
              :module_code,:creator_value,
              to: :solr_document
+
   end
 end
 

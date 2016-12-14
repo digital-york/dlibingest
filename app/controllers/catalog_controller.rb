@@ -1,5 +1,6 @@
 class CatalogController < ApplicationController
   include CurationConcerns::CatalogController
+
   configure_blacklight do |config|
     # config.search_builder_class = ::SearchBuilder
     ## Default parameters to send to solr for all search-like requests. See also SolrHelper#solr_search_params
@@ -46,7 +47,7 @@ class CatalogController < ApplicationController
     config.add_facet_field solr_name('date', :facetable)
     config.add_facet_field solr_name('keyword', :facetable), limit: 5
     config.add_facet_field solr_name('subject_value', :facetable), limit: 5
-    config.add_facet_field solr_name('language', :facetable), limit: 5
+    config.add_facet_field solr_name('language_string', :facetable), limit: 5
     config.add_facet_field solr_name('qualification_level', :facetable)
     config.add_facet_field solr_name('qualification_name', :facetable)
 
@@ -72,6 +73,7 @@ class CatalogController < ApplicationController
     config.add_index_field solr_name('qualification_level', :stored_searchable)
     config.add_index_field solr_name('awarding_institution', :stored_searchable)
     config.add_index_field solr_name('language', :stored_searchable)
+    config.add_index_field solr_name('language_string', :stored_searchable)
     config.add_index_field solr_name('keyword', :stored_searchable)
     config.add_index_field solr_name('subject_value', :stored_searchable)
     config.add_index_field solr_name('module_code', :stored_searchable)
@@ -156,8 +158,8 @@ class CatalogController < ApplicationController
       field.label = 'Abstract or Summary'
       solr_name = solr_name('description', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
@@ -165,8 +167,8 @@ class CatalogController < ApplicationController
       solr_name = solr_name('publisher_value', :stored_searchable, type: :string)
       #solr_name = solr_name('publisher', :stored_searchable, type: :string)
       field.solr_local_parameters = {
-        qf: solr_name,
-        pf: solr_name
+          qf: solr_name,
+          pf: solr_name
       }
     end
 
@@ -189,6 +191,13 @@ class CatalogController < ApplicationController
 
     config.add_search_field('language') do |field|
       solr_name = solr_name('language', :stored_searchable, type: :string)
+      field.solr_local_parameters = {
+          qf: solr_name,
+          pf: solr_name
+      }
+    end
+    config.add_search_field('language_string') do |field|
+      solr_name = solr_name('language_string', :stored_searchable, type: :string)
       field.solr_local_parameters = {
           qf: solr_name,
           pf: solr_name

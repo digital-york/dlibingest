@@ -63,3 +63,7 @@ TO DO - to make collections, exam papers and theses work
 - do more thorough testing
 - test with filesets and think about how main_file can be dealt with
 - sort out the creators mess!
+
+
+in dev mode on mac start redis with
+redis-server /usr/local/etc/redis.conf

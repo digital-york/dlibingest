@@ -64,3 +64,23 @@ group :development, :test do
   #gem 'fcrepo_wrapper'
   gem 'rspec-rails'
 end
+
+group :development, :test do
+  gem 'solr_wrapper', '>= 0.3'
+end
+
+group :development, :test do
+  gem 'fcrepo_wrapper'
+end
+
+group :development, :test do
+end
+
+group :development, :test do
+end
+
+group :development, :test do
+end
+
+group :development, :test do
+end

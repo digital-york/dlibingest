@@ -178,6 +178,7 @@ en:
           date_sim: "Date"
           department_sim: "Department"
           creator_value_sim: "Creator"
+          language_string_sim: "Language"
         index:
           human_readable_type_tesim: "Type of work"
           keyword_tesim: "Keyword"
@@ -192,6 +193,8 @@ en:
           date_tesim: "Date"
           creator_value_tesim: "Creator"
           module_code_tesim: "Module Code"
+          language_tesim: "Language Code"
+          language_string_tesim: "Language"
         show:
           rights_holder: "Rights Holder"
           subject: "Subject Heading"
@@ -200,6 +203,8 @@ en:
           qualification_level: "Degree Level"
           former_id: "Former Identifier"
           module_code: "Module Code"
+          language: "Language Code"
+          language_string: "Language"
   file_manager:
     link_text: 'File Manager'
   simple_form:
