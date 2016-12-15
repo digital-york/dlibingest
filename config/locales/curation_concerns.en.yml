@@ -1,0 +1,225 @@
+en:
+  curation_concerns:
+    product_name: "York Digital Library"
+    institution_name:  &INSTITUTION_NAME "University of York"
+    catalog:
+      index:
+        type_tabs:
+          all: All
+    collections:
+      search_form:
+        placeholder: "Search Collection"
+        label: "Search Collection %{title}"
+    division:
+      name: "Your Department at Institution"
+      homepage_url: "#"
+    document_language: "en"
+    institution:
+      name: "University of York"
+      homepage_url: "#"
+    show:
+      related_files:
+        heading: 'Files included in Thesis'
+      downloadable_content:
+        heading: 'Downloadable Content'
+        default_link: 'Download file'
+        image_link: 'Download image'
+        office_link: 'Download file'
+        pdf_link: 'Download PDF'
+    search:
+      form:
+        q:
+          label: "Search Repository"
+          placeholder: "Type keywords in here"
+    bread_crumb:
+      works_list: "the works browser"
+    api:
+      accepted:
+        default: "Your request has been accepted for processing, but processing is not complete. See job for more info."
+      unauthorized:
+        default: "You must be logged in to do that!"
+      forbidden:
+        default: "You are not authorized to access this content."
+      success:
+        default: "Your request was processed successfully."
+      deleted:
+        default: "Deleted the Resource"
+      not_found:
+        default: "Could not find a resource that matches your request."
+      unprocessable_entity:
+        default: "The resource you attempted to modify cannot be modified according to your request."
+        empty_file: "The file you uploaded has no content."
+      bad_request:
+        default: "Unable to process your request.  See errors for more info."
+      internal_error:
+        default: "The server encountered an error."
+    schema_org:
+      resource_type:
+        Article: "http://schema.org/Article"
+        Audio: "http://schema.org/AudioObject"
+        Book: "http://schema.org/Book"
+        Conference Proceeding: "http://schema.org/ScholarlyArticle"
+        Dataset: "http://schema.org/Dataset"
+        Dissertation: "http://schema.org/ScholarlyArticle"
+        Image: "http://schema.org/ImageObject"
+        Map or Cartographic Material: "http://schema.org/Map"
+        Masters Thesis: "http://schema.org/ScholarlyArticle"
+        Part of Book: "http://schema.org/Book"
+        Research Paper: "http://schema.org/ScholarlyArticle"
+        Software or Program Code: "http://schema.org/Code"
+        Video: "http://schema.org/VideoObject"
+      based_near:
+        type: "http://schema.org/Place"
+        property: contentLocation
+        value: name
+      advisor:
+        type: "http://schema.org/Person"
+        property: advisor
+        # used as the itemprop value for itemscoped attributes
+        value: name
+      creator:
+        type: "http://schema.org/Person"
+        property: creator
+        value: name
+      date_created:
+        property: dateCreated
+      description:
+        property: description
+ # peri adding some stuff here. no idea what these do but it seems a good idea to update them. doesnt actually solve the show problem though
+      abstract:
+        property: abstract
+      department:
+        property: department
+      awarding_institution:
+        property: awardingInstitution
+      date_of_award:
+        property: dateOfAward
+      #advisor:
+        #property: advisor
+      qualification_name:
+        property: qualificationName
+      qualification_level:
+        property: qualificationLevel
+      preflabel:
+        property: preflabel
+      rights_holder:
+        property: rightsHolder
+      former_id:
+        property: formerId
+      # end of peris stuff
+      language:
+        property: inLanguage
+      publisher:
+        type: "http://schema.org/Organization"
+        property: publisher
+        value: name
+      subject:
+        type: "http://schema.org/Thing"
+        #property: about
+        property: subject
+        value: name
+      keyword:
+        property: keywords
+      title:
+        property: name
+
+    visibility:
+      open:
+        text: "Open Access"
+        class: "label-success"
+        label_html: <span class="label label-success">Open Access</span> Everyone. Check out <a href="">SHERPA/RoMEO</a> for specific publishers' copyright policies if you plan to patent and/or publish your %{type} in a journal.
+      authenticated:
+        text: *INSTITUTION_NAME
+        class: "label-info"
+        label_html: "<span class=\"label label-info\">%{institution}</span> Only users who are logged in through %{institution}."
+      embargo:
+        text: "Embargo"
+        class: "label-warning"
+        label_html: <span class="label label-warning">Embargo</span>
+      lease:
+        text: "Lease"
+        class: "label-warning"
+        label_html: <span class="label label-warning">Lease</span>
+      private:
+        label_html: <span class="label label-danger">Private</span> Only users and/or groups that have been given specific access in the "Share With" section.
+      restricted:
+        text: "Private"
+        class: "label-danger"
+    single_use_links:
+      title: Single-Use Links
+      table:
+        link: Link
+        key: Key
+        expires: Expires
+        actions: Actions
+        no_links: No links have been generated
+      download:
+        type: Download
+        generate: Generate Download Link
+      show:
+        type: Show
+        generate: Generate Show Link
+      copy:
+        tooltip: Copied!
+        button: Copy to Clipboard
+      delete: Delete
+      expiration:
+        time: "in %{value} hours"
+        lesser_time: in less than one hour
+  blacklight:
+    search:
+      fields:
+        facet:
+          advisor_sim: "Supervisor"
+          date_of_award_sim: "Date of Award"
+          qualification_name_sim: "Degree"
+          qualification_level_sim: "Degree Level"
+          subject_value_sim: "Subject Heading"
+          date_sim: "Date"
+          department_sim: "Department"
+          creator_value_sim: "Creator"
+          language_string_sim: "Language"
+        index:
+          human_readable_type_tesim: "Type of work"
+          keyword_tesim: "Keyword"
+          subject_value_tesim: "Subject Heading"
+          advisor_tesim: "Supervisor"
+          date_of_award_tesim: "Date of Award"
+          qualification_name_tesim: "Degree"
+          qualification_level_tesim: "Degree Level"
+          awarding_institution_tesim: "Awarding Institution"
+          department_tesim: "Department"
+          former_id_tesim: "Former Identifier"
+          date_tesim: "Date"
+          creator_value_tesim: "Creator"
+          module_code_tesim: "Module Code"
+          language_tesim: "Language Code"
+          language_string_tesim: "Language"
+        show:
+          rights_holder: "Rights Holder"
+          subject: "Subject Heading"
+          advisor: "Supervisor"
+          qualification_name: "Degree"
+          qualification_level: "Degree Level"
+          former_id: "Former Identifier"
+          module_code: "Module Code"
+          language: "Language Code"
+          language_string: "Language"
+  file_manager:
+    link_text: 'File Manager'
+  simple_form:
+    required:
+      html: '<span class="label label-info required-tag">required</span>'
+    hints:
+      defaults:
+        description: 'Please keep your description to 300 words or fewer.'
+        files:       'A PDF is preferred.'
+    labels:
+      defaults:
+        lease_expiration_date:     'until'
+        embargo_release_date:      'until'
+        visibility_during_embargo: 'Restricted to'
+        visibility_after_embargo:  'then open it up to'
+        visibility_during_lease:   'Is available for'
+        visibility_after_lease:    'then restrict it to'
+        files:                     'Upload a file'

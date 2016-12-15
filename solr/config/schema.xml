@@ -102,10 +102,9 @@
       For more information about this and other Spatial fields new to Solr 4, see:
       http://wiki.apache.org/solr/SolrAdaptersForLuceneSpatial4
     -->
-    <!-- ERROR IN SOLR 6.1.0
     <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType"
-      geo="true" distErrPct="0.025" maxDistErr="0.000009" units="degrees" />
-    -->
+      geo="true" distErrPct="0.025" maxDistErr="0.000009" distanceUnits="degrees" />
+    
     <fieldType name="text" class="solr.TextField" omitNorms="false">
       <analyzer>
         <tokenizer class="solr.ICUTokenizerFactory"/>

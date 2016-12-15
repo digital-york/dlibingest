@@ -34,4 +34,4 @@
       </div>
     </fieldset>
 <% end %>
-<% @curation_concern = access_control_cleanup(@curation_concern) if @curation_concern.new_record? %>
+<% @curation_concern = access_control_cleanup(@curation_concern) if !@curation_concern.nil? and @curation_concern.new_record? %>

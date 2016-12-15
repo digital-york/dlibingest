@@ -1,6 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'dlibhydra', path: "~/Dropbox/code/rails/dlibhydra" #git: 'https://github.com/digital-york/dlibhydra.git'
+gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'latest_dlibhydra'
+#gem 'dlibhydra', path: '/Users/julieallinson/Dropbox/code/rails/dlibhydra'
+#gem 'dlibhydra'
 gem 'curation_concerns'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
@@ -20,6 +22,8 @@ gem 'therubyracer', platforms: :ruby
 
 # Use jquery as the JavaScript library
 gem 'jquery-rails'
+# and add the jquery UI libraries as well
+gem 'jquery-ui-rails', '5.0.5'
 # Turbolinks makes navigating your web application faster. Read more: https://github.com/turbolinks/turbolinks
 gem 'turbolinks', '~> 5'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
@@ -50,13 +54,33 @@ end
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 group :development, :test do
-  gem 'solr_wrapper', '>= 0.3'
+  #gem 'solr_wrapper', '>= 0.3'
 end
 
 gem 'rsolr', '~> 1.0'
 gem 'devise'
 gem 'devise-guests', '~> 0.5'
 group :development, :test do
-  gem 'fcrepo_wrapper'
+  #gem 'fcrepo_wrapper'
   gem 'rspec-rails'
+end
+
+group :development, :test do
+  gem 'solr_wrapper', '>= 0.3'
+end
+
+group :development, :test do
+  gem 'fcrepo_wrapper'
+end
+
+group :development, :test do
+end
+
+group :development, :test do
+end
+
+group :development, :test do
+end
+
+group :development, :test do
 end

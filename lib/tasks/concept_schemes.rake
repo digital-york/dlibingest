@@ -1,8 +1,10 @@
 namespace :concept_schemes do
   require 'csv'
 
+  SOLR = 'http://localhost:8983/solr/hydra-development'
+
   task a: :environment do
-    solr = RSolr.connect :url => 'http://localhost:8983/solr/hydra_works'
+    solr = RSolr.connect :url => SOLR
     response = solr.get 'select', :params => {
         :q=>'preflabel_tesim:qualification_names AND has_model_ssim:Dlibhydra::ConceptScheme',
         :start=>0,
@@ -24,7 +26,7 @@ namespace :concept_schemes do
 
       begin
         @scheme = ''
-        solr = RSolr.connect :url => 'http://localhost:8983/solr/hydra_works'
+        solr = RSolr.connect :url => SOLR
         response = solr.get 'select', :params => {
             :q=>"preflabel_tesim:#{i} AND has_model_ssim:Dlibhydra::ConceptScheme",
             :start=>0,
@@ -77,7 +79,7 @@ namespace :concept_schemes do
       puts 'Creating the Concept Scheme'
 
       begin
-        solr = RSolr.connect :url => 'http://localhost:8983/solr/hydra_works'
+        solr = RSolr.connect :url => SOLR
         response = solr.get 'select', :params => {
             :q=>"preflabel_tesim:#{i} AND has_model_ssim:Dlibhydra::ConceptScheme",
             :start=>0,
