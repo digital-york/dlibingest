@@ -1,9 +1,10 @@
 development:
-  host: localhost
+  host: dlibmessage.york.ac.uk
   port: 6379
 test:
-  host: localhost
+  host: dlibmessage.york.ac.uk
   port: 6379
 production:
-  host: localhost
+  host: dlibmessage.york.ac.uk
   port: 6379
+
