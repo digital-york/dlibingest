@@ -10,8 +10,13 @@ default: &default
   timeout: 5000
 
 development:
-  <<: *default
-  database: db/development.sqlite3
+  adapter:  <%= ENV["development.database.adapter"] %>
+  encoding: <%= ENV["development.database.encoding"] %>
+  database: <%= ENV["development.database.database"] %>
+  username: <%= ENV["development.database.username"] %>
+  password: <%= ENV["development.database.password"] %>
+  host:     <%= ENV["development.database.host"] %>
+  port:     <%= ENV["development.database.port"] %>
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".

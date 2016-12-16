@@ -1,7 +1,10 @@
 development:
   user: fedoraAdmin
-  password: fedoraAdmin
-  url: http://127.0.0.1:<%= ENV['FCREPO_DEVELOPMENT_PORT'] || 8984 %>/rest
+  password: secret3
+  url: http://127.0.0.1:8080/fedora/rest
+
+#  password: fedoraAdmin
+#  url: http://127.0.0.1:<%= ENV['FCREPO_DEVELOPMENT_PORT'] || 8984 %>/rest
   base_path: /dev
 test:
   user: fedoraAdmin
