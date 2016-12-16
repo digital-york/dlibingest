@@ -56,6 +56,7 @@ end
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 gem 'dotenv-rails'
+gem 'resque'
 
 group :development, :test do
   #gem 'solr_wrapper', '>= 0.3'
