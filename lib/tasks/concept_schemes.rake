@@ -13,7 +13,7 @@ namespace :concept_schemes do
     response["response"]["docs"].first['id']
   end
 
-  desc "TODO"
+  desc "load_terms"
   task load_terms: :environment do
 
     path = Rails.root + 'lib/'
@@ -68,6 +68,8 @@ namespace :concept_schemes do
     end
     puts 'Finished!'
   end
+
+  desc 'load_depts'
   task load_depts: :environment do
 
     path = Rails.root + 'lib/'
