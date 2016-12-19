@@ -1,0 +1,4 @@
+development: dlibmessage.york.ac.uk:6379
+test:        dlibmessage.york.ac.uk:6379
+production:  dlibmessage.york.ac.uk:6379
+

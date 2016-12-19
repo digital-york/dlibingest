@@ -16,6 +16,8 @@ module CurationConcerns
 
           thesis_json = get_thesis_json(attributes)
           Resque.enqueue(WorkflowWorker, thesis_json)
+puts '===============Sending message to dlibmessage==============='
+puts Resque.redis          
 
           # next_actor.create(attributes) && save && run_callbacks(:after_create_concern)
           save && next_actor.create(attributes) && run_callbacks(:after_create_concern)
