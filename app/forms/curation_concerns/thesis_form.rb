@@ -8,7 +8,7 @@ module CurationConcerns
     # use the _ids form for HABM
     # TODO advisor
     self.terms += [:abstract, :department_resource_ids, :qualification_name_resource_ids, :qualification_level,
-                   :date_of_award, :advisor, :keyword, :awarding_institution_resource_ids,
+                   :date_of_award, :advisor_string, :keyword, :awarding_institution_resource_ids,
                    :rights_holder, :subject_resource_ids, :creator_string, :creator_resource_ids, :advisor_resource_ids]
 
     self.required_fields = [:title, :department_resource_ids, :date_of_award]
