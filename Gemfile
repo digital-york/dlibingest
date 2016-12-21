@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 
-gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'latest_dlibhydra'
+gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'journal_article'
+#gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'latest_dlibhydra'
 #gem 'dlibhydra', path: '/Users/julieallinson/Dropbox/code/rails/dlibhydra'
 #gem 'dlibhydra'
 gem 'curation_concerns'
