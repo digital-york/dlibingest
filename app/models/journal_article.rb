@@ -1,9 +1,17 @@
 # Generated via
 #  `rails generate curation_concerns:work JournalArticle`
-class JournalArticle < ActiveFedora::Base
+class JournalArticle < Dlibhydra::JournalArticle
   include ::CurationConcerns::WorkBehavior
-  include ::CurationConcerns::BasicMetadata
-  # Change this to restrict which works can be added as a child.
-  # self.valid_child_concerns = []
-  validates :title, presence: { message: 'Your work must have a title.' }
+  
+  self.human_readable_type = 'Journal Article'
+  validates :title, presence: { message: 'Your journal article must have a title.' }
+  
+
+  class JournalArticleIndexer < CurationConcerns::WorkIndexer
+    include Dlibhydra::IndexesJournalArticle
+  end
+
+  def self.indexer
+    JournalArticleIndexer
+  end
 end
