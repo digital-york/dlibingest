@@ -167,6 +167,10 @@ GEM
     devise-guests (0.5.0)
       devise
     diff-lcs (1.2.5)
+    dotenv (2.1.1)
+    dotenv-rails (2.1.1)
+      dotenv (= 2.1.1)
+      railties (>= 4.0, < 5.1)
     dropbox-sdk (1.6.5)
       json
     dry-configurable (0.4.0)
@@ -542,6 +546,7 @@ DEPENDENCIES
   devise
   devise-guests (~> 0.5)
   dlibhydra!
+  dotenv-rails
   fcrepo_wrapper
   jbuilder (~> 2.5)
   jquery-rails
