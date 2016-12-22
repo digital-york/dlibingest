@@ -1,8 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'latest_dlibhydra'
-#gem 'dlibhydra', path: '/Users/julieallinson/Dropbox/code/rails/dlibhydra'
-#gem 'dlibhydra'
+gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'master'
 gem 'curation_concerns'
 gem 'dotenv-rails', groups: [:development, :test, :production]
 
@@ -66,22 +64,22 @@ group :development, :test do
   gem 'rspec-rails'
 end
 
-group :development, :test do
-  gem 'solr_wrapper', '>= 0.3'
-end
+#group :development, :test do
+ # gem 'solr_wrapper', '>= 0.3'
+#end
 
-group :development, :test do
-  gem 'fcrepo_wrapper'
-end
+#group :development, :test do
+#  gem 'fcrepo_wrapper'
+#end
 
-group :development, :test do
-end
+#group :development, :test do
+#end
 
-group :development, :test do
-end
+#group :development, :test do
+#end
 
-group :development, :test do
-end
+#group :development, :test do
+#end
 
-group :development, :test do
-end
+#group :development, :test do
+#end

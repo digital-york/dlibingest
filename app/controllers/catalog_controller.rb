@@ -61,6 +61,7 @@ class CatalogController < ApplicationController
     config.add_facet_fields_to_solr_request!
 
     # solr fields to be displayed in the index (search results) view
+	
     #   The ordering of the field names is the order of the display
     config.add_index_field solr_name('creator_value', :stored_searchable)
     #config.add_index_field solr_name('creator', :stored_searchable)
@@ -69,7 +70,7 @@ class CatalogController < ApplicationController
     config.add_index_field solr_name('date_of_award', :stored_searchable)
     config.add_index_field solr_name('department_value', :stored_searchable)
     config.add_index_field solr_name('publisher', :stored_searchable)
-    config.add_index_field solr_name('qualification_name', :stored_searchable)
+    config.add_index_field solr_name('qualification_name_value', :stored_searchable)
     config.add_index_field solr_name('qualification_level', :stored_searchable)
     config.add_index_field solr_name('awarding_institution_value', :stored_searchable)
     config.add_index_field solr_name('language', :stored_searchable)
