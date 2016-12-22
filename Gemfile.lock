@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/digital-york/dlibhydra.git
-  revision: 0aa154f7c640745b38bd355f52ccad5b79cdfdba
+  revision: c57fbb8afe94c9009d43ec526f6e2251d19408bc
   branch: journal_article
   specs:
     dlibhydra (0.1.0)
@@ -169,7 +169,7 @@ GEM
     diff-lcs (1.2.5)
     dropbox-sdk (1.6.5)
       json
-    dry-configurable (0.4.0)
+    dry-configurable (0.5.0)
       concurrent-ruby (~> 1.0)
     dry-container (0.6.0)
       concurrent-ruby (~> 1.0)

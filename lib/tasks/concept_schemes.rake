@@ -1,7 +1,7 @@
 namespace :concept_schemes do
   require 'csv'
 
-  SOLR = 'http://localhost:8983/solr/hydra-development'
+  SOLR = 'http://localhost:8983/solr/development'
 
   task a: :environment do
     solr = RSolr.connect :url => SOLR
@@ -19,7 +19,7 @@ namespace :concept_schemes do
     path = Rails.root + 'lib/'
     # .csv files should exist in the specified path
     #list = ['qualification_names']
-    list = ['subjects','qualification_names']
+    list = ['subjects','qualification_names','journals']
     list.each do |i|
 
       puts 'Creating the Concept Scheme'
