@@ -1,8 +1,7 @@
 development:
   admin:
     - julie.allinson@york.ac.uk
-  archivist:
-    - archivist1@example.com
+    - ps552@york.ac.uk
 
 test:
   archivist:

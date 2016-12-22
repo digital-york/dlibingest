@@ -147,6 +147,7 @@ OPTIONAL third level is year eg 1973. Not all disciplines have this level
 
 end  #of method
 
+
 def make_collection
 #coll = Object::Collection.new
 coll = Object::Collection.new
@@ -160,6 +161,8 @@ coll.save!
 id = coll.id
 puts "collection id was " +id
 end
+
+
 
 def test_pdf_upload
 #make basic cc thesis
@@ -191,9 +194,11 @@ vt.save!
 puts "done"
 end
 
+
 #this is defined in yaml
 #return standard term from approved authority list
 def get_qualification_level_term(searchterm)
+puts "in get_qualification_level_term parameter was "+searchterm
 masters = ['Masters','masters']
 bachelors = ['Bachelors','Bachelor','Batchelors', 'Batchelor']
 diplomas = ['Diploma','(Dip', '(Dip', 'Diploma (Dip)']
@@ -229,7 +234,7 @@ preflabel = preflabel.to_s
 	    service = Dlibhydra::Terms::QualificationNameTerms.new
 	elsif authority_type == "institution"  #not sure about this since we only have two? york and oxford brookes?
 		service = Dlibhydra::Terms::CurrentOrganisationTerms.new
-	elsif authority_type == "subject"   
+	elsif authority_type == "subject"   #not yet implemented
 	    service = Dlibhydra::Terms::SubjectTerms.new 
 	elsif authority_type == "person_name"   #no pcurrent_person objects yet created
 	    service = Dlibhydra::Terms::CurrentPersonTerms.new
@@ -395,6 +400,7 @@ type_array.each do |t|	    #loop1
 		
 	#not found? check for plain research masters without arts or science specified (order of testing here is crucial)
 		if qualification_name_preflabel == "unfound"    #loop3
+		puts "loop3 looking for qualification name"
 			if researchMasters.include? type_to_test #loop 4 not done with main list as "MRes" may be listed as separate type as well as a more specific type
 				qualification_name_preflabel = "Master of Research (MRes)"
 			end#end loop 4
@@ -417,6 +423,8 @@ end
 	auth = Qa::Authorities::Local::FileBasedAuthority.new('licenses') 
 	rights = auth.search(term)[0]['id']
 end
+
+
 
 def testme
 #new collection(extending dlibhydra but including CurationConcerns::WorkBehaviour) id t722h880z
@@ -485,6 +493,8 @@ t.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=
 	puts "done test (without filesets or content). should have department now"
 
 end 
+
+
 
 #bundle exec rake migrate_thesis[/vagrant/files_to_test/york_847953.xml,9s1616164]
 # bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,9s1616164]
@@ -559,13 +569,7 @@ puts "migrating a thesis"
 	#for initial development purposes on my machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 	puts "edited pdf loc is :" + newpdfloc
 	#create a new thesis implementing the dlibhydra models
-	
-	
-	#thesis = Object::Thesis.create
-	thesis = Object::Thesis.new
-	#once depositor and permissions defined, object can be saved at any timex.permissions
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-	thesis.depositor = "ps552@york.ac.uk"
+	thesis = Object::Thesis.create
 	#start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
 	t = titleArray.to_s   #CHOSS - construct title!
@@ -575,6 +579,7 @@ puts "migrating a thesis"
 	if former_id.length > 0
 	thesis.former_id = [former_id]
 	end
+	
 	 creatorArray = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
 	 thesis.creator_string = [creatorArray.to_s]
 	
@@ -587,15 +592,16 @@ puts "migrating a thesis"
 	#date_of_award (dateAccepted in the dc created by the model) 1 only
 	thesis_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s
 	thesis.date_of_award = thesis_date
+	
 	#advisor 0... 1 so check if present
 	thesis_advisor = []
-	   doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:contributor/text()",ns).each do |i|
+		doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:contributor/text()",ns).each do |i|
 		thesis_advisor.push(i.to_s)
 	end
 	thesis_advisor.each do |c|
-		thesis.advisor_string.push(c)
+		thesis.advisor.push(c)
 	end	
-#CHOSS
+
    #departments and institutions 
    locations = []
 	 doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:publisher/text()",ns).each  do |i|
@@ -616,7 +622,7 @@ puts "migrating a thesis"
 		end
 		inst_preflabels.each do | preflabel|
 			id = get_resource_id('institution', preflabel)
-			thesis.awarding_institution_resource_ids+=[id]
+			thesis.awarding_institution_resource_ids.push(id)
 		end
 				
 		#department
@@ -625,7 +631,9 @@ puts "migrating a thesis"
 			puts "no department found"
 		end
 		dept_preflabels.each do | preflabel|
+		puts "at line 627 dep_preflabel was " + preflabel
 			id = get_resource_id('department', preflabel)
+			puts "at line 629 resource_id was " + id
 			thesis.department_resource_ids +=[id]
 		end
 	end
@@ -636,11 +644,9 @@ puts "migrating a thesis"
 	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:type/text()",ns).each do |t|	
 	typesToParse.push(t)
 	end
-	#qualification names (object)
 	qualification_name_preflabel = get_qualification_name_preflabel(typesToParse)
-	if qualification_name_preflabel != "unfound"   
+	if qualification_name_preflabel != "unfound"  #testing for null 
 		qname_id = get_resource_id('qualification_name',qualification_name_preflabel)
-		puts "at line 650 qname_id was " + qname_id
 		if qname_id.to_s != "unfound"		
 			thesis.qualification_name_resource_ids+=[qname_id]
 		else
@@ -649,6 +655,7 @@ puts "migrating a thesis"
 	else
 		puts "no qualification name preflabel found"
 	end	
+	
 	#qualification levels (yml file). there can only be one
 	typesToParse.each do |t|	
 	type_to_test = t.to_s
@@ -663,9 +670,13 @@ puts "migrating a thesis"
 	if theses.include? type_to_test	
 	#not using methods below yet - or are we? subjects[] no longer in model
 		subject_id = get_resource_id('subject',"Dissertations, Academic")
-		thesis.subject_resource_ids +=[subject_id]		 
+		 #thesis.subject_resource_ids =["Dissertations, Academic"]
+		 puts "at line 674 subject_id was" + subject_id
+		thesis.subject_resource_ids =[subject_id]		 
+		borkit
 	end
 end	
+	
 	thesis_language = []
 	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:language/text()",ns).each do |lan|
 	thesis_language.push(lan.to_s)
@@ -705,8 +716,10 @@ end
 
 
    thesis_rightsholder = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[not(contains(.,'http')) and not (contains(.,'licenses')) ]",ns).to_s
+   puts "read in thesis_rights_holder " + thesis_rightsholder
    if thesis_rightsholder.length > 0
 	thesis.rights_holder=[thesis_rightsholder] 
+    puts "thesis.rights_holder is now " + thesis.rights_holder[0].to_s	
    end
 
 	#license  set a default which will be overwritten if one is found. its the url, not the statement. use licenses.yml not rights_statement.yml
@@ -720,7 +733,11 @@ end
 		thesis_rights = newrights
 			thesis.rights=[thesis_rights]			
 		end	
-		
+	
+	
+	#rdf:type is boilerplate.dont need to add this 
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	thesis.depositor = "ps552@york.ac.uk"
 	
 	#save	
 	thesis.save!
@@ -764,4 +781,5 @@ end
 
    thesis.mainfile << mfset	   #assume this also sets mainfile_ids[]
 end
+
 end #end of class

@@ -1,5 +1,5 @@
 namespace :migration_tasks do
-#require '/vagrant/merged_cc/app/models/foxml_reader.rb'
+require '/vagrant/fresh_dlibingest/dlibingest/app/models/foxml_reader.rb'
 task :default do
   puts "Hello Peri!"
 end
@@ -39,15 +39,7 @@ task :testupload => :environment do
 	r.test_pdf_upload
 end
 
-task :vanilla => :environment do
-	r = FoxmlReader.new
-	r.vanilla
-end
 
-task :strawberry => :environment do
-	r = FoxmlReader.new
-	r.strawberry
-end
 
 task :make_collection => :environment do
 	r = FoxmlReader.new

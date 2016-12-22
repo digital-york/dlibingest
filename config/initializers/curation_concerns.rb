@@ -51,8 +51,9 @@ CurationConcerns.configure do |config|
   # config.display_media_download_link = true
 
   # Specify the path to the file characterization tool:
-  # config.fits_path = "fits.sh"
-  config.fits_path = "fits" # this is for mac (JA)
+  #config.fits_path = "fits.sh"
+  #config.fits_path = "fits" # this is for mac (JA)
+  config.fits_path = "/opt/fits-0.10.2/fits.sh"   #CHOSS  wonder if this is why uploads are not happening? copied this config in from the aa saved installatios
 
   # Specify a date you wish to start collecting Google Analytic statistics for.
   # Leaving it blank will set the start date to when ever the file was uploaded by
