@@ -1,7 +1,7 @@
 namespace :concept_schemes do
   require 'csv'
 
-  SOLR = 'http://localhost:8983/solr/hydra-development'
+  SOLR = 'http://localhost:8983/solr/merged'
 
   task a: :environment do
     solr = RSolr.connect :url => SOLR

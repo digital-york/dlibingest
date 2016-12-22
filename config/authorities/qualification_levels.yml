@@ -2,6 +2,9 @@ terms:
     - id: Masters (Postgraduate)
       term: Masters (Postgraduate)
       active: true
+    - id: Diplomas (Postgraduate)
+      term: Diplomas (Postgraduate)
+      active: true
     - id: Bachelors (Undergraduate)
       term: Bachelors (Undergraduate)
       active: true
