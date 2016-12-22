@@ -11,6 +11,7 @@ include ::Dlibhydra
 include ::CurationConcerns
 include ::Hydra
 
+
 =begin
 *list of possible collections under theses is quite extensive - get it from an risearch query
 *thesescollections.txt contains all the returned data from risearch for all levels
@@ -19,7 +20,7 @@ include ::Hydra
 *col_mapping.txt is output by the script and is the permanent mapping file. format:
 originalpid, title, newid . seems to make sense
 =end
-#This code does work, but the level three list is incomplete - suspect the risearch was not run with unlimited results. so for real version would require running again - but for demo purposes I'v just deleted collections with only one. rerun risearch query with a complete list against yodlapp3 on monday (check the list of level 2 collections in the query before running, and check the number of returns)
+
 def make_collection_structure
 puts "running make_collection_structure"
 
@@ -28,10 +29,8 @@ puts "running make_collection_structure"
 topmapping = []
 #we also need a pid:id hash so we can extract id via a pid key
 idmap ={}
-toppid = "york:18179"
+toppid = "york:18179"    #top level collection
 topcol = Object::Collection.new
-#topcol = Dlibhydra::Collection.new
-topcol.confirm_cc #confirms when I give Object as module it gets a CurationConcerns Collection
 topcol.title = ["Masters dissertations"]
 topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 topcol.depositor = "ps552@york.ac.uk"
@@ -71,8 +70,7 @@ csv.each do |line|
 	mappings_string = line[0] + "," +  + line[1] + "," + col_id 
 	mappings_level2.push(mappings_string)
 	#add to hash, old pid as key, new id as value
-	key = line[0]
-	puts "at line 56 " +key+ " was added to idmap_level2 with value " +col_id
+	key = line[0]	
 	idmap[key] = col.id
 end
 
@@ -105,7 +103,6 @@ yearpidcount = yearpidcount +1
     puts "starting number " +yearpidcount.to_s+ " in list"
     puts line[0]
 	year_col = Object::Collection.new
-	year_col.confirm_cc
 	puts "started new year collection"
 	#col = Dlibhydra::Collection.new extend cc collection instead
 	year_col_title = line[1].to_s
@@ -124,7 +121,6 @@ yearpidcount = yearpidcount +1
 	mapped_parent_id = idmap[parent_pid]	
 	puts "mapped parent id was " + mapped_parent_id
 	parent = Object::Collection.find(mapped_parent_id)
-	parent.confirm_cc
 	parent.members << year_col
 	puts "parent id was" + parent.id.to_s
 	puts "year collection id was" + year_col.id.to_s
@@ -151,7 +147,6 @@ OPTIONAL third level is year eg 1973. Not all disciplines have this level
 
 end  #of method
 
-
 def make_collection
 #coll = Object::Collection.new
 coll = Object::Collection.new
@@ -165,115 +160,6 @@ coll.save!
 id = coll.id
 puts "collection id was " +id
 end
-
-#create a simple out of the box thesis in a collection and upload a test file to it to check the basic functions and calls work before integrating with dlibhydra
-def vanilla
-fset = FileSet.new
-t = CurationConcerns::Thesis.create
-t.title =["A spell to turn fine straw to gold"]
-t.preflabel =t.title[0]
-t.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-t.depositor = "ps552@york.ac.uk"
-t.save!
-col = Object::Collection.find("zk51vg76b")
-col.members << t  
-col.save!
-users = Object::User.all #otherwise it will use one of the included modules
-user = users[0]	
-fset.title = [t.preflabel]
-fset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-fset.depositor = "ps552@york.ac.uk"
-contentfile = open("/vagrant/files_to_test/testpdf.pdf")
-#contentfile = open("/vagrant/files_to_test/testcontentupload.txt")	
-actor = CurationConcerns::Actors::FileSetActor.new(fset, user)
-fset.save!
-t.members << fset #could this be the critical bit?
-#actor.create_metadata(t, file_set_params = {files: [contentfile],title: ['vanilla title'],visibility: 'public'})
-actor.create_metadata(t)  #note 't' is name of thesis object, not content file
-puts "metadata created"
-#result = actor.create_content(contentfile)
-result = actor.create_content(contentfile, relation = 'original_file' )
-puts "original created"
-
-puts "result was " +result.to_s
-fset.save!
-puts "done"
-end
-
-#with dlibhydra
-def strawberry
-fset = FileSet.new
-#fset = CcMigrate::MainFileSet.new  #Cant use the MainFileSet. needs new child object instead.
-dt = CurationConcerns::DlibThesis.create
-#dt = CurationConcerns::Thesis.create
-#dt.speak
-dt.title = ["fresh strawberry with a small pdf file"]
-dt.preflabel = dt.title[0]
-dt.creator = ["fred smith"]
-dt.abstract = "'It seems very pretty,' she said when she had finished it, 'but it's rather hard to understand!' (You see she didn't like to confess, even to herself, that she couldn't make it out at all.) 'Somehow it seems to fill my head with ideas—only I don't exactly know what they are! However, somebody killed something: that's clear, at any rate.'"
-dt.date_of_award = "2012"
-dt.advisor.push("Albert Einstein")
-dt.department.push ("Department of Things") 
-dt.awarding_institution = "University of Life"
-dt.qualification_name = "Masters in Cunning"
-dt.qualification_level = "Masters"
-dt.subject.push("Dissertations, Academic")	
-dt.language.push("Klingon")
-dt.keyword.push("some_keyword")
-dt.rights_holder = "The Kings Hand" 
-#dt.license = "http://dlib.york.ac.uk/licences#yorkrestricted"
-dt.rights = "http://dlib.york.ac.uk/licences#yorkrestricted"
-
-#required permissions and depositor
-dt.depositor = "ps552@york.ac.uk"
-dt.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-dt.save!
-col = Object::Collection.find("9s1616164")
-col.members << dt  
-col.save!
-puts "made the strawberry"
-#add the file
-#users = Object::User.all #otherwise it will use one of the included modules
-#user = users[0]	
-
-#****now we have to make a child object to hold the generic file set and the content. generic work?
-childobject  = Dlibhydra::GenericWork.create
-childobject.title = ["thesis pdf"]
-childobject.preflabel = childobject.title[0]
-#dont add depositor or permissions, no methods in GenericWork for this
-
-#read the content and put it into the fset
-#contentfile = open("/vagrant/files_to_test/testcontentupload.txt")	
-contentfile = open("/vagrant/files_to_test/testpdf.pdf") #only for pdf - says "KeyError: key not found: :object" but still seems to complete ok. huh? These could be derivatives errors. https://github.com/curationexperts/goldenseal/issues/242 and also https://github.com/projecthydra/hydra-works/issues/210
-fset.title = ["thesis content"]
-fset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-users = Object::User.all #otherwise it will use one of the included modules
-user = users[0]
-actor = CurationConcerns::Actors::FileSetActor.new(fset, user)
-actor.create_metadata(dt)#name of object its to be added to
-puts "crested metadata line 106"
-result = actor.create_content(contentfile)
-puts "created content line 108"
-fset.save!
-childobject.members << fset
-childobject.save!
-
-dt.members << childobject
-puts "saved a generic object and added it to thesis" 
-dt.save!
-
-fset.title = ["thesis content"]
-fset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-fset.depositor = "ps552@york.ac.uk"
-
-#dt.members << fset #could this be the critical bit?
-#actor.create_metadata(t, file_set_params = {files: [contentfile],title: ['vanilla title'],visibility: 'public'})
-#puts "result was " +result.to_s
-fset.save!
-puts "added file to strawberry"
-end
-
-
 
 def test_pdf_upload
 #make basic cc thesis
@@ -305,325 +191,300 @@ vt.save!
 puts "done"
 end
 
+#this is defined in yaml
+#return standard term from approved authority list
+def get_qualification_level_term(searchterm)
+masters = ['Masters','masters']
+bachelors = ['Bachelors','Bachelor','Batchelors', 'Batchelor']
+diplomas = ['Diploma','(Dip', '(Dip', 'Diploma (Dip)']
+doctoral = ['Phd','Doctor of Philosophy (PhD)']
+standardterm="unfound"
+if masters.include? searchterm
+	standardterm = 'Masters (Postgraduate)'
+elsif bachelors.include? searchterm
+	standardterm = 'Bachelors (Undergraduate)'
+elsif diplomas.include? searchterm
+	standardterm = 'Diplomas (Postgraduate)' #my guess
+elsif doctoral.include? searchterm
+    standardterm = 'Doctoral (Postgraduate)'	
+end
+if standardterm != "unfound"
+	#pass the id, get back the term. in this case both are currently identical
+	auth = Qa::Authorities::Local::FileBasedAuthority.new('qualification_levels')
+	approvedterm = auth.find(standardterm)['term']
+else 
+	approvedterm = "unfound"
+end
+return approvedterm
+end #end get_qualification_level_term
 
-def test_pdf_upload_VANILLA_WORKS
-#make basic cc thesis
-	vt = CurationConcerns::Thesis.create
-	vt.title = ["ANOTHER CC vanilla thesis"]
-	#vt.preflabel = vt.title[0]   #no preflabel in vanilla CurationConcerns
-	vt.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-	vt.depositor = "ps552@york.ac.uk"
-	vt.save!
-puts "done"
-#now try to upload a content file
-	contentfile = open("/vagrant/files_to_test/testpdf.pdf")
-	users = Object::User.all #otherwise it will use one of the included modules
-	user = users[0]	
-	vfset = FileSet.new
-	vfset.title = ["main pdf content"]
-	actor = CurationConcerns::Actors::FileSetActor.new(vfset, user)
-puts "OK SO FAR"
-actor.create_content(contentfile, relation = 'main_file' )
-actor.create_metadata(vt, file_set_params = {files: [contentfile],
-                                          title: ['test title'],
-                                          visibility: 'public'})
-puts "still ok"	
+#this returns the  id of an value from  an authority list where each value is stored as a fedora object
+#the parameters should be one of the authority types with a relevant class listed in Dlibhydra::Terms and the preflabel is the exact preflabel for the value (eg "University of York. Department of Philosophy") 
+def get_resource_id(authority_type, preflabel)
+id="unfound"
+preflabel = preflabel.to_s
+	if authority_type == "department"
+		service = Dlibhydra::Terms::DepartmentTerms.new		 
+	elsif authority_type == "qualification_name"
+	    service = Dlibhydra::Terms::QualificationNameTerms.new
+	elsif authority_type == "institution"  #not sure about this since we only have two? york and oxford brookes?
+		service = Dlibhydra::Terms::CurrentOrganisationTerms.new
+	elsif authority_type == "subject"   
+	    service = Dlibhydra::Terms::SubjectTerms.new 
+	elsif authority_type == "person_name"   #no pcurrent_person objects yet created
+	    service = Dlibhydra::Terms::CurrentPersonTerms.new
+	end
+	id = service.find_id(preflabel)
 end
 
+#this returns the  correct preflabels to be used when calling get_resource_id to get the object ref for the department
+#note there may be more than one! hence the array - test for length
+#its a separate method as multiple variants map to the same preflabel/object. 'loc' is the  
+def get_department_preflabel(stringtomatch)
+preflabels=[]
+=begin
+Full list of preflabels at https://github.com/digital-york/dlibingest/blob/new_works/lib/assets/lists/departments.csv
 
+and here is the equivalent list of dc:publisher from risearch (GET all values of dc:publisher for objects with type Theses  (make sure to tick Force Distinct")
+select  $dept
+ from <#ri>
+ where $object <dc:type> 'Theses' 
+and $object <dc:publisher> $dept)
+
+note the variants - hence need to reduce the search strings to minimum and decapitalise
+ 
+University of York. Dept. of History of Art
+University of York. Dept. of Chemistry
+University of York. Institute of Advanced Architectural Studies
+Institute of Advanced Architectural Studies
+University of York. York Management School
+University of York. Dept. of Management Studies
+University of York. Centre for Medieval Studies
+University of York. Dept. of History
+University of York. Dept. of Sociology
+University of York. Dept. of Education
+University of York. Dept. of Economics and Related Studies
+University of York. Dept. of Music.
+University of York. Dept. of Archaeology
+University of York. Dept. of Biology
+University of York. Dept. of Health Sciences
+University of York. Dept. of English and Related Literature
+University of York. Dept. of Language and Linguistic Science
+University of York. Dept. of Politics
+University of York. Dept. of Philosophy
+University of York. Dept. of Social Policy and Social Work
+"York Management School (York, England)"
+University of York. Institute of Advanced Architectural Studies.
+University of York. Centre for Conservation Studies
+University of York. Department of Archaeology
+University of York. Dept of Archaeology
+niversity of York. Dept. of Archaeology
+University of York: Dept. of Archaeology
+University of York. Post-war Reconstruction and Development Unit
+University of York. York Management School.
+University of York. Centre for Medieval Studies.
+University of York. The York Management School.
+The University of York. York Management School.
+University of York. York Management School'
+University of York. Dept.of History of Art
+University of York. Dept. of History of Art.
+University of York. Dept of History of Art
+University of York. Departments of English and History of Art
+University of York. Centre for Eighteenth Century Studies
+Oxford Brookes University    									#this is an awarding institution not a dept
+
+=end
+	loc = stringtomatch.downcase  #get ride of case inconsistencies
+	if loc.include? "reconstruction"
+		preflabels.push("University of York. Post-war Reconstruction and Development Unit") 
+	elsif loc.include? "advanced architectural"
+	    preflabels.push("University of York. Institute of Advanced Architectural Studies")
+	elsif loc.include? "medieval"
+	    preflabels.push("University of York. Centre for Medieval Studies")
+	elsif loc.include? "history of art"
+	    preflabels.push("University of York. Department of History of Art") 
+	elsif loc.include? "conservation"
+	    preflabels.push("University of York. Centre for Conservation Studies")
+	elsif loc.include? "eighteenth century"
+	    preflabels.push("University of York. Centre for Eighteenth Century Studies")
+	elsif loc.include? "chemistry"
+	    preflabels.push("University of York. Department of Chemistry")
+	elsif loc.include? "history"   #ok because of order
+	    preflabels.push("University of York. Department of History")
+	elsif loc.include? "sociology"
+	    preflabels.push( "University of York. Department of Sociology")
+	elsif loc.include? "education"
+	    preflabels.push("University of York. Department of Education")
+	elsif loc.include? "economics and related"
+	    preflabels.push( "University of York. Department of Economics and Related Studies")
+	elsif loc.include? "music"
+	    preflabels.push( "University of York. Department of Music")
+	elsif loc.include? "archaeology"
+	    preflabels.push( "University of York. Department of Archaeology")
+	elsif loc.include? "biology"
+	    preflabels.push( "University of York. Department of Biology")
+	elsif loc.include? "english and related literature"
+	    preflabels.push( "University of York. Department of English and Related Literature")
+	elsif loc.include? "health sciences"
+	    preflabels.push( "University of York. Department of Health Sciences")
+	elsif loc.include? "politics"
+	    preflabels.push("University of York. Department of Politics")
+	elsif loc.include? "philosophy"
+	    preflabels.push( "University of York. Department of Philosophy")
+	elsif loc.include? "social policy and social work"
+	    preflabels.push( "University of York. Department of Social Policy and Social Work")
+	elsif loc.include? "management"
+	    preflabels.push( "University of York. The York Management School")
+	elsif loc.include? "language and linguistic science"
+	    preflabels.push("University of York. Department of Language and Linguistic Science")
+	elsif loc.include? "departments of english and history of art"   #damn! two departments to return!
+	    preflabels.push( "University of York. Department of Department of English and Related Literature")
+		preflabels.push("University of York. Department of Department of Language and Linguistic Science")
+	end
+	return preflabels
+end
+
+#this returns the  correct preflabel to be used when calling get_resource_id to get the object ref for the degree
+#its a separate method as multiple variants map to the same preflabel/object. it really can only have one return - anything else would be nonsense. its going to be quite complex as some cross checking accross the various types may be  needed
+#type_array will be an array consisting of all the types for an object!
+def get_qualification_name_preflabel(type_array)
+
+#Arrays of qualification name variants
+artMasters = ['Master of Arts (MA)', 'Master of Arts', 'Master of Art (MA)', 'MA (Master of Arts)','Masters of Arts (MA)', 'MA']
+artBachelors = ['Batchelor of Arts (BA)', '"Bachelor of Arts (BA),"', 'BA', 'Bachelor of Arts (BA)']
+artsByResearch = ['Master of Arts by research (MRes)', '"Master of Arts, by research (MRes)"' ]
+scienceByResearch = ['Master of Science by research (MRes)', '"Master of Science, by research (MRes)"' ]
+scienceBachelors = ['Batchelor of science (BSc)', '"Bachelor of Science (BSc),"', 'BSc', ]
+scienceMasters = ['Master of Science (MSc.)', '"Master of Science (MSc),"',"'Master of Science (MSc)",'Master of Science (MSc)','MSc', ]
+philosophyBachelors = ['Bachelor of Philosophy (BPhil)', 'BPhil']
+philosophyMasters = ['Master of Philosophy (MPhil)','MPhil']
+researchMasters = ['Master of Research (Mres)','Master of Research (MRes)','Mres','MRes']#this is the only problematic one
+#the variant single quote character in  Conservation Studies is invalid and causes invalid multibyte char (UTF-8) error so  handled this in nokogiri open document call. however we also need to ensure the resulting string is included in the lookup array so the match will still be found. this means recreating it and inserting it into the array
+not_valid = "Postgraduate Diploma in â€˜Conservation Studiesâ€™ (PGDip)"
+valid_now = not_valid.encode('UTF-8', :invalid => :replace, :undef => :replace)
+pgDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
+
+
+qualification_name_preflabel = "unfound" #initial value
+#by testing all we should find one of those below
+type_array.each do |t|	    #loop1
+	type_to_test = t.to_s
+	
+	#outer loop tests for creation of qualification_name_preflabel
+	if qualification_name_preflabel == "unfound"   #loop2
+		if artMasters.include? type_to_test #loop2a
+		 qualification_name_preflabel = "Master of Arts (MA)"		 
+		elsif artBachelors.include? type_to_test
+		 qualification_name_preflabel = "Bachelor of Arts (BA)"		 
+		elsif artsByResearch.include? type_to_test
+		 qualification_name_preflabel = "Master of Arts by Research (MRes)"		 
+		elsif scienceBachelors.include? type_to_test
+		 qualification_name_preflabel = "Bachelor of Science (BSc)"		 
+		elsif scienceMasters.include? type_to_test
+		 qualification_name_preflabel = "Master of Science (MSc)"		 
+		elsif scienceByResearch.include? type_to_test
+		 qualification_name_preflabel = "Master of Science by Research (MRes)"		 
+	    elsif philosophyBachelors.include? type_to_test
+		 qualification_name_preflabel = "Bachelor of Philosophy (BPhil)"		 
+		elsif philosophyMasters.include? type_to_test
+		 qualification_name_preflabel = "Master of Philosophy (MPhil)"		
+		elsif pgDiplomas.include? type_to_test
+		 qualification_name_preflabel = "Postgraduate Diploma (PGDip)"		 
+		end #end loop2a
+	end #end loop2
+		
+	#not found? check for plain research masters without arts or science specified (order of testing here is crucial)
+		if qualification_name_preflabel == "unfound"    #loop3
+			if researchMasters.include? type_to_test #loop 4 not done with main list as "MRes" may be listed as separate type as well as a more specific type
+				qualification_name_preflabel = "Master of Research (MRes)"
+			end#end loop 4
+		end   #'end loop 3
+	end #end loop1	
+	return qualification_name_preflabel
+end  #this is where the get_qualification_name_preflabel method should end
+
+def get_standard_language(searchterm)
+	s = searchterm.titleize
+	auth = Qa::Authorities::Local::FileBasedAuthority.new('languages')
+	approved_language = auth.search(s)[0]['id']
+end
+
+#will need to expand this for other collections, but not Theses, as all have smae rights
+def get_standard_rights(searchterm)
+if searchterm.include?("yorkrestricted")
+  term = 'York Restricted'
+end
+	auth = Qa::Authorities::Local::FileBasedAuthority.new('licenses') 
+	rights = auth.search(term)[0]['id']
+end
 
 def testme
+#new collection(extending dlibhydra but including CurationConcerns::WorkBehaviour) id t722h880z
 
 puts "starting test of migration scripts"
 t= Object::Thesis.create
-t.title = ["my script made this thesis"]
+mfset = Object::FileSet.new  
+t.title = ["Adding a department"]
+t.former_id = ["york:123456"]
+t.creator_string = ["Alan Bastaard"]
+t.abstract = ["as an id from the authorities list"]
+t.date_of_award = "2017"
+t.advisor = ["pub landlord"]
+
+
+ds = Dlibhydra::Terms::DepartmentTerms.new
+dept_id = ds.find_id("department","University of York. Department of Philosophy") #hard coded for test only. Must be exact!!!
+ t.department_resource_ids = [dept_id]
+ puts "found dept resource id " + dept_id
+# t.awarding_institution # LOOKUP!
+# t.qualification_name # LOOKUP!
+# t.qualification_level # LOOKUP!
+# t.subject # LOOKUP!
+#t.language=["pirate english"]
+t.keyword = ["sprouts"]
+t.rights_holder = ["Alan Bastaard"]
+t.rights = ["http://dlib.york.ac.uk/licences#yorkrestricted"] #NOW MULTIVALUED
+
 t.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	t.depositor = "ps552@york.ac.uk"	
 	#save	
 	t.save!	
 	id = t.id
 	puts "thesis id was " +id 
-
-end 
-
-
-#5712m6524]
-#for test purposes the path is /vagrant/files_to_test/york_847953.xml
-# bundle exec rake migrate[/vagrant/files_to_test/york_847953.xml,qr46r0806]
-# bundle exec rake migrate[/vagrant/files_to_test/york_807119.xml,qr46r0806] 
-# bundle exec rake migrate[/vagrant/files_to_test/york_21031.xml,zk51vg76b] 
-
-
-def migrate(path,collection)
-mfset = FileSet.new   #FILESET. #defin this at top because otherwise expects to find it in CurationConcerns module 
-puts "migrating"
-	defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"
-	foxmlpath = path
-	puts "path was " + foxmlpath
-	parentcol = collection
-	#TODO remember collection allocation will somehow need to be done appropraitely in new system - may not be the same way. may require getting from rels-ext then mapping against new list - or may be utterly different. will need discussion.
-	
-	#open foxml file, enforcing  UTF-8 compliance
-	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
-	#doesnt resolve nested namespaces, this fixes that
-    ns = doc.collect_namespaces	
-	#find the max dc version
-	#versions = Array[]
-	nums = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion/@ID",ns)	
-	all = nums.to_s
-	current = all.rpartition('.').last 
-	currentVersion = 'DC.' + current
-	#find the max THESIS_MAIN version
-	thesis_nums = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion/@ID",ns)	
-	thesis_all = thesis_nums.to_s
-	thesis_current = thesis_all.rpartition('.').last 
-	currentThesisVersion = 'THESIS_MAIN.' + thesis_current
-	#GET CONTENT - get the location of the pdf as a string
-	pdf_loc = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion[@ID='#{currentThesisVersion}']/foxml:contentLocation/@REF",ns).to_s	
-	puts "at line 362 found thesis doc " + pdf_loc #but this has local.fedora.host, which will be wrong. need to replace this 
-	#reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
-	#needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
-	newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'
-	#for initial development purposes on my machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
-	puts "edited pdf loc is :" + newpdfloc
-	#create a new thesis implementing the dlibhydra models
-	thesis = CurationConcerns::DlibThesis.create
-	
-	#start reading and populating  data
-	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
-	t = titleArray.to_s   #CHOSS - construct title!
-	thesis.title = [t]	#1 only	
-	thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
-	##A thesis should only ever have one author (creator)	
-	 creatorArray = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
-	 thesis.creator = [creatorArray.to_s]
-	
-	#abstract is currently the description. optional field so test presence
-	thesis_abstract = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
-	if thesis_abstract.length > 0
-	thesis.abstract = thesis_abstract
-	end
-	
-	#date_of_award (dateAccepted in the dc created by the model) 1 only
-	thesis_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s
-	thesis.date_of_award = thesis_date
-	
-	#advisor 0... 1 so check if present
-	thesis_advisor = []
-		doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:contributor/text()",ns).each do |i|
-		thesis_advisor.push(i.to_s)
-	end
-	thesis_advisor.each do |c|
-		thesis.advisor.push(c)
-	end	
-
-   #departments and institutions (this gets wierd). need to do some data checking for splits etc. 
-   #possible splits: York.  
-   #without splits: Oxford Brookes University
-   locations = []
-	 doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:publisher/text()",ns).each  do |i|
-	 locations.push(i.to_s)
-	 end
-	 locations.each do |loc|
-		#first get the institution . 1 only. will overwrite if there
-		#then add the department, splitting strings where required	
-		if loc.include? "University of York"
-			thesis.awarding_institution = "University of York"
-			if loc.include? "York." 
-				splitstring = loc.split('York.',2)#2nd param ensures it only splits into 2 parts
-				thesis.department.push (splitstring[1])
-			elsif loc.include? "York:"
-				splitstring = loc.split('York:',2)
-				thesis.department.push (splitstring[1])			
-			end
-	    elsif loc.include? "Institute of Advanced Architectural Studies"
-			thesis.awarding_institution = "University of York"
-			thesis.department.push ("Institute of Advanced Architectural Studies")
-		elsif loc.include? "York Management School "
-			thesis.awarding_institution = "University of York"
-			thesis.department.push ("York Management School")        				
-		elsif loc.include? "Oxford Brookes University"
-			thesis.awarding_institution = "Oxford Brookes University"
-		end
-	end
-	
-	#work on this
-	#qualification level, name, resource type
-	# resource type should be added as a dc:subject 
-	#ignore dcmi types
-	typesToParse = []  #
-	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:type/text()",ns).each do |t|	
-	typesToParse.push(t)
-	end
-	#Arrays of qualification name variants
-	artMasters = ['Master of Arts (MA)', 'Master of Arts', 'Master of Art (MA)', 'MA (Master of Arts)','Masters of Arts (MA)', 'MA']
-	artBachelors = ['Batchelor of Arts (BA)', '"Bachelor of Arts (BA),"', 'BA', 'Bachelor of Arts (BA)']
-	artsByResearch = ['Master of Arts by research (MRes)', '"Master of Arts, by research (MRes)"' ]
-	scienceBachelors = ['Batchelor of science (BSc)', '"Bachelor of Science (BA),"', 'BSc', ]
-	scienceMasters = ['Master of Science (MSc.)', '"Master of Science (MSc),"',"'Master of Science (MSc)",'Master of Science (MSc)','MSc', ]
-	scienceByResearch  = ['Master of Science by research (MRes)']
-	philosophyBachelors = ['Bachelor of Philosophy (BPhil)', 'BPhil']
-	philosophyMasters = ['Master of Philosophy (MPhil)','MPhil']
-	researchMasters = ['Master of Research (Mres)','Master of Research (MRes)','Mres','MRes']
-	#the variant single quote character in  Conservation Studies is invalid and causes invalid multibyte char (UTF-8) eror so  handled this in nokogiri open document call. however we also need to ensure the resulting string is included in the lookup array so the match will still be found. this means recreating it and inserting it into the array
-	not_valid = "Postgraduate Diploma in ‘Conservation Studies’ (PGDip)"
-	valid_now = not_valid.encode('UTF-8', :invalid => :replace, :undef => :replace)
-	conservationDiploma = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', valid_now]	
-	medievalDiploma =['Postgraduate Diploma in Medieval Studies (PGDip)','PGDip']
-	
-	#degree levels - masters, batchelors, diploma
-	masters = ['Masters','masters']
-	bachelors = ['Bachelors','Bachelor','Batchelors', 'Batchelor']
-	diplomas = ['Diploma','(Dip', '(Dip', 'Diploma (Dip)']
-	
-	#resource Types map to dc:subject. at present the only official value is Dissertations, Academic
-	theses = [ 'theses','Theses','Dissertations','dissertations' ] 
-	
-	#now check which group (if any) is present and apply standard name
-	typesToParse.each do |t|	
-	type_to_test = t.to_s
-	#check academic degree
-	#this is now the vivo:AcademicDegree type in the model. it will be precisely one
-		if artMasters.include? type_to_test
-		 thesis.qualification_name = "Master of Arts (MA)"
-		elsif artBachelors.include? type_to_test
-		 thesis.qualification_name = "Bachelor of Arts (BA)"
-		elsif artsByResearch.include? type_to_test
-		 thesis.qualification_name = "Master of Arts by research (MRes)"
-		elsif scienceBachelors.include? type_to_test
-		 thesis.qualification_name = "Bachelor of Science (BSc)"
-		elsif scienceMasters.include? type_to_test
-		 thesis.qualification_name = "Master of Science (MSc)"
-		elsif scienceByResearch.include? type_to_test
-		 thesis.qualification_name = "Master of Science by research (MRes)"
-	    elsif philosophyBachelors.include? type_to_test
-		 thesis.qualification_name = "Bachelor of Philosophy (BPhil)"
-		elsif philosophyMasters.include? type_to_test
-		 thesis.qualification_name = "Master of Philosophy (MPhil)"
-	    elsif researchMasters.include? type_to_test
-		 thesis.qualification_name = "Master of Research (MRes)"
-		elsif medievalDiploma.include? type_to_test
-		 thesis.qualification_name = "Postgraduate Diploma in Medieval Studies (PGDip)"
-		elsif conservationDiploma.include? type_to_test
-		 thesis.qualification_name = "Postgraduate Diploma in Conservation Studies (PGDip)"
-		end
-		
-	#now check for qualification levels. there can only be one
-	if masters.include? type_to_test
-		 thesis.qualification_level = "Masters"
-	elsif bachelors.include? type_to_test
-		 thesis.qualification_level = "Bachelors"
-    elsif diplomas.include? type_to_test
-		 thesis.qualification_level = "Postgraduate Diploma"
-	end
-	
-	#now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
-	if theses.include? type_to_test
-		 thesis.subject.push("Dissertations, Academic")	
-	end
-end	
+	#col = Object::Collection.find("gb19f580q")  #see line 901 in this file
+	#puts "id of col was:" +col.id
+	#puts "got collection ok " + col.title[0].to_s
+	#col.members << t  
+	#col.save!
 	
 	
-	thesis_language = []
-	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:language/text()",ns).each do |lan|
-	thesis_language.push(lan.to_s)
-	end
-	thesis_language.each do |lan|   #0 ..n
-		thesis.language.push(lan)
-	end	
-	
-	#dc.keyword (formerly subject, as existing ones from migration are free text not lookup
-	thesis_subject = []
-	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:subject/text()",ns).each do |s|
-	thesis_subject.push(s.to_s)
-	end
-	thesis_subject.each do |s|
-	puts "found subject " +s.to_s
-		thesis.keyword.push(s)   #TODO::THIS WAS ADDED TO FEDORA AS DC.RELATION NOT DC(OR DC11).SUBJECT!!!
-	end	
-	#dc11.subject??? not required for migration - see above
-	
-	
-	#rights.
-	#rights holder 0...1
-	#checked data on dlib. all have the same rights statement and url cited, so this should work fine, as everything else is rights holders
-	thesis_rightsholder = []
-	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[not(contains(.,'http')) and not (contains(.,'licenses')) ]",ns).each do |r|
-	thesis_rightsholder.push(r)
-	end
-	puts "looked for rights holder"
-	thesis_rightsholder.each do |r|
-		thesis.rights_holder = r.to_s 
-		puts "found rights holder " + thesis.rights_holder
-	end	
-	
-	#license  set a default which will be overwritten if one is found. its the url, not the statement
-	thesis_rights = defaultLicence
-	thesis_rights = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[contains(.,'http')]",ns).to_s
-	#thesis.license = thesis_rights.to_s
-	thesis.rights = thesis_rights.to_s
-	puts "found thesis rights "
-	#rdf:type is boilerplate.dont need to add this 
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-	thesis.depositor = "ps552@york.ac.uk"
-	
-	#save	
-	thesis.save!	
-	id = thesis.id
-	puts "thesis id was " +id 
-	#put in collection	
-	col = Object::Collection.find(parentcol.to_s)# should this be CurationConcerns::Collection?
-	
-	#how about creating the collection programmatically instead? but then how do I add to it after the event? 
-	puts "id of col was:" +col.id
-	puts "got collection ok " + col.title[0].to_s
-	col.members << thesis  
-	col.save
-	#TODO... create a fileset (MainFileSet) and add the content
-	# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
-		
-	#try code below	
-	#get a user
-	users = Object::User.all #otherwise it will use one of the included modules
+=begin
+	users = Object::User.all 
 	user = users[0]	
-	#populate new FileSet title field. give it permissions.
-	mfset.title = ["main pdf content"]	
+	mfset.title = ["THESIS_MAIN"]
 	mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	mfset.depositor = "ps552@york.ac.uk"
+	mfset.save!	
 	
-	#****make a child object to hold the generic file set and the content. generic work?
-	childobject  = Dlibhydra::GenericWork.new  #NOT create!
-	childobject.title = ["main thesis pdf"]
-	childobject.preflabel = childobject.title[0]
-	#dont add depositor or permissions, no methods in GenericWork for this
-	
-	#read content file
-	#contentfile = open("/vagrant/files_to_test/testpdf.pdf")
-	puts "just before creating content, pdf loc used is " + newpdfloc.to_s
-	#contentfile = open(newpdfloc)
+	testpdfloc = "/vagrant/files_to_test/testpdf.pdf"
+	if !File.exist?(testpdfloc)
+		puts 'content file ' + testpdfloc.to_s + ' not found'	
+		return
+	else
+		puts 'checked for ' + testpdfloc.to_s + ' found it present'
+	end  
 	contentfile = open("/vagrant/files_to_test/testpdf.pdf")
-	
-	puts "opened the content file" 
-	
-	#make filesetactor   CHOSS
-#http://www.rubydoc.info/gems/curation_concerns/1.0.0/CurationConcerns/Actors/FileSetActor
 	actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
-	#essential metadata and content are created in this order	
-	#actor.create_metadata(childobject)#that doesnt work	
-	#actor.create_metadata(mfset) #nope, that doesnt work. needs to be the record object
-	actor.create_metadata(thesis)#name of object its to be added to  
+	actor.create_metadata(t)
 	puts "created metadata" 
 	actor.create_content(contentfile, relation = 'original_file' )
 	puts "created content"
-   
 	mfset.save!
-	childobject.members << mfset
-	childobject.save!
-	thesis.members << childobject #could this be the critical bit?
-	thesis.save!
-	puts "done"
-end
+    t.mainfile << mfset
+=end
+	puts "done test (without filesets or content). should have department now"
 
+end 
 
 #bundle exec rake migrate_thesis[/vagrant/files_to_test/york_847953.xml,9s1616164]
 # bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,9s1616164]
@@ -631,13 +492,12 @@ end
 #bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,/vagrant/files_to_test/col_mapping.txt]
 #emotional world etc
 #bundle exec rake migrate_thesis[/vagrant/files_to_test/york_807119.xml,/vagrant/files_to_test/col_mapping.txt]   (the whole collects bundle needs recreation, col mapping txt includes empty year collections)
-#bundle exec rake migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
+#bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
 def migrate_thesis(path,collection_mapping_doc_path)
 #mfset = Dlibhydra::FileSet.new   #FILESET. #defin this at top because otherwise expects to find it in CurationConcerns module 
-mfset = Object::FileSet.new   #FILESET. #defin this at top because otherwise expects to find it in CurationConcerns module . 
+mfset = Object::FileSet.new   #FILESET. #define this at top because otherwise expects to find it in CurationConcerns module . 
 
-puts "migrating a thesis"
-	defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"
+puts "migrating a thesis"	
 	foxmlpath = path
 	#parentcol = collection
 	
@@ -699,154 +559,124 @@ puts "migrating a thesis"
 	#for initial development purposes on my machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 	puts "edited pdf loc is :" + newpdfloc
 	#create a new thesis implementing the dlibhydra models
-	#thesis = CurationConcerns::Thesis.create
-	thesis = Object::Thesis.create
+	
+	
+	#thesis = Object::Thesis.create
+	thesis = Object::Thesis.new
+	#once depositor and permissions defined, object can be saved at any timex.permissions
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	thesis.depositor = "ps552@york.ac.uk"
 	#start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
 	t = titleArray.to_s   #CHOSS - construct title!
 	thesis.title = [t]	#1 only	
-	thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
-	##A thesis should only ever have one author (creator)	
+	#thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
 	former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
 	if former_id.length > 0
 	thesis.former_id = [former_id]
 	end
-	
 	 creatorArray = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
-	 thesis.creator = [creatorArray.to_s]
+	 thesis.creator_string = [creatorArray.to_s]
 	
 	#abstract is currently the description. optional field so test presence
 	thesis_abstract = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
 	if thesis_abstract.length > 0
-	thesis.abstract = thesis_abstract
+	thesis.abstract = [thesis_abstract] #now multivalued
 	end
 	
 	#date_of_award (dateAccepted in the dc created by the model) 1 only
 	thesis_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s
 	thesis.date_of_award = thesis_date
-	
 	#advisor 0... 1 so check if present
 	thesis_advisor = []
-		doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:contributor/text()",ns).each do |i|
+	   doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:contributor/text()",ns).each do |i|
 		thesis_advisor.push(i.to_s)
 	end
 	thesis_advisor.each do |c|
-		thesis.advisor.push(c)
+		thesis.advisor_string.push(c)
 	end	
-
-   #departments and institutions (this gets wierd). need to do some data checking for splits etc. 
-   #possible splits: York.  
-   #without splits: Oxford Brookes University
+#CHOSS
+   #departments and institutions 
    locations = []
 	 doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:publisher/text()",ns).each  do |i|
 	 locations.push(i.to_s)
 	 end
+	 inst_preflabels = []
 	 locations.each do |loc|
-		#first get the institution . 1 only. will overwrite if there
-		#then add the department, splitting strings where required	
+		#awarding institution id (just check preflabel here as few options)
 		if loc.include? "University of York"
-			thesis.awarding_institution = "University of York"
-			if loc.include? "York." 
-				splitstring = loc.split('York.',2)#2nd param ensures it only splits into 2 parts
-				thesis.department.push (splitstring[1])
-			elsif loc.include? "York:"
-				splitstring = loc.split('York:',2)
-				thesis.department.push (splitstring[1])			
-			end
-	    elsif loc.include? "Institute of Advanced Architectural Studies"
-			thesis.awarding_institution = "University of York"
-			thesis.department.push ("Institute of Advanced Architectural Studies")
-		elsif loc.include? "York Management School "
-			thesis.awarding_institution = "University of York"
-			thesis.department.push ("York Management School")        				
+			inst_preflabels.push("University of York")
+		elsif loc.include? "York." 
+			inst_preflabels.push("University of York")
+		elsif loc.include? "York:"
+			inst_preflabels.push("University of York")
 		elsif loc.include? "Oxford Brookes University"
-			thesis.awarding_institution = "Oxford Brookes University"
+			puts "we need to decide what to do about this"
+				#thesis.awarding_institution = "Oxford Brookes University"
+		end
+		inst_preflabels.each do | preflabel|
+			id = get_resource_id('institution', preflabel)
+			thesis.awarding_institution_resource_ids+=[id]
+		end
+				
+		#department
+		dept_preflabels = get_department_preflabel(loc)		 
+		if dept_preflabels.empty?
+			puts "no department found"
+		end
+		dept_preflabels.each do | preflabel|
+			id = get_resource_id('department', preflabel)
+			thesis.department_resource_ids +=[id]
 		end
 	end
 	
-	#work on this
+	
 	#qualification level, name, resource type
-	# resource type should be added as a dc:subject 
-	#ignore dcmi types
 	typesToParse = []  #
 	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:type/text()",ns).each do |t|	
 	typesToParse.push(t)
 	end
-	#Arrays of qualification name variants
-	artMasters = ['Master of Arts (MA)', 'Master of Arts', 'Master of Art (MA)', 'MA (Master of Arts)','Masters of Arts (MA)', 'MA']
-	artBachelors = ['Batchelor of Arts (BA)', '"Bachelor of Arts (BA),"', 'BA', 'Bachelor of Arts (BA)']
-	artsByResearch = ['Master of Arts by research (MRes)', '"Master of Arts, by research (MRes)"' ]
-	scienceBachelors = ['Batchelor of science (BSc)', '"Bachelor of Science (BA),"', 'BSc', ]
-	scienceMasters = ['Master of Science (MSc.)', '"Master of Science (MSc),"',"'Master of Science (MSc)",'Master of Science (MSc)','MSc', ]
-	scienceByResearch  = ['Master of Science by research (MRes)']
-	philosophyBachelors = ['Bachelor of Philosophy (BPhil)', 'BPhil']
-	philosophyMasters = ['Master of Philosophy (MPhil)','MPhil']
-	researchMasters = ['Master of Research (Mres)','Master of Research (MRes)','Mres','MRes']
-	#the variant single quote character in  Conservation Studies is invalid and causes invalid multibyte char (UTF-8) eror so  handled this in nokogiri open document call. however we also need to ensure the resulting string is included in the lookup array so the match will still be found. this means recreating it and inserting it into the array
-	not_valid = "Postgraduate Diploma in ‘Conservation Studies’ (PGDip)"
-	valid_now = not_valid.encode('UTF-8', :invalid => :replace, :undef => :replace)
-	conservationDiploma = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', valid_now]	
-	medievalDiploma =['Postgraduate Diploma in Medieval Studies (PGDip)','PGDip']
-	
-	#degree levels - masters, batchelors, diploma
-	masters = ['Masters','masters']
-	bachelors = ['Bachelors','Bachelor','Batchelors', 'Batchelor']
-	diplomas = ['Diploma','(Dip', '(Dip', 'Diploma (Dip)']
-	
-	#resource Types map to dc:subject. at present the only official value is Dissertations, Academic
-	theses = [ 'theses','Theses','Dissertations','dissertations' ] 
-	
-	#now check which group (if any) is present and apply standard name
+	#qualification names (object)
+	qualification_name_preflabel = get_qualification_name_preflabel(typesToParse)
+	if qualification_name_preflabel != "unfound"   
+		qname_id = get_resource_id('qualification_name',qualification_name_preflabel)
+		puts "at line 650 qname_id was " + qname_id
+		if qname_id.to_s != "unfound"		
+			thesis.qualification_name_resource_ids+=[qname_id]
+		else
+			puts "no qualification nameid found"
+		end
+	else
+		puts "no qualification name preflabel found"
+	end	
+	#qualification levels (yml file). there can only be one
 	typesToParse.each do |t|	
 	type_to_test = t.to_s
-	#check academic degree
-	#this is now the vivo:AcademicDegree type in the model. it will be precisely one
-		if artMasters.include? type_to_test
-		 thesis.qualification_name = "Master of Arts (MA)"
-		elsif artBachelors.include? type_to_test
-		 thesis.qualification_name = "Bachelor of Arts (BA)"
-		elsif artsByResearch.include? type_to_test
-		 thesis.qualification_name = "Master of Arts by research (MRes)"
-		elsif scienceBachelors.include? type_to_test
-		 thesis.qualification_name = "Bachelor of Science (BSc)"
-		elsif scienceMasters.include? type_to_test
-		 thesis.qualification_name = "Master of Science (MSc)"
-		elsif scienceByResearch.include? type_to_test
-		 thesis.qualification_name = "Master of Science by research (MRes)"
-	    elsif philosophyBachelors.include? type_to_test
-		 thesis.qualification_name = "Bachelor of Philosophy (BPhil)"
-		elsif philosophyMasters.include? type_to_test
-		 thesis.qualification_name = "Master of Philosophy (MPhil)"
-	    elsif researchMasters.include? type_to_test
-		 thesis.qualification_name = "Master of Research (MRes)"
-		elsif medievalDiploma.include? type_to_test
-		 thesis.qualification_name = "Postgraduate Diploma in Medieval Studies (PGDip)"
-		elsif conservationDiploma.include? type_to_test
-		 thesis.qualification_name = "Postgraduate Diploma in Conservation Studies (PGDip)"
-		end
-		
-	#now check for qualification levels. there can only be one
-	if masters.include? type_to_test
-		 thesis.qualification_level = "Masters"
-	elsif bachelors.include? type_to_test
-		 thesis.qualification_level = "Bachelors"
-    elsif diplomas.include? type_to_test
-		 thesis.qualification_level = "Postgraduate Diploma"
+	degree_level = get_qualification_level_term(type_to_test)
+	if degree_level != "unfound"
+		thesis.qualification_level += [degree_level]
 	end
-	
+
 	#now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
-	if theses.include? type_to_test
-		 thesis.subject.push("Dissertations, Academic")	
+	#resource Types map to dc:subject. at present the only official value is Dissertations, Academic
+	theses = [ 'theses','Theses','Dissertations','dissertations' ] 
+	if theses.include? type_to_test	
+	#not using methods below yet - or are we? subjects[] no longer in model
+		subject_id = get_resource_id('subject',"Dissertations, Academic")
+		thesis.subject_resource_ids +=[subject_id]		 
 	end
 end	
-	
-	
 	thesis_language = []
 	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:language/text()",ns).each do |lan|
 	thesis_language.push(lan.to_s)
 	end
+	#this should return the key as that allows us to just search on the term
 	thesis_language.each do |lan|   #0 ..n
-		thesis.language.push(lan)
+	standard_language = "unfound"
+	    standard_language = get_standard_language(lan.titleize)#capitalise first letter
+		if standard_language!= "unfound"
+			thesis.language+=[standard_language]
+		end
 	end	
 	
 	#dc.keyword (formerly subject, as existing ones from migration are free text not lookup
@@ -855,8 +685,7 @@ end
 	thesis_subject.push(s.to_s)
 	end
 	thesis_subject.each do |s|
-	puts "found subject " +s.to_s
-		thesis.keyword.push(s)   #TODO::THIS WAS ADDED TO FEDORA AS DC.RELATION NOT DC(OR DC11).SUBJECT!!!
+		thesis.keyword+=[s]   #TODO::THIS WAS ADDED TO FEDORA AS DC.RELATION NOT DC(OR DC11).SUBJECT!!!
 	end	
 	#dc11.subject??? not required for migration - see above
 	
@@ -877,21 +706,24 @@ end
 
    thesis_rightsholder = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[not(contains(.,'http')) and not (contains(.,'licenses')) ]",ns).to_s
    if thesis_rightsholder.length > 0
-	thesis.rights_holder = thesis_rightholder   
+	thesis.rights_holder=[thesis_rightsholder] 
    end
 
-	#license  set a default which will be overwritten if one is found. its the url, not the statement
+	#license  set a default which will be overwritten if one is found. its the url, not the statement. use licenses.yml not rights_statement.yml
 	#For full york list see https://dlib.york.ac.uk/yodl/app/home/licences. edit in rights.yml
+	defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"
 	thesis_rights = defaultLicence
 	thesis_rights = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[contains(.,'http')]",ns).to_s
-	thesis.rights = [thesis_rights.to_s] # multivalued in Object::Thesis def
 	
-	#rdf:type is boilerplate.dont need to add this 
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-	thesis.depositor = "ps552@york.ac.uk"
+	newrights =  get_standard_rights(thesis_rights)#  all theses currently York restricted 	
+		if newrights.length > 0
+		thesis_rights = newrights
+			thesis.rights=[thesis_rights]			
+		end	
+		
 	
 	#save	
-	thesis.save!	
+	thesis.save!
 	id = thesis.id
 	puts "thesis id was " +id 
 	#put in collection	
@@ -899,15 +731,11 @@ end
 	puts "id of col was:" +col.id
 	puts "got collection ok " + col.title[0].to_s
 	col.members << thesis  
-	col.save
-	#TODO... create a fileset (MainFileSet) and add the content
+	col.save!
+	
 	# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
-		
-	#try code below	
-	#get a user
 	users = Object::User.all #otherwise it will use one of the included modules
 	user = users[0]	
-	#populate new FileSet title field. give it permissions.
 	mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
 	mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	mfset.depositor = "ps552@york.ac.uk"
@@ -924,19 +752,16 @@ end
 #http://www.rubydoc.info/gems/curation_concerns/1.0.0/CurationConcerns/Actors/FileSetActor
 	actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
 	#essential metadata and content are created in this order	
+	#below section temp commented out as not working
+=begin
+     
 	actor.create_metadata(thesis)#name of object its to be added to  
 	puts "created metadata" 
 	actor.create_content(contentfile, relation = 'original_file' )
 	puts "created content"
-   
+=end   
 	mfset.save!
 
    thesis.mainfile << mfset	   #assume this also sets mainfile_ids[]
 end
-
-
-
-
-
-
 end #end of class
