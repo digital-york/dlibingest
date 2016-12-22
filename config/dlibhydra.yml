@@ -1,1 +1,1 @@
-depositor: 'ps552@york.ac.uk'
+depositor: <%= ENV['DEPOSITOR'] %>
