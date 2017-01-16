@@ -1,4 +1,4 @@
-﻿# encoding: UTF-8
+# encoding: UTF-8
 require 'nokogiri'
 require 'open-uri'
 #require 'rdf' #added this as an experiment to try to solve Dlibhydra problems
@@ -161,14 +161,85 @@ id = coll.id
 puts "collection id was " +id
 end
 
+
+#call syntax looks like this:
+#bundle exec rake migration_tasks:anyonecantestupload[ps552@york.ac.uk,9k41zd48h,/vagrant/files_to_test/testpdf.pdf]
+def test_pdf_upload_anyone(username,collection_id,filepath)#eg "ps552@york.ac.uk"
+thesis = Object::Thesis.new
+mfset = Object::FileSet.new
+#eg parentcol = "9k41zd48h"
+parentcol = collection_id
+#once depositor and permissions defined, object can be saved at any time
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>username, :type=> "person", :access => "edit"})]
+	thesis.depositor = username	
+	puts "thesis depositor was " +thesis.depositor
+	thesis.title = ["A test ingest of content"]	    
+	thesis.former_id = ["york:666"]
+	thesis.creator_string = ["Austin Powers"]
+	thesis.abstract = ["bla bla"]
+	thesis.date_of_award = "2017"
+	thesis.advisor_string.push("Mary Poppins")	
+	id = get_resource_id('institution', "University of York")
+	thesis.awarding_institution_resource_ids+=[id]	
+	id = get_resource_id('department', 'University of York. Centre for Medieval Studies')
+	thesis.department_resource_ids +=[id]	
+	thesis.qualification_level += ['Masters (Postgraduate)']
+
+        qualification_name_preflabel = "Master of Arts (MA)"
+	qname_id = get_resource_id('qualification_name',qualification_name_preflabel)
+	thesis.qualification_name_resource_ids+=[qname_id] #this is now aboslutely VITAL or the thesis will not display
+	
+	subject_id = get_resource_id('subject',"Dissertations, Academic")
+		thesis.subject_resource_ids +=[subject_id]
+	thesis.language+=['English']
+	thesis.rights_holder = ['Dr Evil']
+	defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"  
+	thesis.rights=[defaultLicence]
+	thesis.save!
+	puts "thesis id was " + thesis.id
+	col = Object::Collection.find(parentcol)
+	puts "id of col was:" +col.id
+	puts "got collection ok " + col.title[0].to_s
+	col.members << thesis  
+	col.save!
+	
+	#should now have a saved thesis to add content to
+	users = Object::User.all 
+	user = users[0]
+	mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml
+	mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	mfset.depositor = "ps552@york.ac.uk"
+	#read content file
+	testpdfloc = filepath   #eg "/vagrant/files_to_test/testpdf.pdf"
+	if !File.exist?(testpdfloc)
+		puts 'content file ' + testpdfloc.to_s + ' not found'	
+		return
+	else
+		puts 'checked for ' + testpdfloc.to_s + ' found it present'
+	end 
+	contentfile = open(testpdfloc)
+	actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)	
+	puts " created actor" 
+	#essential metadata and content are created in this order
+	actor.create_metadata(thesis)#name of object its to be added to  
+	puts "created metadata" 
+	actor.create_content(contentfile)
+	puts "created content"
+	mfset.save!
+   thesis.mainfile << mfset	   
+   puts "all done"
+
+end #end def of test_pdf_upload_anyone
+
 def test_pdf_upload
+
 #make basic cc thesis
 	#vt = CurationConcerns::Thesis.create
-	vt = CurationConcerns::DlibThesis.create	
+	vt = Thesis.new	
 	vt.title = ["and a fourth CC vanilla thesis"]
 	vt.preflabel = vt.title[0]   #no preflabel in vanilla CurationConcerns
-	vt.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-	vt.depositor = "ps552@york.ac.uk"
+	vt.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>username, :type=> "person", :access => "edit"})]
+	vt.depositor = username
 	vt.save!
 puts "done"
 #now try to upload a content file into a Dlibhydra fileset
@@ -360,14 +431,14 @@ philosophyBachelors = ['Bachelor of Philosophy (BPhil)', 'BPhil']
 philosophyMasters = ['Master of Philosophy (MPhil)','MPhil']
 researchMasters = ['Master of Research (Mres)','Master of Research (MRes)','Mres','MRes']#this is the only problematic one
 #the variant single quote character in  Conservation Studies is invalid and causes invalid multibyte char (UTF-8) error so  handled this in nokogiri open document call. however we also need to ensure the resulting string is included in the lookup array so the match will still be found. this means recreating it and inserting it into the array
-not_valid = "Postgraduate Diploma in â€˜Conservation Studiesâ€™ (PGDip)"
+not_valid = "Postgraduate Diploma in ‘Conservation Studies’ (PGDip)"
 valid_now = not_valid.encode('UTF-8', :invalid => :replace, :undef => :replace)
 pgDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
 
 
 qualification_name_preflabel = "unfound" #initial value
 #by testing all we should find one of those below
-type_array.each do |t|	    #loop1
+type_array.each do |t,|	    #loop1
 	type_to_test = t.to_s
 	
 	#outer loop tests for creation of qualification_name_preflabel
@@ -486,15 +557,18 @@ t.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=
 
 end 
 
+
+
 #bundle exec rake migrate_thesis[/vagrant/files_to_test/york_847953.xml,9s1616164]
 # bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,9s1616164]
 #def migrate_thesis(path,collection)
 #bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,/vagrant/files_to_test/col_mapping.txt]
 #emotional world etc
-#bundle exec rake migrate_thesis[/vagrant/files_to_test/york_807119.xml,/vagrant/files_to_test/col_mapping.txt]   (the whole collects bundle needs recreation, col mapping txt includes empty year collections)
+#bundle exec rake migrate_thesis[/vagrant/files_to_test/york_807119.xml,/vagrant/files_to_test/col_mapping.txt]   
 #bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
 def migrate_thesis(path,collection_mapping_doc_path)
 #mfset = Dlibhydra::FileSet.new   #FILESET. #defin this at top because otherwise expects to find it in CurationConcerns module 
+
 mfset = Object::FileSet.new   #FILESET. #define this at top because otherwise expects to find it in CurationConcerns module . 
 
 puts "migrating a thesis"	
@@ -568,7 +642,7 @@ puts "migrating a thesis"
 	thesis.depositor = "ps552@york.ac.uk"
 	#start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
-	t = titleArray.to_s   #CHOSS - construct title!
+	t = "DEBUGGING! " + titleArray.to_s   #CHOSS - construct title!
 	thesis.title = [t]	#1 only	
 	#thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
 	former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
@@ -640,7 +714,6 @@ puts "migrating a thesis"
 	qualification_name_preflabel = get_qualification_name_preflabel(typesToParse)
 	if qualification_name_preflabel != "unfound"   
 		qname_id = get_resource_id('qualification_name',qualification_name_preflabel)
-		puts "at line 650 qname_id was " + qname_id
 		if qname_id.to_s != "unfound"		
 			thesis.qualification_name_resource_ids+=[qname_id]
 		else
@@ -741,10 +814,10 @@ end
 	mfset.depositor = "ps552@york.ac.uk"
 		
 	#read content file
-	#contentfile = open("/vagrant/files_to_test/testpdf.pdf")
+	contentfile = open("/vagrant/files_to_test/testpdf.pdf")
 	puts "just before creating content, pdf loc used is " + localpdfloc.to_s
 	#contentfile = open(newpdfloc) #at present content has to sit on same server. could in real application probably get by sftp
-	contentfile = open(localpdfloc) #ie '/vagrant/files_to_test/filename'
+	#contentfile = open(localpdfloc) #ie '/vagrant/files_to_test/filename'
 	
 	puts "opened the content file" 
 	
@@ -753,15 +826,17 @@ end
 	actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
 	#essential metadata and content are created in this order	
 	#below section temp commented out as not working
-=begin
+#=begin
      
 	actor.create_metadata(thesis)#name of object its to be added to  
 	puts "created metadata" 
-	actor.create_content(contentfile, relation = 'original_file' )
-	puts "created content"
-=end   
+	#actor.create_content(contentfile, relation = 'original_file' )
+	actor.create_content(contentfile) #CHOSS
+	puts "created content for " 
+#=end   
 	mfset.save!
 
    thesis.mainfile << mfset	   #assume this also sets mainfile_ids[]
+   puts "all done"
 end
 end #end of class
