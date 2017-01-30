@@ -161,7 +161,7 @@ id = coll.id
 puts "collection id was " +id
 end
 
-
+# not quite right when you try to edit - something a little wrong
 #call syntax looks like this:
 #bundle exec rake migration_tasks:anyonecantestupload[ps552@york.ac.uk,9k41zd48h,/vagrant/files_to_test/testpdf.pdf]
 def test_pdf_upload_anyone(username,collection_id,filepath)#eg "ps552@york.ac.uk"
@@ -172,8 +172,8 @@ parentcol = collection_id
 #once depositor and permissions defined, object can be saved at any time
 	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>username, :type=> "person", :access => "edit"})]
 	thesis.depositor = username	
-	puts "thesis depositor was " +thesis.depositor
-	thesis.title = ["A test ingest of content"]	    
+	puts "CHOSS thesis depositor was " +thesis.depositor
+	thesis.title = ["Another test ingest of content"]	    
 	thesis.former_id = ["york:666"]
 	thesis.creator_string = ["Austin Powers"]
 	thesis.abstract = ["bla bla"]
@@ -198,8 +198,8 @@ parentcol = collection_id
 	thesis.save!
 	puts "thesis id was " + thesis.id
 	col = Object::Collection.find(parentcol)
-	puts "id of col was:" +col.id
-	puts "got collection ok " + col.title[0].to_s
+	puts "id of collection was:" +col.id
+	puts "collection title was " + col.title[0].to_s
 	col.members << thesis  
 	col.save!
 	
@@ -215,11 +215,10 @@ parentcol = collection_id
 		puts 'content file ' + testpdfloc.to_s + ' not found'	
 		return
 	else
-		puts 'checked for ' + testpdfloc.to_s + ' found it present'
+		puts 'checked for content file to upload ' + testpdfloc.to_s + ' and found it present'
 	end 
 	contentfile = open(testpdfloc)
 	actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)	
-	puts " created actor" 
 	#essential metadata and content are created in this order
 	actor.create_metadata(thesis)#name of object its to be added to  
 	puts "created metadata" 
@@ -227,7 +226,7 @@ parentcol = collection_id
 	puts "created content"
 	mfset.save!
    thesis.mainfile << mfset	   
-   puts "all done"
+   #puts "all done"  comment out in case its replacing an expected return value
 
 end #end def of test_pdf_upload_anyone
 
@@ -241,7 +240,6 @@ def test_pdf_upload
 	vt.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>username, :type=> "person", :access => "edit"})]
 	vt.depositor = username
 	vt.save!
-puts "done"
 #now try to upload a content file into a Dlibhydra fileset
 	contentfile = open("/vagrant/files_to_test/testpdf.pdf")
 	users = Object::User.all #otherwise it will use one of the included modules
@@ -251,15 +249,12 @@ puts "done"
 	vfset.title = ["main pdf content"]
 	#vfset.preflabel = "main pdf content"
 	actor = CurationConcerns::Actors::FileSetActor.new(vfset, user)
-puts "OK SO FAR"
 actor.create_content(contentfile, relation = 'main_file' )
 actor.create_metadata(vt, file_set_params = {files: [contentfile],
                                           title: ['test title'],
                                           visibility: 'public'})
-puts "still ok"	
 vfset.save!
 vt.save!
-puts "done"
 end
 
 #this is defined in yaml
@@ -506,7 +501,7 @@ t.advisor = ["pub landlord"]
 ds = Dlibhydra::Terms::DepartmentTerms.new
 dept_id = ds.find_id("department","University of York. Department of Philosophy") #hard coded for test only. Must be exact!!!
  t.department_resource_ids = [dept_id]
- puts "found dept resource id " + dept_id
+ puts "CHOSS found dept resource id " + dept_id
 # t.awarding_institution # LOOKUP!
 # t.qualification_name # LOOKUP!
 # t.qualification_level # LOOKUP!
@@ -521,7 +516,7 @@ t.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=
 	#save	
 	t.save!	
 	id = t.id
-	puts "thesis id was " +id 
+	puts "CHOSS thesis id was " +id 
 	#col = Object::Collection.find("gb19f580q")  #see line 901 in this file
 	#puts "id of col was:" +col.id
 	#puts "got collection ok " + col.title[0].to_s
@@ -547,13 +542,10 @@ t.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=
 	contentfile = open("/vagrant/files_to_test/testpdf.pdf")
 	actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
 	actor.create_metadata(t)
-	puts "created metadata" 
 	actor.create_content(contentfile, relation = 'original_file' )
-	puts "created content"
 	mfset.save!
     t.mainfile << mfset
 =end
-	puts "done test (without filesets or content). should have department now"
 
 end 
 
@@ -572,9 +564,7 @@ def migrate_thesis(path,collection_mapping_doc_path)
 mfset = Object::FileSet.new   #FILESET. #define this at top because otherwise expects to find it in CurationConcerns module . 
 
 puts "migrating a thesis"	
-	foxmlpath = path
-	#parentcol = collection
-	
+	foxmlpath = path	
 	#enforce  UTF-8 compliance when opening foxml file
 	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
 	#doesnt resolve nested namespaces, this fixes that
@@ -614,12 +604,12 @@ puts "migrating a thesis"
 	#GET CONTENT - get the location of the pdf as a string
 	pdf_loc = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion[@ID='#{currentThesisVersion}']/foxml:contentLocation/@REF",ns).to_s	
 	
-	
+	#CHOSS CONTENT FILES
 	#this has local.fedora.host, which will be wrong. need to replace this 
 	#reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
 	#needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 	newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'
-	localpdfloc = pdf_loc.sub 'http://local.fedora.server', '/vagrant/files_to_test'
+	localpdfloc = pdf_loc.sub 'http://local.fedora.server', '/vagrant/files_to_test'   
 	
 	#dont continue to migrate file if content file not found
 	if !File.exist?(localpdfloc)
@@ -627,22 +617,21 @@ puts "migrating a thesis"
 		return
 	else
 		puts 'checked for ' + localpdfloc.to_s + ' found it present'
-	end  
-	
-	
+	end 
 	#for initial development purposes on my machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
-	puts "edited pdf loc is :" + newpdfloc
+	puts "CHOSS edited pdf loc (with substituted yodlapp3)  is :" + newpdfloc
+	
+	
+	
 	#create a new thesis implementing the dlibhydra models
-	
-	
-	#thesis = Object::Thesis.create
 	thesis = Object::Thesis.new
-	#once depositor and permissions defined, object can be saved at any timex.permissions
+	#once depositor and permissions defined, object can be saved at any time
 	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
+	
 	#start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
-	t = "DEBUGGING! " + titleArray.to_s   #CHOSS - construct title!
+	t = "DEBUGGING migrate_thesis with real pdf defined in foxml " + titleArray.to_s   #CHOSS - construct title!
 	thesis.title = [t]	#1 only	
 	#thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
 	former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
@@ -669,7 +658,6 @@ puts "migrating a thesis"
 	thesis_advisor.each do |c|
 		thesis.advisor_string.push(c)
 	end	
-#CHOSS
    #departments and institutions 
    locations = []
 	 doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:publisher/text()",ns).each  do |i|
@@ -770,7 +758,6 @@ end
 	thesis_rightsholder = []	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[not(contains(.,'http')) and not (contains(.,'licenses')) ]",ns).each do |r|
 	thesis_rightsholder.push(r)
 	end
-	puts "looked for rights holder"
 	thesis_rightsholder.each do |r|
 		thesis.rights_holder = r.to_s 
 	end	
@@ -802,41 +789,47 @@ end
 	#put in collection	
 	col = Object::Collection.find(parentcol.to_s)	
 	puts "id of col was:" +col.id
-	puts "got collection ok " + col.title[0].to_s
+	puts " collection title was " + col.title[0].to_s
 	col.members << thesis  
 	col.save!
 	
 	# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 	users = Object::User.all #otherwise it will use one of the included modules
 	user = users[0]	
+#=begin
 	mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
 	mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	mfset.depositor = "ps552@york.ac.uk"
-		
-	#read content file
-	contentfile = open("/vagrant/files_to_test/testpdf.pdf")
-	puts "just before creating content, pdf loc used is " + localpdfloc.to_s
-	#contentfile = open(newpdfloc) #at present content has to sit on same server. could in real application probably get by sftp
-	#contentfile = open(localpdfloc) #ie '/vagrant/files_to_test/filename'
+	mfset.save!
 	
-	puts "opened the content file" 
+		
+	#read content file - in newpdfloc(yodlapp3) or localpdfloc(on local pc)
+	puts "CHOSS just before creating content, pdf loc used is " + localpdfloc.to_s
+	#contentfile = open(newpdfloc) #at present content has to sit on same server. could in real application probably get by sftp
+	contentfile = open(localpdfloc) #ie '/vagrant/files_to_test/filename'
+	#contentfile = open("/vagrant/files_to_test/testpdf.pdf")   #CHOSS see line 
+	#contentfile = open("/vagrant/files_to_test/AlbumArtSmall.jpg")
+	#THE NEXT THREE LINES make content upload work.
+	local_file = Hydra::Derivatives::IoDecorator.new(File.open(localpdfloc, "rb"))
+	#local_file = Hydra::Derivatives::IoDecorator.new(File.open("/vagrant/files_to_test/testpdf.pdf", "rb")) 	
+	#local_file = Hydra::Derivatives::IoDecorator.new(File.open("/vagrant/files_to_test/AlbumArtSmall.jpg", "rb")) 
+	relation = "original_file"
+	Hydra::Works::AddFileToFileSet.call(mfset,local_file,relation.to_sym)
+	mfset.save!
+	
+	
 	
 	#make filesetactor  
-#http://www.rubydoc.info/gems/curation_concerns/1.0.0/CurationConcerns/Actors/FileSetActor
+    #http://www.rubydoc.info/gems/curation_concerns/1.0.0/CurationConcerns/Actors/FileSetActor
 	actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
 	#essential metadata and content are created in this order	
-	#below section temp commented out as not working
-#=begin
-     
 	actor.create_metadata(thesis)#name of object its to be added to  
-	puts "created metadata" 
 	#actor.create_content(contentfile, relation = 'original_file' )
-	actor.create_content(contentfile) #CHOSS
-	puts "created content for " 
-#=end   
+	actor.create_content(contentfile) 
 	mfset.save!
 
    thesis.mainfile << mfset	   #assume this also sets mainfile_ids[]
-   puts "all done"
+#=end
+   #puts "all done"
 end
 end #end of class
