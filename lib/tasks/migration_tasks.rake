@@ -1,5 +1,6 @@
 namespace :migration_tasks do
-require '/vagrant/fresh_dlibingest/dlibingest/app/models/foxml_reader.rb'
+require_relative '../../app/models/foxml_reader.rb'
+
 task :default do
   puts "Hello Peri!"
 end
