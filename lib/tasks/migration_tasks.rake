@@ -15,12 +15,7 @@ end
 
 
 
-task :migrate, [:path,:collection] => :environment  do|t, args|
-puts "Args were: #{args}"
-puts "hey there"
-	r = FoxmlReader.new
-	r.migrate(args[:path],args[:collection])
-end
+
 
 task :migrate_thesis, [:path,:collection] => :environment  do|t, args|
 puts "Args were: #{args}"
@@ -32,6 +27,12 @@ end
 task :testme => :environment do
 	r = FoxmlReader.new
 	r.testme
+end
+
+task :anyonecantestupload, [:username,:collection_id,:filepath] => :environment do|t, args|
+puts "Args were: #{args}"
+	r = FoxmlReader.new
+	r.test_pdf_upload_anyone(args[:username],args[:collection_id],args[:filepath])
 end
 
 task :testupload => :environment do
