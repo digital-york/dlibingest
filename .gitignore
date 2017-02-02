@@ -21,3 +21,6 @@
 .byebug_history
 .env
 s.sh
+/.idea/*
+cm.sh
+fits.log
