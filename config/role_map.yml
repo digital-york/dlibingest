@@ -1,7 +1,10 @@
 development:
   admin:
-    - julie.allinson@york.ac.uk
+    - frank.feng@york.ac.uk
+  york:
+    - jea9@york.ac.uk
     - ps552@york.ac.uk
+    - yf508@york.ac.uk
 
 test:
   archivist:

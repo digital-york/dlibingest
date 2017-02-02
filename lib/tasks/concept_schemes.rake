@@ -3,7 +3,6 @@ namespace :concept_schemes do
   require 'yaml'
 
   solrconfig = YAML.load_file('config/solr.yml')
-
   SOLR = solrconfig[Rails.env]['url']
 
   task a: :environment do
@@ -22,7 +21,7 @@ namespace :concept_schemes do
     path = Rails.root + 'lib/'
     # .csv files should exist in the specified path
     #list = ['qualification_names']
-    list = ['subjects','qualification_names']
+    list = ['subjects','qualification_names','journals']
     list.each do |i|
 
       print 'Searching the Concept Scheme: ' + i

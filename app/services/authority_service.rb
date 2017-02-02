@@ -1,6 +1,9 @@
 module AuthorityService
 
 # Object based
+	class JournalService < Dlibhydra::Terms::JournalTerms
+		include ::LocalAuthorityConcern
+	end
 	class SubjectService < Dlibhydra::Terms::SubjectTerms
 		include ::LocalAuthorityConcern
 	end
@@ -18,12 +21,6 @@ module AuthorityService
 	end
 
 # File based
-	class RightsStatementsService < CurationConcerns::QaSelectService
-	include ::FileAuthorityConcern
-		def initialize
-			super('rights_statements')
-		end
-	end
 	class ResourceTypesService < CurationConcerns::QaSelectService
 	include ::FileAuthorityConcern
 		def initialize
@@ -42,10 +39,18 @@ module AuthorityService
 			super('licenses')
 		end
 	end
+
 	class LanguagesService < CurationConcerns::QaSelectService
 	include ::FileAuthorityConcern
 		def initialize
 			super('languages')
+		end
+	end
+
+	class RightsStatementsService < CurationConcerns::QaSelectService
+	include ::FileAuthorityConcern
+		def initialize
+			super('rights_statements')
 		end
 	end
 

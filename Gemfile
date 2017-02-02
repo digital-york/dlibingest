@@ -1,6 +1,9 @@
 source 'https://rubygems.org'
 
-gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'master'
+gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'journal_article'
+#gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'master'
+#gem 'dlibhydra', path: '/Users/julieallinson/Dropbox/code/rails/dlibhydra'
+#gem 'dlibhydra'
 gem 'curation_concerns'
 gem 'dotenv-rails', groups: [:development, :test, :production]
 
