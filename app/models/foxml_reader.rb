@@ -673,8 +673,7 @@ puts "migrating a thesis"
 		elsif loc.include? "York:"
 			inst_preflabels.push("University of York")
 		elsif loc.include? "Oxford Brookes University"
-			puts "we need to decide what to do about this"
-				#thesis.awarding_institution = "Oxford Brookes University"
+			inst_preflabels.push("Oxford Brookes University") #I'v just added this as a minority of our theses come from here!
 		end
 		inst_preflabels.each do | preflabel|
 			id = get_resource_id('institution', preflabel)
