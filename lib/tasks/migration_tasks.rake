@@ -1,7 +1,5 @@
 namespace :migration_tasks do
-
-require_relative '../../app/models/foxml_reader.rb'
-
+require '/vagrant/fresh_dlibingest/dlibingest/app/models/foxml_reader.rb'
 task :default do
   puts "Hello Peri!"
 end
@@ -15,11 +13,23 @@ task :make_collection_structure => :environment do
 	r.make_collection_structure
 end
 
-task :migrate_thesis, [:path,:collection] => :environment  do|t, args|
+
+
+
+task :migrate_lots_of_theses, [:dirpath,:collection_mapping_doc] => :environment  do|t, args|
+puts "Args were: #{args}"
+puts "need to do sommat here"
+r = FoxmlReader.new
+r.migrate_lots_of_theses(args[:dirpath],args[:collection_mapping_doc])
+end
+
+
+
+task :migrate_thesis, [:path,:collection_mapping] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "hey there"
 	r = FoxmlReader.new
-	r.migrate_thesis(args[:path],args[:collection])
+	r.migrate_thesis(args[:path],args[:collection_mapping])
 end
 
 task :testme => :environment do

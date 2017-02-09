@@ -548,7 +548,18 @@ t.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=
 =end
 
 end 
+#bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt]
+#try this. will need to restart rails first.
+def migrate_lots_of_theses(path_to_fox,collection_mapping_doc_path)
+puts "doing a bulk migration"
+Dir.foreach(path_to_fox)do |item|
+	#we dont want to try and act on the current and parent directories
+	next if item == '.' or item == '..'
+	itempath = path_to_fox + "/" + item
+	migrate_thesis(itempath,collection_mapping_doc_path)
+end
 
+end
 
 
 #bundle exec rake migrate_thesis[/vagrant/files_to_test/york_847953.xml,9s1616164]
@@ -558,6 +569,7 @@ end
 #emotional world etc
 #bundle exec rake migrate_thesis[/vagrant/files_to_test/york_807119.xml,/vagrant/files_to_test/col_mapping.txt]   
 #bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
+#bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_806397.xml,/vagrant/files_to_test/col_mapping.txt]
 def migrate_thesis(path,collection_mapping_doc_path)
 #mfset = Dlibhydra::FileSet.new   #FILESET. #defin this at top because otherwise expects to find it in CurationConcerns module 
 
@@ -596,6 +608,7 @@ puts "migrating a thesis"
 	all = nums.to_s
 	current = all.rpartition('.').last 
 	currentVersion = 'DC.' + current
+	
 	#find the max THESIS_MAIN version
 	thesis_nums = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion/@ID",ns)	
 	thesis_all = thesis_nums.to_s
@@ -619,19 +632,31 @@ puts "migrating a thesis"
 		puts 'checked for ' + localpdfloc.to_s + ' found it present'
 	end 
 	#for initial development purposes on my machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
-	puts "CHOSS edited pdf loc (with substituted yodlapp3)  is :" + newpdfloc
 	
+	puts "CHOSS edited pdf loc (with substituted yodlapp3)  is :" + newpdfloc
 	
 	
 	#create a new thesis implementing the dlibhydra models
 	thesis = Object::Thesis.new
+#trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviuously referenes something in a dunamic away
+#which is different for each object
+=begin
+	existing_state = "didnt find an active state" 
+	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='info:fedora/fedora-system:def/model#state']/@VALUE",ns)
+	puts '***************existing state:' + existing_state.to_s
+	if existing_state.to_s == "Active"
+	puts '***************FOUND existing state:' + existing_state.to_s
+	#pasted in from gui produced Thesis! not sure if required
+	 thesis.state = "http://fedora.info/definitions/1/0/access/ObjState#active"  
+	end
+=end
 	#once depositor and permissions defined, object can be saved at any time
 	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
 	
 	#start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
-	t = "DEBUGGING migrate_thesis with real pdf defined in foxml " + titleArray.to_s   #CHOSS - construct title!
+	t = titleArray.to_s   
 	thesis.title = [t]	#1 only	
 	#thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
 	former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
