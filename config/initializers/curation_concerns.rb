@@ -1,4 +1,7 @@
 CurationConcerns.configure do |config|
+  # Injected via `rails g curation_concerns:work JournalArticle`  (run this command to maker it work, just copying the files wont work)
+  config.register_curation_concern :journal_article  
+  # Injected via `rails g curation_concerns:work JournalArticle`  
   # Injected via `rails g curation_concerns:work Thesis`
   config.register_curation_concern :thesis
   # Injected via `rails g curation_concerns:work ExamPaper`
@@ -23,22 +26,25 @@ CurationConcerns.configure do |config|
 
   # Where to store tempfiles, leave blank for the system temp directory (e.g. /tmp)
   # config.temp_file_base = '/home/developer1'
+  config.temp_file_base = '/vagrant/fresh_dlibingest/dlibingest/tmp'
 
   # Location on local file system where derivatives will be stored.
   # If you use a multi-server architecture, this MUST be a shared volume.
   # config.derivatives_path = File.join(Rails.root, 'tmp', 'derivatives')
-
+  config.derivatives_path = '/vagrant/fresh_dlibingest/dlibingest/tmp/derivatives'
+  
   # Location on local file system where uploaded files will be staged
   # prior to being ingested into the repository or having derivatives generated.
   # If you use a multi-server architecture, this MUST be a shared volume.
   # config.working_path = File.join(Rails.root, 'tmp', 'uploads')
-
+  config.working_path = '/vagrant/fresh_dlibingest/dlibingest/tmp/uploads'
+  
   # If you have ffmpeg installed and want to transcode audio and video uncomment this line
   # config.enable_ffmpeg = true
 
   # CurationConcerns uses NOIDs for files and collections instead of Fedora UUIDs
   # where NOID = 10-character string and UUID = 32-character string w/ hyphens
-  # config.enable_noids = true
+   config.enable_noids = true
 
   # Specify a different template for your repository's NOID IDs
   # config.noid_template = ".reeddeeddk"
@@ -49,11 +55,13 @@ CurationConcerns.configure do |config|
 
   # Specify whether the media display partial should render a download link
   # config.display_media_download_link = true
+  config.display_media_download_link = true
 
   # Specify the path to the file characterization tool:
   #config.fits_path = "fits.sh"
   #config.fits_path = "fits" # this is for mac (JA)
-  config.fits_path = "/opt/fits-0.10.2/fits.sh"   #CHOSS  wonder if this is why uploads are not happening? copied this config in from the aa saved installatios
+  config.fits_path = "/opt/fits-0.10.2/fits.sh"   #CHOSS trying unix style config as fits sits under unix
+  #config.fits_path = "\opt\fits-0.10.2\fits.sh"   #CHOSS  wonder if this is why uploads are not happening? copied this config in from the aa saved installatios
 
   # Specify a date you wish to start collecting Google Analytic statistics for.
   # Leaving it blank will set the start date to when ever the file was uploaded by
@@ -63,7 +71,8 @@ CurationConcerns.configure do |config|
   # Fedora import/export tool
   #
   # Path to the Fedora import export tool jar file
-  # config.import_export_jar_file_path = "tmp/fcrepo-import-export.jar"
+  #PS - this is a new feature which we are not using
+  # config.import_export_jar_file_path = "tmp/fcrepo-import-export.jar"   
   #
   # Location where descriptive rdf should be exported
   # config.descriptions_directory = "tmp/descriptions"

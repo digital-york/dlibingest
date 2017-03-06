@@ -16,6 +16,9 @@ module AuthorityService
 	class DepartmentService < Dlibhydra::Terms::DepartmentTerms
 		include ::LocalAuthorityConcern
 	end
+	class JournalService < Dlibhydra::Terms::JournalTerms
+		include ::LocalAuthorityConcern
+	end
 
 # File based
 	class RightsStatementsService < CurationConcerns::QaSelectService

@@ -43,7 +43,10 @@ Rails.application.configure do
   config.assets.debug = true
 
   # Suppress logger output for asset requests.
-  config.assets.quiet = true
+  #config.assets.quiet = true #suppresses logging from gui so  dont want in dev! 
+  # Use the lowest log level to ensure availability of diagnostic information
+  # when problems arise.
+  config.log_level = :debug     
 
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true

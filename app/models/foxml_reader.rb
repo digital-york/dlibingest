@@ -1,8 +1,6 @@
 # encoding: UTF-8
 require 'nokogiri'
 require 'open-uri'
-#require 'rdf' #added this as an experiment to try to solve Dlibhydra problems
-#require 'curation_concerns' #makes no difference
 require 'dlibhydra'
 require 'csv'
 
@@ -553,7 +551,7 @@ end
 def migrate_lots_of_theses(path_to_fox,collection_mapping_doc_path)
 puts "doing a bulk migration"
 Dir.foreach(path_to_fox)do |item|
-	#we dont want to try and act on the current and parent directories
+	#we dont want to act on the current and parent directories
 	next if item == '.' or item == '..'
 	itempath = path_to_fox + "/" + item
 	migrate_thesis(itempath,collection_mapping_doc_path)
@@ -638,7 +636,7 @@ puts "migrating a thesis"
 	
 	#create a new thesis implementing the dlibhydra models
 	thesis = Object::Thesis.new
-#trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviuously referenes something in a dunamic away
+#trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviously references something in a dynamic away
 #which is different for each object
 =begin
 	existing_state = "didnt find an active state" 
@@ -655,9 +653,11 @@ puts "migrating a thesis"
 	thesis.depositor = "ps552@york.ac.uk"
 	
 	#start reading and populating  data
+	#TITLE!!!!
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
-	t = titleArray.to_s   
+	t = "friday " + titleArray.to_s   
 	thesis.title = [t]	#1 only	
+	puts "creating "+ thesis.title[0]
 	#thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
 	former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
 	if former_id.length > 0
@@ -778,14 +778,6 @@ end
 	#rights.
 	#rights holder 0...1
 	#checked data on dlib. all have the same rights statement and url cited, so this should work fine, as everything else is rights holders
-=begin
-	thesis_rightsholder = []	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[not(contains(.,'http')) and not (contains(.,'licenses')) ]",ns).each do |r|
-	thesis_rightsholder.push(r)
-	end
-	thesis_rightsholder.each do |r|
-		thesis.rights_holder = r.to_s 
-	end	
-=end
 
 
    thesis_rightsholder = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[not(contains(.,'http')) and not (contains(.,'licenses')) ]",ns).to_s
@@ -820,28 +812,44 @@ end
 	# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 	users = Object::User.all #otherwise it will use one of the included modules
 	user = users[0]	
-#=begin
+
 	mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
 	mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	mfset.depositor = "ps552@york.ac.uk"
-	mfset.save!
-	
+	mfset.save!	
 		
-	#read content file - in newpdfloc(yodlapp3) or localpdfloc(on local pc)
-	puts "CHOSS just before creating content, pdf loc used is " + localpdfloc.to_s
-	#contentfile = open(newpdfloc) #at present content has to sit on same server. could in real application probably get by sftp
-	contentfile = open(localpdfloc) #ie '/vagrant/files_to_test/filename'
-	#contentfile = open("/vagrant/files_to_test/testpdf.pdf")   #CHOSS see line 
-	#contentfile = open("/vagrant/files_to_test/AlbumArtSmall.jpg")
-	#THE NEXT THREE LINES make content upload work.
-	local_file = Hydra::Derivatives::IoDecorator.new(File.open(localpdfloc, "rb"))
-	#local_file = Hydra::Derivatives::IoDecorator.new(File.open("/vagrant/files_to_test/testpdf.pdf", "rb")) 	
+	#read content file - in newpdfloc(yodlapp3) or localpdfloc(on local pc)	
+	#make this one place to switch round from testfiles to real files
+	#ALTERNATIVES
+	contentloc = localpdfloc  #ie '/vagrant/files_to_test/filename'
+	#contentloc = newpdfloc   # has to sit on same server or mapped drive
+	#contentloc = "/vagrant/files_to_test/testpdf.pdf"
+	contentfile = open(contentloc)
+	#THE NEXT SET OF LINES TO 'finished derivs' make derivs creation work
+	local_file = Hydra::Derivatives::IoDecorator.new(File.open(contentloc, "rb")) 	
 	#local_file = Hydra::Derivatives::IoDecorator.new(File.open("/vagrant/files_to_test/AlbumArtSmall.jpg", "rb")) 
-	relation = "original_file"
-	Hydra::Works::AddFileToFileSet.call(mfset,local_file,relation.to_sym)
-	mfset.save!
+	relation = "original_file"	
+	if contentloc.downcase.end_with? "pdf"
+		local_file.mime_type = 'application/pdf'
+	elsif 	contentloc.downcase.end_with? "jpg"
+	     local_file.mime_type = 'image/jpeg'
+	elsif 	contentloc.downcase.end_with? "jpeg"
+	     local_file.mime_type = 'image/jpeg'	 
+	elsif 	contentloc.downcase.end_with? "tiff"
+	     local_file.mime_type = 'image/tiff'
+	elsif 	contentloc.downcase.end_with? "jp2"
+	     local_file.mime_type = 'image/jp2'
+	end	
+	#give it an original name too (not essential)
+	original_name = File.basename(contentloc)
+	local_file.original_name = original_name	
 	
+	mfset.create_derivatives(local_file)  
+	#finished derivs
 	
+	#THE NEXT SET OF LINES TO 'finished content upload' make derivs creation work
+	Hydra::Works::AddFileToFileSet.call(mfset,local_file,relation.to_sym) #this is required to actually upload, even tho it also gets called later 
+	mfset.save!	
 	
 	#make filesetactor  
     #http://www.rubydoc.info/gems/curation_concerns/1.0.0/CurationConcerns/Actors/FileSetActor
@@ -851,9 +859,8 @@ end
 	#actor.create_content(contentfile, relation = 'original_file' )
 	actor.create_content(contentfile) 
 	mfset.save!
-
    thesis.mainfile << mfset	   #assume this also sets mainfile_ids[]
-#=end
-   #puts "all done"
+   #finished content upload
+   puts "all done"
 end
 end #end of class
