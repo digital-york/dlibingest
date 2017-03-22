@@ -17,7 +17,7 @@ include ::Hydra
 *format is: old pid of collection,title of collection,old parent_pid
 *col_mapping.txt is output by the script and is the permanent mapping file. format:
 originalpid, title, newid . 
-make the path to the various files used for this a parameter 
+made the path to the various files used for this a parameter 
 at present gonna use "/home/ubuntu/mapping_files/"  (with end slash)
 so call is like rake migration_tasks:make_collection_structure[/home/ubuntu/mapping_files/]
 =end
