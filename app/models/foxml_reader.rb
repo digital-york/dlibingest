@@ -4,10 +4,12 @@ require 'open-uri'
 require 'dlibhydra'
 require 'csv'
 
+#methods to create collection structure and do migrations
 class FoxmlReader
 include ::Dlibhydra
 include ::CurationConcerns
 include ::Hydra
+
 
 
 =begin
