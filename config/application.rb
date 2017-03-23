@@ -10,7 +10,7 @@ Dotenv::Railtie.load
 
 module Dlibingest
   class Application < Rails::Application
-   config.web_console.whitelisted_ips = '10.0.2.2'    
+#   config.web_console.whitelisted_ips = '10.0.2.2'    
     config.generators do |g|
       g.test_framework :rspec, :spec => true
     end
