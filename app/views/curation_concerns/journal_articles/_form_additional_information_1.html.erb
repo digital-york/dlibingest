@@ -1,11 +1,3 @@
 <fieldset class="optional prompt">
-  <% ql_service = AuthorityService::JournalService.new %>
-  <%= f.input :journal_resource_ids, as: :multi_value_select,
-              label: 'Journal',
-              collection: ql_service.select_all_options,
-              include_blank: true,
-              item_helper: ql_service.method(:include_current_value),
-              input_html: { class: 'form-control' } %>
-  <%= f.input :issue_number, as: :multi_value %>
-  <%= f.input :volume_number, as: :multi_value %>
+
 </fieldset>
