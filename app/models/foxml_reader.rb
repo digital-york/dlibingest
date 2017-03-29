@@ -13,7 +13,7 @@ include ::Hydra
 
 
 =begin
-*list of possible collections under theses is quite extensive - get it from an risearch query
+*the list of possible collections under theses is quite extensive - get it from an risearch query
 *thesescollections.txt contains all the returned data from risearch for all levels
 *thesescollectionsLevel2|3.txt is a complete cleaned up list of level 2|3 collections ready for use. 
 *format is: old pid of collection,title of collection,old parent_pid
