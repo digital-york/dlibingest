@@ -8,6 +8,7 @@ class JournalArticle < Dlibhydra::JournalArticle
   # self.valid_child_concerns = []
   self.human_readable_type = 'Journal Article'
   validates :title, presence: { message: 'Your journal article must have a title.' }
+  validates :journal_resource_ids, presence: { message: 'Your journal article must have a journal.' }
 
   class JournalArticleIndexer < CurationConcerns::WorkIndexer
     include Dlibhydra::IndexesJournalArticle
