@@ -20,6 +20,8 @@ en:
     show:
       related_files:
         heading: 'Files included in Thesis'
+      related_external_files:
+        heading: 'External files'
       downloadable_content:
         heading: 'Downloadable Content'
         default_link: 'Download file'

@@ -3,3 +3,13 @@
   background-image: image-url('YODL_Banner_Rev_03d.jpg');
   background-size: cover;
 }
+
+.representative-media{
+  max-height: 150px;
+  max-width: 150px;
+}
+
+tr.file_set td.thumbnail a img {
+  max-height: 100px;
+  max-width: 100px;
+}
