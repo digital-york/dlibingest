@@ -2,13 +2,15 @@ require_relative 'boot'
 
 require 'rails/all'
 
-# Require the gems listed in Gemfile, including any gems
+# Require the gems listed in Gemfile,  including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+Dotenv::Railtie.load
+
 module Dlibingest
   class Application < Rails::Application
-    
+#   config.web_console.whitelisted_ips = '10.0.2.2'    
     config.generators do |g|
       g.test_framework :rspec, :spec => true
     end

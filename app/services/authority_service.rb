@@ -16,18 +16,28 @@ module AuthorityService
 	class DepartmentService < Dlibhydra::Terms::DepartmentTerms
 		include ::LocalAuthorityConcern
 	end
+	class JournalService < Dlibhydra::Terms::JournalTerms
+		include ::LocalAuthorityConcern
+	end
 
 # File based
+# <<<<<<< HEAD
+# 	class ResourceTypesService < CurationConcerns::QaSelectService
+# 	include ::FileAuthorityConcern
+# 		def initialize
+# 			super('resource_types')
+# =======
+	class RightsStatementsService < CurationConcerns::QaSelectService
+	include ::FileAuthorityConcern
+		def initialize
+			super('rights_statements')
+# >>>>>>> external-fileset
+		end
+	end
 	class ResourceTypesService < CurationConcerns::QaSelectService
 	include ::FileAuthorityConcern
 		def initialize
 			super('resource_types')
-		end
-	end
-	class LanguagesService < CurationConcerns::QaSelectService
-	include ::FileAuthorityConcern
-		def initialize
-			super('languages')
 		end
 	end
 	class QualificationLevelsService < CurationConcerns::QaSelectService
@@ -42,10 +52,17 @@ module AuthorityService
 			super('licenses')
 		end
 	end
-	class RightsStatementsService < CurationConcerns::QaSelectService
+# <<<<<<< HEAD
+# 	class RightsStatementsService < CurationConcerns::QaSelectService
+# 	include ::FileAuthorityConcern
+# 		def initialize
+# 			super('rights_statements')
+# =======
+	class LanguagesService < CurationConcerns::QaSelectService
 	include ::FileAuthorityConcern
 		def initialize
-			super('rights_statements')
+			super('languages')
+# >>>>>>> external-fileset
 		end
 	end
 

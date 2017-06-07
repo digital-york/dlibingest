@@ -28,4 +28,13 @@ class ApplicationController < ActionController::Base
 
 
   protect_from_forgery with: :exception
+
+
+  def render_thumbnail(document, options)
+    return unless document[:file_id].present?
+    url = thumbnail_url(document)
+
+    image_tag url, image_options if url.present?
+  end
+
 end

@@ -35,12 +35,16 @@ class CatalogController < ApplicationController
     # config.show.title_field = solr_name("title", :stored_searchable)
     # config.show.display_type_field = solr_name("has_model", :symbol)
 
+    # To define customized view
+
+
+
     # solr fields that will be treated as facets by the blacklight application
     #   The ordering of the field names is the order of the display
     config.add_facet_field solr_name('human_readable_type', :facetable), limit: 5
     config.add_facet_field solr_name('creator_value', :facetable), limit: 5
-    config.add_facet_field solr_name('advisor', :facetable), limit: 5
-    config.add_facet_field solr_name('department', :facetable)
+    config.add_facet_field solr_name('advisor_value', :facetable), limit: 5
+    config.add_facet_field solr_name('department_value', :facetable)
     config.add_facet_field solr_name('publisher', :facetable)
     # TODO date facets will need work
     config.add_facet_field solr_name('date_of_award', :facetable)
@@ -49,7 +53,7 @@ class CatalogController < ApplicationController
     config.add_facet_field solr_name('subject_value', :facetable), limit: 5
     config.add_facet_field solr_name('language_string', :facetable), limit: 5
     config.add_facet_field solr_name('qualification_level', :facetable)
-    config.add_facet_field solr_name('qualification_name', :facetable)
+    config.add_facet_field solr_name('qualification_name_value', :facetable)
 
     config.add_facet_field 'generic_type_sim', show: false, single: true
     # config.add_facet_field solr_name('based_near', :facetable), limit: 5
@@ -61,17 +65,18 @@ class CatalogController < ApplicationController
     config.add_facet_fields_to_solr_request!
 
     # solr fields to be displayed in the index (search results) view
+	
     #   The ordering of the field names is the order of the display
     config.add_index_field solr_name('creator_value', :stored_searchable)
     #config.add_index_field solr_name('creator', :stored_searchable)
-    config.add_index_field solr_name('advisor', :stored_searchable)
+    config.add_index_field solr_name('advisor_value', :stored_searchable)
     config.add_index_field solr_name('date', :stored_searchable)
     config.add_index_field solr_name('date_of_award', :stored_searchable)
-    config.add_index_field solr_name('department', :stored_searchable)
+    config.add_index_field solr_name('department_value', :stored_searchable)
     config.add_index_field solr_name('publisher', :stored_searchable)
-    config.add_index_field solr_name('qualification_name', :stored_searchable)
+    config.add_index_field solr_name('qualification_name_value', :stored_searchable)
     config.add_index_field solr_name('qualification_level', :stored_searchable)
-    config.add_index_field solr_name('awarding_institution', :stored_searchable)
+    config.add_index_field solr_name('awarding_institution_value', :stored_searchable)
     config.add_index_field solr_name('language', :stored_searchable)
     config.add_index_field solr_name('language_string', :stored_searchable)
     config.add_index_field solr_name('keyword', :stored_searchable)
@@ -282,7 +287,7 @@ class CatalogController < ApplicationController
     end
 
     config.add_search_field('advisor') do |field|
-      solr_name = solr_name('advisor', :stored_searchable, type: :string)
+      solr_name = solr_name('advisor_value', :stored_searchable, type: :string)
       field.solr_local_parameters = {
           qf: solr_name,
           pf: solr_name
@@ -290,7 +295,7 @@ class CatalogController < ApplicationController
     end
 
     config.add_search_field('awarding_institution') do |field|
-      solr_name = solr_name('awarding_institution', :stored_searchable, type: :string)
+      solr_name = solr_name('awarding_institution_value', :stored_searchable, type: :string)
       field.solr_local_parameters = {
           qf: solr_name,
           pf: solr_name
@@ -306,7 +311,7 @@ class CatalogController < ApplicationController
     end
 
     config.add_search_field('qualification_name') do |field|
-      solr_name = solr_name('qualification_name', :stored_searchable, type: :string)
+      solr_name = solr_name('qualification_name_value', :stored_searchable, type: :string)
       field.solr_local_parameters = {
           qf: solr_name,
           pf: solr_name

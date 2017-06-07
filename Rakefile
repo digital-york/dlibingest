@@ -7,4 +7,4 @@ Rails.application.load_tasks
 
 #require 'solr_wrapper/rake_task' unless Rails.env.production?
 
-require 'solr_wrapper/rake_task' unless Rails.env.production?
+#require 'solr_wrapper/rake_task' unless Rails.env.production?

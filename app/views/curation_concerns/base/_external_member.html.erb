@@ -1,0 +1,22 @@
+<% if external_member.solr_document._source["filetype_tesim"][0]=='externalurl' %>
+
+<tr class="<%= dom_class(external_member) %> attributes">
+  <td class="thumbnail">
+    <%= render_thumbnail_tag external_member, image_options: {:class => "york_thumbnail"} %>
+  </td>
+  <% if external_member.solr_document._source["external_file_url_tesim"].nil? %>
+      <td class="attribute filename"><%= link_to(external_member.link_name, contextual_path(external_member, @presenter)) %></td>
+  <% else
+    externalurl = external_member.solr_document._source["external_file_url_tesim"][0]
+  %>
+    <td class="attribute filename"><%= link_to(externalurl, contextual_path(external_member, @presenter)) %></td>
+  <% end %>
+  <td class="attribute date_uploaded"><%= external_member.try(:date_uploaded) %></td>
+  <td class="attribute permission"><%= external_member.permission_badge %></td>
+  <td>
+    <%= render 'actions', member: external_member %>
+  </td>
+</tr>
+
+<% end %>
+
