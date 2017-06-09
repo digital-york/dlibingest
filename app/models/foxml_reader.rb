@@ -4,11 +4,13 @@ require 'open-uri'
 require 'dlibhydra'
 require 'csv'
 
+
 #methods to create the  collection structure and do migrations
 class FoxmlReader
 include ::Dlibhydra
 include ::CurationConcerns
 include ::Hydra
+
 
 
 
@@ -19,9 +21,8 @@ include ::Hydra
 *format is: old pid of collection,title of collection,old parent_pid
 *col_mapping.txt is output by the script and is the permanent mapping file. format:
 originalpid, title, newid . 
-made the path to the various files used for this a parameter 
-at present gonna use "/home/ubuntu/mapping_files/"  (with end slash)
-so call is like rake migration_tasks:make_collection_structure[/home/ubuntu/mapping_files/]
+
+so call is like rake migration_tasks:make_collection_structure[/home/dlib/mapping_files/]
 =end
 
 def make_collection_structure(mapping_path)
@@ -400,17 +401,25 @@ end
 
 
 
-#bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt]
+#bundle exec rake migration_tasks:migrate_lots_of_theses[/home/dlib/testfiles/foxml,/home/dlib/mapping_files/col_mapping.txt]
 #try this. will need to restart rails first.
 def migrate_lots_of_theses(path_to_fox,collection_mapping_doc_path)
 puts "doing a bulk migration"
+fname = "tally.txt"
+tallyfile = File.open(fname, "a")
+
+
 Dir.foreach(path_to_fox)do |item|
+    #keep a record of whats been ingested. imagine this will go to the location the method has been called from
+	
 	#we dont want to try and act on the current and parent directories
 	next if item == '.' or item == '..'
 	itempath = path_to_fox + "/" + item
 	migrate_thesis(itempath,collection_mapping_doc_path)
+	tallyfile.puts("ingested "+ itempath)
+	sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 end
-
+tallyfile.close
 end
 
 
