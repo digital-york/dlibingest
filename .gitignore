@@ -23,3 +23,7 @@
 .idea/
 cm.sh
 fits.log
+start_worker.sh
+start_workflow_backend.sh
+w.sh
+

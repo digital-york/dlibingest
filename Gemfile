@@ -70,6 +70,9 @@ group :development, :test do
   gem 'rspec-rails'
 end
 
+gem 'redis'
+gem 'resque', require: 'resque/server'
+
 #group :development, :test do
  # gem 'solr_wrapper', '>= 0.3'
 #end
