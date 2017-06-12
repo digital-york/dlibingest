@@ -1,7 +1,7 @@
 require 'json'
-require 'dlibhydra'
 require 'hydra/works'
 require 'logger'
+require_relative 'basic_processor.rb'
 
 class ThesisProcessor < BasicProcessor
 
