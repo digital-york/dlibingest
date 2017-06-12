@@ -408,16 +408,23 @@ puts "doing a bulk migration"
 fname = "tally.txt"
 tallyfile = File.open(fname, "a")
 
-
 Dir.foreach(path_to_fox)do |item|
     #keep a record of whats been ingested. imagine this will go to the location the method has been called from
 	
 	#we dont want to try and act on the current and parent directories
 	next if item == '.' or item == '..'
 	itempath = path_to_fox + "/" + item
-	migrate_thesis(itempath,collection_mapping_doc_path)
-	tallyfile.puts("ingested "+ itempath)
-	sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+	result = migrate_thesis(itempath,collection_mapping_doc_path)
+	if result == 0
+		tallyfile.puts("ingested "+ itempath)
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+		FileUtils.mv(itempath, "/home/dlib/testfiles/foxdone/" + item)  #move files once migrated
+	elsif result == 1
+		tallyfile.puts("FAILED TO INGEST "+ itempath)
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+	else
+        tallyfile.puts " didnt return expected value of 0 or 1 "	
+	end
 end
 tallyfile.close
 end
@@ -433,12 +440,14 @@ end
 #bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_806397.xml,/vagrant/files_to_test/col_mapping.txt]
 #on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_847953.xml,/home/ubuntu/mapping_files/col_mapping.txt]
 #on megastack: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/york_847953.xml,/home/dlib/mapping_files/col_mapping.txt]
+#returns result = 0 for success, 1 for fail
 def migrate_thesis(path,collection_mapping_doc_path)
+result = 1 #default is fail
 mfset = Object::FileSet.new   #FILESET. #define this at top because otherwise expects to find it in CurationConcerns module . 
 puts "migrating a thesis"	
 	foxmlpath = path	
 	#enforce  UTF-8 compliance when opening foxml file
-	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}.xml, 
 	#doesnt resolve nested namespaces, this fixes that
     ns = doc.collect_namespaces		
 	#establish parent collection - map old to new from mappings file
@@ -659,8 +668,8 @@ end
 		end	
 		
 	
-	#save	
-	thesis.save!
+	#save	  
+	thesis.save!  #WIERD BULK ERRORS MUST HAPPEN BEFORE OR AT THIS POINT
 	id = thesis.id
 	puts "thesis id was " +id 
 	#put in collection	
@@ -700,5 +709,7 @@ end
    thesis.mainfile << mfset	   
    thesis.save!
    puts "all done for  file " + id
+   result = 0
+   return result   #give it  a return value
 end
 end #end of class
