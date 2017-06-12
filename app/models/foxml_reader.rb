@@ -447,7 +447,7 @@ mfset = Object::FileSet.new   #FILESET. #define this at top because otherwise ex
 puts "migrating a thesis"	
 	foxmlpath = path	
 	#enforce  UTF-8 compliance when opening foxml file
-	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}.xml, 
+	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)} 
 	#doesnt resolve nested namespaces, this fixes that
     ns = doc.collect_namespaces		
 	#establish parent collection - map old to new from mappings file
