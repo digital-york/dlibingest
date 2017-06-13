@@ -1,16 +1,24 @@
 require 'json'
 require 'hydra/works'
 require 'logger'
+require 'dlibhydra'
+
 require_relative 'basic_processor.rb'
 
 class ThesisProcessor < BasicProcessor
 
+
+  # Start the log over whenever the log exceeds 100 megabytes in size.
+  # self.logger = Logger.new('workflow.log', 0, 100 * 1024 * 1024)
+
   # process Thesis submission
   def self.process(message)
+    logger = Logger.new('log/workflow.log', 0, 100 * 1024 * 1024)
+
     logger.info 'Ingesting thesis to Fedora ...'
-    logger.info '---------------message--------------'
-    logger.info message.inspect
-    logger.info '-----------------------------'
+    #logger.info '---------------message--------------'
+    #logger.info message.inspect
+    #logger.info '-----------------------------'
 
     begin
       # construct Thesis object from message received
