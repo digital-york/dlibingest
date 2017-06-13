@@ -74,7 +74,7 @@ class ThesisProcessor < BasicProcessor
     creators_array              = creators.split(',')
     keywords_array              = keywords.split(',')
     subjects_array              = subjects.split(',')
-#	  rights_array                = rights.split(',')
+	  rights_array                = rights.split(',')
     languages_array             = languages.split(',')
     departments_array           = departments.split(',')
     advisors_array              = advisors.split(',')
@@ -87,15 +87,19 @@ class ThesisProcessor < BasicProcessor
     thesis.title                = title_array
     thesis.keyword              = keywords_array
     #thesis.keyword             = ['northern misery']
-    thesis.rights               = rights
+    thesis.rights               = rights_array
     thesis.language             = languages_array
     #thesis.language            = ['en-GB']
-    thesis.department           = departments_array
-    thesis.advisor              = advisors_array
-    thesis.qualification_name   = qualification_name_array
+    #thesis.department           = departments_array
+    thesis.department_resource_ids = departments_array
+    #thesis.advisor              = advisors_array
+    thesis.advisor_resource_ids = advisors_array
+    #thesis.qualification_name   = qualification_name_array
+    thesis.qualification_name_resource_ids   = qualification_name_array
     thesis.qualification_level  = qualification_level_array
     thesis.date_of_award        = date_of_award
-    thesis.awarding_institution = awarding_institution_array
+    #thesis.awarding_institution = awarding_institution_array
+    thesis.awarding_institution_resource = awarding_institution_array
 
     thesis
   end
