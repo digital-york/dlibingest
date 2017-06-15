@@ -7,99 +7,81 @@ require_relative 'basic_processor.rb'
 
 class ThesisProcessor < BasicProcessor
 
-
-  # Start the log over whenever the log exceeds 100 megabytes in size.
-  # self.logger = Logger.new('workflow.log', 0, 100 * 1024 * 1024)
-
   # process Thesis submission
   def self.process(message)
-    logger = Logger.new('log/workflow.log', 0, 100 * 1024 * 1024)
-
-    logger.info 'Ingesting thesis to Fedora ...'
-    #logger.info '---------------message--------------'
-    #logger.info message.inspect
-    #logger.info '-----------------------------'
 
     begin
       # construct Thesis object from message received
       thesis = get_thesis(message)
 
-      ##TODO: get userid from message
-      userid = '1'
+      userid = get_userid(message)
       user =  User.find(userid)
 
-      ##TODO: get permissions setting from message
-      permissions = 'public'  # currently, support 'public', 'york', 'embargo', 'lease', and 'private'
+      permission = get_permission(message)  # currently, support 'public', 'york', 'embargo', 'lease', and 'private'
 
       ## define permissions for the thesis created
-      assign_permissions(user, permissions, thesis)
+      assign_permissions(user, permission, thesis)
 
       thesis.save!
+      logger.info 'Thesis saved. id: ' + thesis.id
 
       #process embedded files & external files
       process_files(user,
-                    permissions,
+                    permission,
                     thesis,
                     get_embedded_files(message),
                     get_external_files(message))
 
     rescue Exception => e
-      logger.error e.message
-      logger.error e.backtrace
+      self.logger.error e.message
+      self.logger.error e.backtrace
     end
 
   end
 
-  # construct thesis object from text message
+  # construct thesis object from json/text message
   def self.get_thesis(message)
-    json_s = message.first.to_json
-    json   = JSON.parse json_s
+    json = JSON.parse(message)
 
-    creators             = json['creator']
-    keywords             = json['keyword']
-    rights               = json["rights"]
-    subjects             = json["subject"]
-    languages            = json["language"]
-    departments          = json["department"]
-    advisors             = json["advisor"]
-    visibility           = json["visibility"]
-    title                = json["preflabel"]
-    abstract             = json["abstract"]
-    qualification_name   = json["qualification_name"]
-    qualification_level  = json["qualification_level"]
-    date_of_award        = json["date_of_award"]
-    awarding_institution = json["awarding_institution"]
+    creators              = json['metadata']['creator']
+    keywords              = json['metadata']['keyword']
+    rights                = json['metadata']["rights"]
+    subjects              = json['metadata']["subject"]
+    languages             = json['metadata']["language"]
+    departmentids         = json['metadata']["department"]
+    advisors              = json['metadata']["advisor"]
+    visibility            = json['metadata']["visibility"]
+    titles                = json['metadata']["title"]
+    abstracts             = json['metadata']["abstract"]
+    qualification_names   = json['metadata']["qualification_name"]
+    qualification_levels  = json['metadata']["qualification_level"]
+    date_of_award         = json['metadata']["date_of_award"]
+    awarding_institutions = json['metadata']["awarding_institution"]
+    former_ids            = json['metadata']["former_id"]
+    dois                  = json['metadata']["doi"]
 
-    title_array                 = title.split(',')
-    creators_array              = creators.split(',')
-    keywords_array              = keywords.split(',')
-    subjects_array              = subjects.split(',')
-	  rights_array                = rights.split(',')
-    languages_array             = languages.split(',')
-    departments_array           = departments.split(',')
-    advisors_array              = advisors.split(',')
-    qualification_name_array    = qualification_name.split(',')
-    qualification_level_array   = qualification_level.split(',')
-    awarding_institution_array  = awarding_institution.split(',')
+    #thesis = Dlibhydra::Thesis.create
+    thesis = Thesis.create
 
-    thesis = Dlibhydra::Thesis.create
+    thesis.date_uploaded           = Time.now
+    thesis.date_modified           = Time.now
 
-    thesis.title                = title_array
-    thesis.keyword              = keywords_array
-    #thesis.keyword             = ['northern misery']
-    thesis.rights               = rights_array
-    thesis.language             = languages_array
-    #thesis.language            = ['en-GB']
-    #thesis.department           = departments_array
-    thesis.department_resource_ids = departments_array
-    #thesis.advisor              = advisors_array
-    thesis.advisor_resource_ids = advisors_array
-    #thesis.qualification_name   = qualification_name_array
-    thesis.qualification_name_resource_ids   = qualification_name_array
-    thesis.qualification_level  = qualification_level_array
-    thesis.date_of_award        = date_of_award
-    #thesis.awarding_institution = awarding_institution_array
-    thesis.awarding_institution_resource = awarding_institution_array
+    thesis.title                   = titles
+    thesis.preflabel               = titles[0]
+    thesis.creator_string          = creators
+    thesis.advisor_string          = advisors
+    thesis.abstract                = abstracts
+    thesis.keyword                 = keywords
+    thesis.rights                  = rights
+    thesis.language                = languages
+    thesis.department_resource_ids = departmentids
+    thesis.subject_resource_ids    = subjects
+    thesis.qualification_name_resource_ids  = qualification_names
+    thesis.qualification_level              = qualification_levels
+    thesis.date_of_award                     = date_of_award
+    thesis.awarding_institution_resource_ids = awarding_institutions
+    thesis.former_id                         = former_ids
+    thesis.doi                               = dois
 
     thesis
   end
