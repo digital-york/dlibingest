@@ -15,7 +15,12 @@
 <% collector = can?(:collect, @presenter.id) %>
 <% editor    = can?(:edit,    @presenter.id) %>
 
-<%= render 'representative_media', presenter: @presenter %>
+<!--<%= render 'representative_media', presenter: @presenter %>-->
+<%= image_tag "#{@presenter.solr_document._source["thumbnail_path_ss"]}",
+              class: "representative-media",
+              alt: "",
+              role: "presentation" %>
+
 <%= render "attributes", presenter: @presenter %>
 
 
