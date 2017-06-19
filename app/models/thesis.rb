@@ -11,6 +11,8 @@ class Thesis < Dlibhydra::Thesis
 
   class ThesisIndexer < CurationConcerns::WorkIndexer # Hydra::PCDM::PCDMIndexer
     include Dlibhydra::IndexesThesis
+
+    self.thumbnail_path_service = Dlib::ThumbnailPathService
   end
 
   def self.indexer

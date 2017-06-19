@@ -10,6 +10,8 @@ class ExamPaper < Dlibhydra::ExamPaper
 
   class ExamPaperIndexer < CurationConcerns::WorkIndexer
     include Dlibhydra::IndexesExamPaper
+
+    self.thumbnail_path_service = Dlib::ThumbnailPathService
   end
 
   def self.indexer

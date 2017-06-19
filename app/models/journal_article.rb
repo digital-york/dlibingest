@@ -12,6 +12,8 @@ class JournalArticle < Dlibhydra::JournalArticle
 
   class JournalArticleIndexer < CurationConcerns::WorkIndexer
     include Dlibhydra::IndexesJournalArticle
+
+    self.thumbnail_path_service = Dlib::ThumbnailPathService
   end
 
   def self.indexer

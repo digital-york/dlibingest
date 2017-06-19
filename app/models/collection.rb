@@ -9,6 +9,8 @@ class Collection < Dlibhydra::Collection #ActiveFedora::Base
 
   class CollectionIndexer < CurationConcerns::CollectionIndexer # Hydra::PCDM::PCDMIndexer
     include Dlibhydra::IndexesCollection
+
+    self.thumbnail_path_service = Dlib::ThumbnailPathService
   end
 
   def self.indexer
