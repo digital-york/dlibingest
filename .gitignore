@@ -27,5 +27,7 @@ start_worker.sh
 start_workflow_backend.sh
 w.sh
 t.sh
+lib/asets/lists/collections.xml
 
 
+/lib/assets/lists/collections.xml

@@ -2,7 +2,8 @@ source 'https://rubygems.org'
 
 # gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'master'
 gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'external_fileset'
-gem 'curation_concerns', '~> 1.7.6'
+# gem 'curation_concerns', '~> 1.7.6'
+gem 'curation_concerns', '1.7.6'
 gem 'dotenv-rails', groups: [:development, :test, :production]
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
@@ -27,7 +28,8 @@ gem 'jquery-rails'
 # and add the jquery UI libraries as well
 gem 'jquery-ui-rails', '5.0.5'
 # Turbolinks makes navigating your web application faster. Read more: https://github.com/turbolinks/turbolinks
-gem 'turbolinks', '~> 5'
+#gem 'turbolinks', '~> 5'
+gem 'turbolinks'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'jbuilder', '~> 2.5'
 # Use Redis adapter to run Action Cable in production

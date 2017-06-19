@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161213225131) do
+ActiveRecord::Schema.define(version: 20170615155548) do
 
   create_table "bookmarks", force: :cascade do |t|
     t.integer  "user_id",       null: false
@@ -55,6 +55,17 @@ ActiveRecord::Schema.define(version: 20161213225131) do
     t.index ["parent_id"], name: "index_curation_concerns_operations_on_parent_id"
     t.index ["rgt"], name: "index_curation_concerns_operations_on_rgt"
     t.index ["user_id"], name: "index_curation_concerns_operations_on_user_id"
+  end
+
+  create_table "minter_states", force: :cascade do |t|
+    t.string   "namespace",            default: "default", null: false
+    t.string   "template",                                 null: false
+    t.text     "counters"
+    t.integer  "seq",        limit: 8, default: 0
+    t.binary   "rand"
+    t.datetime "created_at",                               null: false
+    t.datetime "updated_at",                               null: false
+    t.index ["namespace"], name: "index_minter_states_on_namespace", unique: true
   end
 
   create_table "searches", force: :cascade do |t|
@@ -221,11 +232,12 @@ ActiveRecord::Schema.define(version: 20161213225131) do
   end
 
   create_table "sipity_workflows", force: :cascade do |t|
-    t.string   "name",        null: false
+    t.string   "name",                null: false
     t.string   "label"
     t.text     "description"
-    t.datetime "created_at",  null: false
-    t.datetime "updated_at",  null: false
+    t.datetime "created_at",          null: false
+    t.datetime "updated_at",          null: false
+    t.boolean  "allows_access_grant"
     t.index ["name"], name: "index_sipity_workflows_on_name", unique: true
   end
 
