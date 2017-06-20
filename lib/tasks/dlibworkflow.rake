@@ -16,7 +16,8 @@ namespace :dlibworkflow do
 
   desc "Create YODL collections from Fedora 3 repository"
   task create_collections: :environment do
-    top_cols_xpath = "/collections/collection[@pid='YODL']/collection[@pid='york:822269']/collection[@pid='york:815851']"
+    #top_cols_xpath = "/collections/collection[@pid='YODL']/collection[@pid='york:822269']/collection[@pid='york:815851']"
+    top_cols_xpath = "/collections/collection[@pid='YODL']/collection[@pid='york:822269']/collection[@pid='york:11049']"
 
     doc      = Nokogiri::XML(File.open(Rails.root + 'lib/assets/lists/collections.xml'))
     top_cols = doc.xpath(top_cols_xpath)
