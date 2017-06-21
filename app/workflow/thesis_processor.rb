@@ -43,6 +43,20 @@ class ThesisProcessor < BasicProcessor
   def self.get_thesis(message)
     json = JSON.parse(message)
 
+    id = json['id']
+
+    if id.present?
+      t = Thesis.find(id)
+      if t.present?
+        self.logger.info 'Found Thesis: ' + id
+        return t
+      else
+        self.logger.warn 'Cannot find Thesis with id: ' + id
+      end
+    else
+      logger.info 'No Thesis object id provided, creating object now. '
+    end
+
     creators              = json['metadata']['creator']
     keywords              = json['metadata']['keyword']
     rights                = json['metadata']["rights"]

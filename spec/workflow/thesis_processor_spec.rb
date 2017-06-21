@@ -5,12 +5,13 @@ require_relative '../../app/workflow/thesis_processor.rb'
 describe ThesisProcessor do
 
   describe 'ThesisProcessor' do
-    it 'has a processor' do
-      expect 1==1
+    it 'can ingest a new thesis from json' do
+      # message = get_thesis_json()
+      # ThesisProcessor.process(message)
     end
 
-    it 'has a method' do
-      message = get_thesis_json()
+    it 'can attach files to an existing thesis' do
+      message = get_thesis_without_metadata_json()
       ThesisProcessor.process(message)
     end
   end
@@ -26,7 +27,7 @@ describe ThesisProcessor do
             "admin"
           ]
         },
-        "permission" : "private",
+        "permission" : "public",
         "embedded_files": [
           {
             "title" : "",
@@ -66,6 +67,43 @@ describe ThesisProcessor do
           "doi"                  : ["doi_1","doi_2"],
           "former_id"            : ["york:XXXXX"]
         }
+      }
+  '
+  end
+
+  def get_thesis_without_metadata_json()
+    json = '
+      {
+        "auth": {
+          "userid"  : "1",
+          "useremail": "frank.feng@york.ac.uk",
+          "roles": [
+            "public",
+            "admin"
+          ]
+        },
+        "permission" : "public",
+        "embedded_files": [
+          {
+            "title" : "",
+            "path"  : "/var/tmp/test1.pdf"
+          },
+          {
+            "title" : "",
+            "path"  : "/var/tmp/test2.jpg"
+          }
+        ],
+        "external_files": [
+          {
+            "title" : "",
+            "url"  : "https://www.york.ac.uk/static/data/homepage/images/foi-homepage-banner-alt.jpg"
+          },
+          {
+            "title" : "",
+            "url"  : "https://www.york.ac.uk/media/news-and-events/pressreleases/2017/hand-axe-505.jpg"
+          }
+        ],
+        "id": "sb397825r"
       }
   '
   end
