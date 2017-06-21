@@ -62,6 +62,7 @@ class BasicProcessor
       for i in 0..embedded_files.length-1
         filetitle = embedded_files[i]["title"]
         filename  = embedded_files[i]["path"]
+        mainfile  = embedded_files[i]["mainfile"]
         fileset   = FileSet.new
         fileset.filetype = FILE_TYPE_EMBEDDED
         fileset.title    = filetitle
@@ -78,6 +79,11 @@ class BasicProcessor
         logger.info 'fileset saved!'
 
         obj.members << fileset
+
+        if mainfile.present? && mainfile=='true'
+          obj.mainfile << fileset
+        end
+
         obj.save!
         logger.info 'added fileset to thesis: ' + fileset.id + ' -> ' + obj.id
       end

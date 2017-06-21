@@ -5,10 +5,10 @@ require_relative '../../app/workflow/thesis_processor.rb'
 describe ThesisProcessor do
 
   describe 'ThesisProcessor' do
-    it 'can ingest a new thesis from json' do
+    #it 'can ingest a new thesis from json' do
       # message = get_thesis_json()
       # ThesisProcessor.process(message)
-    end
+    #end
 
     it 'can attach files to an existing thesis' do
       message = get_thesis_without_metadata_json()
@@ -31,11 +31,13 @@ describe ThesisProcessor do
         "embedded_files": [
           {
             "title" : "",
-            "path"  : "/var/tmp/test1.pdf"
+            "path"  : "/var/tmp/test1.pdf",
+            "mainfile": "true"
           },
           {
             "title" : "",
-            "path"  : "/var/tmp/test2.jpg"
+            "path"  : "/var/tmp/test2.jpg",
+            "mainfile": "false"
           }
         ],
         "external_files": [
@@ -86,11 +88,13 @@ describe ThesisProcessor do
         "embedded_files": [
           {
             "title" : "",
-            "path"  : "/var/tmp/test1.pdf"
+            "path"  : "/var/tmp/test1.pdf",
+            "mainfile": "true"
           },
           {
             "title" : "",
-            "path"  : "/var/tmp/test2.jpg"
+            "path"  : "/var/tmp/test2.jpg",
+            "mainfile": "false"
           }
         ],
         "external_files": [
@@ -103,7 +107,7 @@ describe ThesisProcessor do
             "url"  : "https://www.york.ac.uk/media/news-and-events/pressreleases/2017/hand-axe-505.jpg"
           }
         ],
-        "id": "sb397825r"
+        "id": "k35694332"
       }
   '
   end
