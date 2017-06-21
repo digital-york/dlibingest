@@ -1,6 +1,7 @@
 namespace :dlibworkflow do
   require 'nokogiri'
   require 'yaml'
+  require 'faraday'
 
   solrconfig = YAML.load_file('config/solr.yml')
   SOLR       = solrconfig[Rails.env]['url']
@@ -28,10 +29,8 @@ namespace :dlibworkflow do
       col_obj.former_id = [col.attr('pid')]
       col_obj.depositor = self.user.email
 
-      #TODO: get permission from OLD Fedora Repository
-
-
-      permission        = self.default_permission
+      #permission        = self.default_permission
+      permission         = get_fedora3_permission(col.attr('pid'))
       BasicProcessor.assign_permissions(user, permission, col_obj)
       col_obj.save!
       puts 'Created collection: ' + col_obj.id
@@ -49,11 +48,11 @@ namespace :dlibworkflow do
       sub_col_obj.title     = [sub_col.attr('label')]
       sub_col_obj.depositor = self.user.email
 
-      #TODO: get permission from OLD Fedora Repository
-
-
-      permission            = self.default_permission
+      #permission            = self.default_permission
+      permission            = get_fedora3_permission(sub_col.attr('pid'))
       BasicProcessor.assign_permissions(user, permission, sub_col_obj)
+
+      sub_col_obj.former_id = sub_col.attr('pid')
       sub_col_obj.save!
       puts indent + 'Created collection: ' + sub_col_obj.id
       parent_obj.members << sub_col_obj
@@ -62,5 +61,38 @@ namespace :dlibworkflow do
       create_sub_collections(sub_col_obj, sub_col, indent + '  ')
     end
   end
+
+  # read ACL from OLD solr server and determine current permission based on ACL
+  def get_fedora3_permission(pid)
+    p = pid.gsub! ':', '?'
+    server_url = ENV['OLD_SOLR_SERVER_URL']
+    path       = ENV['OLD_SOLR_PATH'] + p
+
+    conn = Faraday.new(:url => server_url) do |c|
+      c.use Faraday::Request::UrlEncoded
+      #c.use Faraday::Response::Logger
+      c.use Faraday::Adapter::NetHttp
+    end
+
+    response = conn.get path
+    doc = Nokogiri::XML(response.body.to_s)
+
+    if doc.xpath("/response/result/doc/arr[@name='acl.allowed.roles']/str[.='public']").present?
+      'public'
+    elsif doc.xpath("/response/result/doc/arr[@name='acl.allowed.roles']/str[.='york']").present?
+      'york'
+    elsif doc.xpath("/response/result/doc/arr[@name='acl.allowed.roles']/str[.='libarchStaff']").present?
+      'lib'
+    else
+      'private'
+    end
+
+  end
+
+  # desc "Get fedora 3 object permission"
+  # task get_permission: :environment do
+  #   pid = 'york:3'
+  #   puts get_fedora3_permission(pid)
+  # end
 
 end
