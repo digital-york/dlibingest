@@ -4,13 +4,11 @@ require 'open-uri'
 require 'dlibhydra'
 require 'csv'
 
-
 #methods to create the  collection structure and do migrations
 class FoxmlReader
 include ::Dlibhydra
 include ::CurationConcerns
 include ::Hydra
-
 
 
 
@@ -21,8 +19,9 @@ include ::Hydra
 *format is: old pid of collection,title of collection,old parent_pid
 *col_mapping.txt is output by the script and is the permanent mapping file. format:
 originalpid, title, newid . 
-
-so call is like rake migration_tasks:make_collection_structure[/home/dlib/mapping_files/]
+made the path to the various files used for this a parameter 
+at present gonna use "/home/ubuntu/mapping_files/"  (with end slash)
+so call is like rake migration_tasks:make_collection_structure[/home/ubuntu/mapping_files/]
 =end
 
 def make_collection_structure(mapping_path)
@@ -159,15 +158,48 @@ OPTIONAL third level is year eg 1973. Not all disciplines have this level
 
 end  #of method
 
-def make_collection
+=begin
+keep this for present as it is the only way of making a new child collection within the existing structure (the one on the interface does not allow 
+you to specify the correct parent to add to - only shows some, and no way to distinguish between groups of year collections
+call is like rake migration_tasks:make_collection_structure[/home/ubuntu/dlib/mapping_files/]
+so where the child being added has pid york:1234, is called 1999, and is a child of york:4567
+so to create the old english/
+new english id is m039k4882
+  old year collection title was 2015 
+  old year collection id was york:932220
+ call is like rake migration_tasks:recreate_child_collection[york:932220,2015,m039k4882,/home/ubuntu/mapping_files/]
+ rake migration_tasks:recreate_child_collection[york:932221,2016,m039k4882,/home/ubuntu/mapping_files/]
+=end
+def recreate_child_collection(old_pid, title, parent_id, mapping_path)
+#coll = Object::Collection.new
+mapping_file = mapping_path +"col_mapping.txt"
+puts "mapping file was " + mapping_file
+puts "old year pid was " + old_pid
+puts "old year title was " + title
+puts "parent id was " + parent_id
+mapping = []
 coll = Object::Collection.new
+#coll.preflabel = "stuff I made"
 coll.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 coll.depositor = "ps552@york.ac.uk"
-coll.title = ["a test collection made by ruby"]
+coll.title = [title]
+
 coll.save!
-id = coll.id
-puts "collection id was " +id
+child_id = coll.id
+puts "collection id was " +child_id
+parent_col = Object::Collection.find(parent_id)	
+	puts "id of col was:" +parent_col.id
+	puts " collection title was " + parent_col.title[0].to_s
+parent_col.members << coll	
+parent_col.save!   #saving this IS neccesary
+mapping_string = old_pid + "," +  + coll.title[0].to_s + "," + child_id #former pid of child +title of child plus new id of child
+mapping.push(mapping_string)
+#add to mapping file
+open(mapping_file, "a+")do |mapfile|
+	mapfile.puts(mapping)
 end
+
+end #end recreate_child_collection
 
 
 #this is defined in yaml
@@ -401,25 +433,34 @@ end
 
 
 
-#bundle exec rake migration_tasks:migrate_lots_of_theses[/home/dlib/testfiles/foxml,/home/dlib/mapping_files/col_mapping.txt]
+#bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt
+# rake migration_tasks:migrate_lots_of_theses[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
 #try this. will need to restart rails first.
-def migrate_lots_of_theses(path_to_fox,collection_mapping_doc_path)
+def migrate_lots_of_theses(path_to_fox, path_to_foxdone, collection_mapping_doc_path)
 puts "doing a bulk migration"
 fname = "tally.txt"
+tname = "tracking.txt"
+#could really do with a file to list what its starting work on as a debug tool
+trackingfile = File.open(tname, "a")
 tallyfile = File.open(fname, "a")
-
-Dir.foreach(path_to_fox)do |item|
-    #keep a record of whats been ingested. imagine this will go to the location the method has been called from
-	
+Dir.foreach(path_to_fox)do |item|	
 	#we dont want to try and act on the current and parent directories
 	next if item == '.' or item == '..'
+	trackingfile.puts( "now working on " + item)
 	itempath = path_to_fox + "/" + item
-	result = migrate_thesis(itempath,collection_mapping_doc_path)
+	#migrate_thesis(itempath,collection_mapping_doc_path)
+	result = 2  #so this wont do the actions required if it isnt reset
+	begin
+		result = migrate_thesis(itempath,collection_mapping_doc_path)
+	rescue
+		result = 1	
+		tallyfile.puts("rescue says FAILED TO INGEST "+ itempath)  
+	end
 	if result == 0
 		tallyfile.puts("ingested "+ itempath)
-		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
-		FileUtils.mv(itempath, "/home/dlib/testfiles/foxdone/" + item)  #move files once migrated
-	elsif result == 1
+		#sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  #move files once migrated
+	elsif result == 1   #this may well not work, as it may stop part way through before it ever gets here. rescue block might help?
 		tallyfile.puts("FAILED TO INGEST "+ itempath)
 		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 	else
@@ -427,6 +468,7 @@ Dir.foreach(path_to_fox)do |item|
 	end
 end
 tallyfile.close
+trackingfile.close
 end
 
 
@@ -437,19 +479,20 @@ end
 #emotional world etc
 #bundle exec rake migrate_thesis[/vagrant/files_to_test/york_807119.xml,/vagrant/files_to_test/col_mapping.txt]   
 #bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
-#bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_806397.xml,/vagrant/files_to_test/col_mapping.txt]
-#on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_847953.xml,/home/ubuntu/mapping_files/col_mapping.txt]
-#on megastack: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/york_847953.xml,/home/dlib/mapping_files/col_mapping.txt]
-#returns result = 0 for success, 1 for fail
+#bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847943.xml,/vagrant/files_to_test/col_mapping.txt]
+#on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
 def migrate_thesis(path,collection_mapping_doc_path)
+#mfset = Dlibhydra::FileSet.new   #FILESET. #defin this at top because otherwise expects to find it in CurationConcerns module 
 result = 1 #default is fail
 mfset = Object::FileSet.new   #FILESET. #define this at top because otherwise expects to find it in CurationConcerns module . 
+
 puts "migrating a thesis"	
 	foxmlpath = path	
 	#enforce  UTF-8 compliance when opening foxml file
-	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)} 
+	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
 	#doesnt resolve nested namespaces, this fixes that
-    ns = doc.collect_namespaces		
+    ns = doc.collect_namespaces	
+	
 	#establish parent collection - map old to new from mappings file
 	collection_mappings = {}
 	mapping_text = File.read(collection_mapping_doc_path)
@@ -489,23 +532,21 @@ puts "migrating a thesis"
 	#this has local.fedora.host, which will be wrong. need to replace this 
 	#reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
 	#needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
-	#adapt as appropriate - 
 	newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'
+	localpdfloc = pdf_loc.sub 'http://local.fedora.server', '/home/ubuntu/testfiles/content' #this will be added to below
+    #ADDED 14th June for base name**********************************************************	
+	basename = File.basename(localpdfloc)
 	#comment out line below if redirecting to external url rather than ingesting local
-	localpdfloc = pdf_loc.sub 'http://local.fedora.server', '/home/dlib/testfiles/content'
-    basename = File.basename(localpdfloc)
-	#comment out line below if redirecting to external url rather than ingesting local
-	localpdfloc = '/home/dlib/testfiles/content/'+ basename
-    	
-	#dont continue to migrate file if content file not found (this will only work for local files)
+	localpdfloc = '/home/ubuntu/testfiles/content/'+ basename  #not a repeat but an addition
+	#end of addition*****************************	
+	
+	#dont continue to migrate file if content file not found
 	if !File.exist?(localpdfloc)
 		puts 'content file ' + localpdfloc.to_s + ' not found'	
 		return
 	else
 		puts 'checked for ' + localpdfloc.to_s + ' found it present'
-	end
-
-	
+	end 
 	#for initial development purposes on my machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 		
 	
@@ -668,8 +709,8 @@ end
 		end	
 		
 	
-	#save	  
-	thesis.save!  #WIERD BULK ERRORS MUST HAPPEN BEFORE OR AT THIS POINT
+	#save	
+	thesis.save!
 	id = thesis.id
 	puts "thesis id was " +id 
 	#put in collection	
@@ -679,36 +720,50 @@ end
 	col.members << thesis  
 	col.save!
 	
-	# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
-	users = Object::User.all #otherwise it will use one of the included modules
-	user = users[0]	
-	mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
-	mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-	mfset.depositor = "ps552@york.ac.uk"
-	mfset.save!
+	#this is the section that keeps failing
+	begin
+		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
+		users = Object::User.all #otherwise it will use one of the included modules
+		user = users[0]	
+		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
+		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		mfset.depositor = "ps552@york.ac.uk"
+		mfset.save!
 	
+		#THE NEXT FOUR LINES UPLOAD THE CONTENT INTO THE FILESET AND CREATE A THUMBNAIL
 	
-	#THE NEXT FOUR LINES UPLOAD THE CONTENT INTO THE FILESET AND CREATE A THUMBNAIL
-	#local_file = Hydra::Derivatives::IoDecorator.new(File.open(localpdfloc, "rb"))	
-	#while ingesting rather than pointing to external files, only use the local files, which will be in a flat folder location. 
-	#see localpdfloc assignment at lines 474 to 488 
-	local_file = Hydra::Derivatives::IoDecorator.new(File.open(localpdfloc, "rb"))
-	relation = "original_file"	
-	fileactor = CurationConcerns::Actors::FileActor.new(mfset,relation,user)
-	fileactor.ingest_file(local_file) #according to the documentation this method should produce derivatives as well
-	mfset.save!	
+		local_file = Hydra::Derivatives::IoDecorator.new(File.open(localpdfloc, "rb"))	
+		relation = "original_file"	
+		fileactor = CurationConcerns::Actors::FileActor.new(mfset,relation,user)
+		fileactor.ingest_file(local_file) #according to the documentation this method should produce derivatives as well
+		mfset.save!	
 	
-	#THe NEXT TWO LINES ARE NEEDED TO ATTACH THE FILESET AND CONTENT TO THE WORK 
-	actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
-	actor.create_metadata(thesis)#name of object its to be added to #if you leave this out it wont create the metadata showing the related fileset
-	#create_content does not seem to be required if we are using fileactor.ingest_file, and does not make any difference to download icon
-	#actor.create_content(contentfile, relation = 'original_file' )
-	#actor.create_content(contentfile) #15.03.2017 CHOSS
-	#actor.create_content(local_file)
-	#TELL THESIS THIS IS THE MAIN_FILE. assume this also sets mainfile_ids[]	
-   thesis.mainfile << mfset	   
-   thesis.save!
-   puts "all done for  file " + id
+		#THe NEXT TWO LINES ARE NEEDED TO ATTACH THE FILESET AND CONTENT TO THE WORK 
+		actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
+		actor.create_metadata(thesis)#name of object its to be added to #if you leave this out it wont create the metadata showing the related fileset
+		#create_content does not seem to be required if we are using fileactor.ingest_file, and does not make any difference to download icon
+		#actor.create_content(contentfile, relation = 'original_file' )
+		#actor.create_content(contentfile) #15.03.2017 CHOSS
+		#actor.create_content(local_file)
+		#TELL THESIS THIS IS THE MAIN_FILE. assume this also sets mainfile_ids[]
+    rescue
+		puts "*****************UPLOAD DIDNT WORK FOR " + thesis.title[0].to_s + "********************************"    
+		thesis.mainfile << mfset	   
+		thesis.save!
+		result = 1
+		return result
+   end
+   #try explicitly cloing local_file and setting agents to nil so garbage will be collected
+   #puts "now about to close file "
+   #local_file.close   #doesnt seem to help
+   #puts " closed local file "
+   #fileactor = nil
+   #puts "fileactor nilled"
+   #actor = nil 
+   #puts "actor nilled"
+   #actor.nil
+   #puts "files closed, actors nilled"
+   puts "all done for file " + id
    result = 0
    return result   #give it  a return value
 end
