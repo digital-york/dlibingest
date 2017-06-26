@@ -25,12 +25,13 @@ class CollectionProcessor < BasicProcessor
       collection.save!
       logger.info 'Collection saved. id: ' + collection.id
 
+      # no associated files allowed for collections
       #process embedded files & external files
-      process_files(user,
-                    permission,
-                    collection,
-                    get_embedded_files(message),
-                    get_external_files(message))
+      # process_files(user,
+      #               permission,
+      #               collection,
+      #               get_embedded_files(message),
+      #               get_external_files(message))
 
     rescue Exception => e
       self.logger.error e.message
@@ -41,6 +42,7 @@ class CollectionProcessor < BasicProcessor
 
   # construct thesis object from json/text message
   def self.get_collection(message)
+
     json = JSON.parse(message)
 
     id = json['id']
@@ -65,7 +67,7 @@ class CollectionProcessor < BasicProcessor
     languages             = json['metadata']["language"]
     visibility            = json['metadata']["visibility"]
     titles                = json['metadata']["title"]
-    publisher             = json['metadata']["publisher"]
+    #publisher             = json['metadata']["publisher"]
     date                  = json['metadata']["date"]
     description           = json['metadata']["description"]
     former_ids            = json['metadata']["former_id"]
@@ -83,8 +85,8 @@ class CollectionProcessor < BasicProcessor
     col.rights_holder           = rights_holder
     col.language                = languages
     col.subject_resource_ids    = subjects
-    col.publisher_resource_ids  = publisher
-    col.descripton              = description
+    #col.publisher_resource_ids  = publisher
+    col.description             = description
 
     col.former_id               = former_ids
 

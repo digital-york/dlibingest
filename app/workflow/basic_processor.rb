@@ -57,6 +57,7 @@ class BasicProcessor
 
   # define basic file processing logic, including embedded files and external urls
   def self.process_files(user, permissions, obj, embedded_files, external_files)
+
     # process all embedded files
     if embedded_files.present?
       for i in 0..embedded_files.length-1
@@ -70,11 +71,9 @@ class BasicProcessor
         fileset = assign_permissions(user, permissions, fileset)
         contentfile = open(filename)
         actor = CurationConcerns::Actors::FileSetActor.new(fileset, user)
-
         #add metadata to make fileset appear as a child of the object
         actor.create_metadata(obj)
         actor.create_content(contentfile, relation = 'original_file' )
-
         fileset.save!
         logger.info 'fileset saved!'
 
@@ -85,11 +84,15 @@ class BasicProcessor
         end
 
         obj.save!
-        logger.info 'added fileset to thesis: ' + fileset.id + ' -> ' + obj.id
+        logger.info 'added fileset to object: ' + fileset.id + ' -> ' + obj.id
       end
     else
       logger.info 'No embedded file found.'
     end
+
+logger.info 'external_files ...... '
+logger.info external_files
+
 
     # process all external files
     if external_files.present?
