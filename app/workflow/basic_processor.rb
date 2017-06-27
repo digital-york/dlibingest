@@ -90,10 +90,6 @@ class BasicProcessor
       logger.info 'No embedded file found.'
     end
 
-logger.info 'external_files ...... '
-logger.info external_files
-
-
     # process all external files
     if external_files.present?
       for i in 0..external_files.length-1

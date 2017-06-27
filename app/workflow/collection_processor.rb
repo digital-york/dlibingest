@@ -26,7 +26,6 @@ class CollectionProcessor < BasicProcessor
       logger.info 'Collection saved. id: ' + collection.id
 
       # no associated files allowed for collections
-      #process embedded files & external files
       # process_files(user,
       #               permission,
       #               collection,
