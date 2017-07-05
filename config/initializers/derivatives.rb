@@ -14,10 +14,8 @@ module CurationConcerns
       # read and write to a local file. It's important that characterization runs
       # before derivatives so that we have a credible mime_type field to work with.
       def create_derivatives(filename)
-	    puts  "***************CHOSS using overridden derivatives.rb"
         case mime_type
         when *self.class.pdf_mime_types
-		puts  "***************CHOSS PDF so no thumbnail should be created"
           #Hydra::Derivatives::PdfDerivatives.create(filename,
           #                                          outputs: [{ label: :thumbnail, format: 'jpg', size: '338x493', url: derivative_url('thumbnail') }])
           #Hydra::Derivatives::FullTextExtract.create(filename,
