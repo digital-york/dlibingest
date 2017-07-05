@@ -25,18 +25,18 @@ puts "Args were: #{args}"
 end
 
 
-task :migrate_lots_of_theses, [:dirpath,:donedirpath,:collection_mapping_doc] => :environment  do|t, args|
+task :migrate_lots_of_theses, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "need to do sommat here"
 r = FoxmlReader.new
-r.migrate_lots_of_theses(args[:dirpath],args[:donedirpath],args[:collection_mapping_doc])
+r.migrate_lots_of_theses(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc])
 end
 
-task :migrate_thesis, [:path,:collection_mapping] => :environment  do|t, args|
+task :migrate_thesis, [:path,:contentpath,:collection_mapping] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "hey there"
 	r = FoxmlReader.new
-	r.migrate_thesis(args[:path],args[:collection_mapping])
+	r.migrate_thesis(args[:path],args[:contentpath],args[:collection_mapping])
 end
 
 #use this to add a new child method that was in the former fedora collection structure but missed out of the new structure

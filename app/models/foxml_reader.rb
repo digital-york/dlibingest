@@ -4,7 +4,7 @@ require 'open-uri'
 require 'dlibhydra'
 require 'csv'
 
-#methods to create the  collection structure and do migrations
+# methods to create the  collection structure and do migrations
 class FoxmlReader
 include ::Dlibhydra
 include ::CurationConcerns
@@ -27,10 +27,10 @@ so call is like rake migration_tasks:make_collection_structure[/home/ubuntu/mapp
 def make_collection_structure(mapping_path)
 puts "running make_collection_structure"
 mapping_file = mapping_path +"col_mapping.txt"
-#make the top Theses level first, with a CurationConcerns (not dlibhydra) model.
+# make the top Theses level first, with a CurationConcerns (not dlibhydra) model.
 #array of lines including title
 topmapping = []
-#we also need a pid:id hash so we can extract id via a pid key
+# we also need a pid:id hash so we can extract id via a pid key
 idmap ={}
 toppid = "york:18179"    #top level collection
 topcol = Object::Collection.new
@@ -42,8 +42,8 @@ topcol_id = topcol.id.to_s
 puts "topcol.id was " +topcol.id
 mappings_string = toppid + "," +  + topcol.title[0].to_s + "," + topcol_id 
 	topmapping.push(mappings_string) 
-#write to file as  permanent mapping that we can use when mapping theses against collections 
-#open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
+# write to file as  permanent mapping that we can use when mapping theses against collections 
+# open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
 open(mapping_file, "a+")do |mapfile|
 mapfile.puts(topmapping)
 end
@@ -51,20 +51,20 @@ end
 =begin
 now we need to read from the list which I will create, splitting into appropriate parts and for each create an id and add it to the top level collection
 =end
-#hardcode second level file, but could pass in as param
-#csv_text = File.read("/vagrant/files_to_test/thesescollectionsLevel2SMALL.txt")
+# hardcode second level file, but could pass in as param
+# csv_text = File.read("/vagrant/files_to_test/thesescollectionsLevel2SMALL.txt")
 level2file = mapping_path + "thesescollectionsLevel2.txt"
 csv_text = File.read(level2file)
-#csv_text = File.read("/vagrant/files_to_test/thesescollectionsLevel2.txt")
+# csv_text = File.read("/vagrant/files_to_test/thesescollectionsLevel2.txt")
 csv = CSV.parse(csv_text)
-#we also need a file we can write to, as a permanent mapping
+# we also need a file we can write to, as a permanent mapping
 mappings_level2 = []
 
 puts "starting second level(subjects)"
 csv.each do |line|
     puts line[0]
 	col = Object::Collection.new
-	#col = Dlibhydra::Collection.new
+	# col = Dlibhydra::Collection.new
 	col.title = [line[1]]
 	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	col.depositor = "ps552@york.ac.uk"
@@ -75,35 +75,35 @@ csv.each do |line|
 	topcol.save!
 	mappings_string = line[0] + "," +  + line[1] + "," + col_id 
 	mappings_level2.push(mappings_string)
-	#add to hash, old pid as key, new id as value
+	# add to hash, old pid as key, new id as value
 	key = line[0]	
 	idmap[key] = col.id
 end
 
-#write to file as  permanent mapping that we can use when mapping theses against collections
+# write to file as  permanent mapping that we can use when mapping theses against collections
 open(mapping_file, "a+")do |mapfile| 
-#open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
+# open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
 	mapfile.puts(mappings_level2)
 end
 
-#but we still have our mappings array, so  now use this to make third level collections
-#best make a small list first
+# but we still have our mappings array, so  now use this to make third level collections
+# best make a small list first
 
-#centre for medievaL STUDDIES 
-#york:806625  1969
-#york:803772 1971
-#MANAGEMENT
-#york:795992 2009/2010
-#york:795676 2010/2011
+# centre for medievaL STUDDIES 
+# york:806625  1969
+# york:803772 1971
+# MANAGEMENT
+# york:795992 2009/2010
+# york:795676 2010/2011
 
 sleep 5 # wait 5 seconds before moving on to allow 2nd level collections some time to index before the level3s start trying to find them
 
-#read in third level file
+# read in third level file
 mappings_level3 = []
-#csv_text3 = File.read("/vagrant/files_to_test/thesescollectionsLevel3SMALL.txt")
+# csv_text3 = File.read("/vagrant/files_to_test/thesescollectionsLevel3SMALL.txt")
 level3collsfile = mapping_path + "thesescollectionsLevel3.txt"
 csv_text3 = File.read(level3collsfile)
-#csv_text3 = File.read("/vagrant/files_to_test/thesescollectionsLevel3.txt")
+# csv_text3 = File.read("/vagrant/files_to_test/thesescollectionsLevel3.txt")
 csv_level3 = CSV.parse(csv_text3)
 
 yearpidcount = 1
@@ -114,7 +114,7 @@ yearpidcount = yearpidcount +1
     puts line[0]
 	year_col = Object::Collection.new
 	puts "started new year collection"
-	#col = Dlibhydra::Collection.new extend cc collection instead
+	# col = Dlibhydra::Collection.new extend cc collection instead
 	year_col_title = line[1].to_s
 	puts "got level 3 title which was " +year_col_title
 	year_col.title =  [year_col_title]
@@ -125,7 +125,7 @@ yearpidcount = yearpidcount +1
 	puts "saved collection"
 	year_col_id = year_col.id.to_s
 	puts "year col id was " + year_col_id
-	##need to find the right parent collection here	
+	# need to find the right parent collection here	
 	parent_pid = line[2]# old parent pid, key to find new parent id
 	puts " subject col pid was " + parent_pid
 	mapped_parent_id = idmap[parent_pid]	
@@ -140,23 +140,23 @@ yearpidcount = yearpidcount +1
 	mappings_level3.push(mappings_string)
 end
 
-#and write to permanent mapping file - these can be all the same whether level 2 or 3 or  1
-#but test first with different
+# and write to permanent mapping file - these can be all the same whether level 2 or 3 or  1
+# but test first with different
 open(mapping_file, "a+")do |mapfile|
-#open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
-#open("/vagrant/files_to_test/col_mapping_lev3.txt", "a+")do |mapfile|
+# open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
+# open("/vagrant/files_to_test/col_mapping_lev3.txt", "a+")do |mapfile|
 	mapfile.puts(mappings_level3)
 end
 
 puts "done"
 =begin
-#information we need for each collection is the old pid as a key, plus its parent pid, plus the collection name and the new id once it is created
+information we need for each collection is the old pid as a key, plus its parent pid, plus the collection name and the new id once it is created
 top level will be the top level theses ie current Masters Dissertations (york:18179). 
 second level  is discipline eg Archaeology, Education etc
 OPTIONAL third level is year eg 1973. Not all disciplines have this level
 =end
 
-end  #of method
+end  # of method
 
 =begin
 keep this for present as it is the only way of making a new child collection within the existing structure (the one on the interface does not allow 
@@ -188,7 +188,6 @@ coll.save!
 child_id = coll.id
 puts "collection id was " +child_id
 parent_col = Object::Collection.find(parent_id)	
-	puts "id of col was:" +parent_col.id
 	puts " collection title was " + parent_col.title[0].to_s
 parent_col.members << coll	
 parent_col.save!   #saving this IS neccesary
@@ -202,8 +201,8 @@ end
 end #end recreate_child_collection
 
 
-#this is defined in yaml
-#return standard term from approved authority list
+# this is defined in yaml
+# return standard term from approved authority list
 def get_qualification_level_term(searchterm)
 masters = ['Masters','masters']
 bachelors = ['Bachelors','Bachelor','Batchelors', 'Batchelor']
@@ -248,9 +247,9 @@ preflabel = preflabel.to_s
 	id = service.find_id(preflabel)
 end
 
-#this returns the  correct preflabels to be used when calling get_resource_id to get the object ref for the department
-#note there may be more than one! hence the array - test for length
-#its a separate method as multiple variants map to the same preflabel/object. 'loc' is the  
+# this returns the  correct preflabels to be used when calling get_resource_id to get the object ref for the department
+# note there may be more than one! hence the array - test for length
+# its a separate method as multiple variants map to the same preflabel/object. 'loc' is the  
 def get_department_preflabel(stringtomatch)
 preflabels=[]
 =begin
@@ -355,9 +354,9 @@ Oxford Brookes University    									#this is an awarding institution not a dep
 	return preflabels
 end
 
-#this returns the  correct preflabel to be used when calling get_resource_id to get the object ref for the degree
-#its a separate method as multiple variants map to the same preflabel/object. it really can only have one return - anything else would be nonsense. its going to be quite complex as some cross checking accross the various types may be  needed
-#type_array will be an array consisting of all the types for an object!
+# this returns the  correct preflabel to be used when calling get_resource_id to get the object ref for the degree
+# its a separate method as multiple variants map to the same preflabel/object. it really can only have one return - anything else would be nonsense. its going to be quite complex as some cross checking accross the various types may be  needed
+# type_array will be an array consisting of all the types for an object!
 def get_qualification_name_preflabel(type_array)
 
 #Arrays of qualification name variants
@@ -420,7 +419,7 @@ def get_standard_language(searchterm)
 	approved_language = auth.search(s)[0]['id']
 end
 
-#will need to expand this for other collections, but not Theses, as all have smae rights
+# will need to expand this for other collections, but not Theses, as all have smae rights
 def get_standard_rights(searchterm)
 if searchterm.include?("yorkrestricted")
   term = 'York Restricted'
@@ -433,67 +432,70 @@ end
 
 
 
-#bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt
-# rake migration_tasks:migrate_lots_of_theses[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
-#try this. will need to restart rails first.
-def migrate_lots_of_theses(path_to_fox, path_to_foxdone, collection_mapping_doc_path)
+# bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt
+# MEGASTACK rake migration_tasks:migrate_lots_of_theses[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
+# devserver rake migration_tasks:migrate_lots_of_theses[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
+# this. will need to restart rails first.
+def migrate_lots_of_theses(path_to_fox, path_to_foxdone, contentpath, collection_mapping_doc_path)
 puts "doing a bulk migration"
 fname = "tally.txt"
-tname = "tracking.txt"
-#could really do with a file to list what its starting work on as a debug tool
-trackingfile = File.open(tname, "a")
+# tname = "tracking.txt"  PUT THIS IN MIGRATE_THESIS TO GET TITLE 
+# could really do with a file to list what its starting work on as a debug tool
+# trackingfile = File.open(tname, "a")
 tallyfile = File.open(fname, "a")
 Dir.foreach(path_to_fox)do |item|	
-	#we dont want to try and act on the current and parent directories
+	# we dont want to try and act on the current and parent directories
 	next if item == '.' or item == '..'
-	trackingfile.puts( "now working on " + item)
+	# trackingfile.puts("now working on " + item)
 	itempath = path_to_fox + "/" + item
-	#migrate_thesis(itempath,collection_mapping_doc_path)
-	result = 2  #so this wont do the actions required if it isnt reset
+	# migrate_thesis(itempath,collection_mapping_doc_path)
+	result = 2  # so this wont do the actions required if it isnt reset
 	begin
-		result = migrate_thesis(itempath,collection_mapping_doc_path)
+		result = migrate_thesis(itempath,contentpath,collection_mapping_doc_path)
 	rescue
 		result = 1	
 		tallyfile.puts("rescue says FAILED TO INGEST "+ itempath)  
 	end
 	if result == 0
-		tallyfile.puts("ingested "+ itempath)
+		tallyfile.puts("ingested " + itempath)
 		#sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
-		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  #move files once migrated
-	elsif result == 1   #this may well not work, as it may stop part way through before it ever gets here. rescue block might help?
+		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  # move files once migrated
+	elsif result == 1   # this may well not work, as it may stop part way through before it ever gets here. rescue block might help?
 		tallyfile.puts("FAILED TO INGEST "+ itempath)
 		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 	else
-        tallyfile.puts " didnt return expected value of 0 or 1 "	
+        tallyfile.puts(" didnt return expected value of 0 or 1 ")	
 	end
 end
 tallyfile.close
-trackingfile.close
+# trackingfile.close
 end
 
 
-#bundle exec rake migrate_thesis[/vagrant/files_to_test/york_847953.xml,9s1616164]
+# bundle exec rake migrate_thesis[/vagrant/files_to_test/york_847953.xml,9s1616164]
 # bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,9s1616164]
-#def migrate_thesis(path,collection)
-#bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,/vagrant/files_to_test/col_mapping.txt]
-#emotional world etc
-#bundle exec rake migrate_thesis[/vagrant/files_to_test/york_807119.xml,/vagrant/files_to_test/col_mapping.txt]   
-#bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
-#bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847943.xml,/vagrant/files_to_test/col_mapping.txt]
-#on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
-def migrate_thesis(path,collection_mapping_doc_path)
-#mfset = Dlibhydra::FileSet.new   #FILESET. #defin this at top because otherwise expects to find it in CurationConcerns module 
-result = 1 #default is fail
-mfset = Object::FileSet.new   #FILESET. #define this at top because otherwise expects to find it in CurationConcerns module . 
+# def migrate_thesis(path,collection)
+# bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,/vagrant/files_to_test/col_mapping.txt]
+# emotional world etc
+# bundle exec rake migrate_thesis[/vagrant/files_to_test/york_807119.xml,/vagrant/files_to_test/col_mapping.txt]   
+# bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
+# bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847943.xml,/vagrant/files_to_test/col_mapping.txt]
+# on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
+# new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/york_xxxxx.xml,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
+def migrate_thesis(path, contentpath, collection_mapping_doc_path)
+# mfset = Dlibhydra::FileSet.new   # FILESET. # defin this at top because otherwise expects to find it in CurationConcerns module 
+result = 1 # default is fail
+mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . 
+
 
 puts "migrating a thesis"	
 	foxmlpath = path	
-	#enforce  UTF-8 compliance when opening foxml file
+	# enforce  UTF-8 compliance when opening foxml file
 	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
-	#doesnt resolve nested namespaces, this fixes that
+	# doesnt resolve nested namespaces, this fixes that
     ns = doc.collect_namespaces	
 	
-	#establish parent collection - map old to new from mappings file
+	# establish parent collection - map old to new from mappings file
 	collection_mappings = {}
 	mapping_text = File.read(collection_mapping_doc_path)
 	csv = CSV.parse(mapping_text)
@@ -504,56 +506,54 @@ puts "migrating a thesis"
 	end
 	
 	
-	#now see if the collection mapping is in here
-	#make sure we have current rels-ext version
+	# now see if the collection mapping is in here
+	# make sure we have current rels-ext version
 	rels_nums = doc.xpath("//foxml:datastream[@ID='RELS-EXT']/foxml:datastreamVersion/@ID",ns)	
 	rels_all = all = rels_nums.to_s
 	current_rels = rels_all.rpartition('.').last 
 	rels_current_version = 'RELS-EXT.' + current_rels
 	untrimmed_former_parent_pid  = doc.xpath("//foxml:datastream[@ID='RELS-EXT']/foxml:datastreamVersion[@ID='#{rels_current_version}']/foxml:xmlContent/rdf:RDF/rdf:Description/rel:isMemberOf/@rdf:resource",ns).to_s	
-	#remove unwanted bits 
+	# remove unwanted bits 
 	former_parent_pid = untrimmed_former_parent_pid.sub 'info:fedora/york', 'york'
 	parentcol = collection_mappings[former_parent_pid]
-	#find max dc version
+	# find max dc version
 	nums = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion/@ID",ns)	
 	all = nums.to_s
 	current = all.rpartition('.').last 
 	currentVersion = 'DC.' + current
 	
-	#find the max THESIS_MAIN version
+	# find the max THESIS_MAIN version
 	thesis_nums = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion/@ID",ns)	
 	thesis_all = thesis_nums.to_s
 	thesis_current = thesis_all.rpartition('.').last 
 	currentThesisVersion = 'THESIS_MAIN.' + thesis_current
-	#GET CONTENT - get the location of the pdf as a string
+	# GET CONTENT - get the location of the pdf as a string
 	pdf_loc = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion[@ID='#{currentThesisVersion}']/foxml:contentLocation/@REF",ns).to_s	
 	
 	# CONTENT FILES
-	#this has local.fedora.host, which will be wrong. need to replace this 
-	#reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
-	#needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
-	newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'
-	localpdfloc = pdf_loc.sub 'http://local.fedora.server', '/home/ubuntu/testfiles/content' #this will be added to below
-    #ADDED 14th June for base name**********************************************************	
+	# this has local.fedora.host, which will be wrong. need to replace this 
+	# reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
+	# needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
+	# newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'  # CHOSS we dont need this any more as we cant download remotely
+	localpdfloc = pdf_loc.sub 'http://local.fedora.server', contentpath #this will be added to below. once we have external urls can add in relevant url
+    # ADDED 14th June for base name**********************************************************	
 	basename = File.basename(localpdfloc)
-	#comment out line below if redirecting to external url rather than ingesting local
-	localpdfloc = '/home/ubuntu/testfiles/content/'+ basename  #not a repeat but an addition
-	#end of addition*****************************	
+	# comment out line below if redirecting to external url rather than ingesting local
+	localpdfloc = contentpath + basename  #not a repeat but an addition
+	# end of addition*****************************	
 	
-	#dont continue to migrate file if content file not found
+	# dont continue to migrate file if content file not found
 	if !File.exist?(localpdfloc)
 		puts 'content file ' + localpdfloc.to_s + ' not found'	
-		return
-	else
-		puts 'checked for ' + localpdfloc.to_s + ' found it present'
+		return	
 	end 
-	#for initial development purposes on my machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
+	# for initial development purposes on my machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 		
 	
-	#create a new thesis implementing the dlibhydra models
+	# create a new thesis implementing the dlibhydra models
 	thesis = Object::Thesis.new
-#trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviuously referenes something in a dunamic away
-#which is different for each object
+# trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviuously referenes something in a dunamic away
+# which is different for each object
 =begin
 	existing_state = "didnt find an active state" 
 	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='info:fedora/fedora-system:def/model#state']/@VALUE",ns)
@@ -564,32 +564,38 @@ puts "migrating a thesis"
 	 thesis.state = "http://fedora.info/definitions/1/0/access/ObjState#active"  
 	end
 =end
-	#once depositor and permissions defined, object can be saved at any time
+	# once depositor and permissions defined, object can be saved at any time
 	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
 	
-	#start reading and populating  data
+	# start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
-	t = titleArray.to_s   
-	thesis.title = [t]	#1 only	
-	#thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
+	t = titleArray.to_s 
+		
+	thesis.title = [t]	# 1 only	
+	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
 	former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
 	if former_id.length > 0
 	thesis.former_id = [former_id]
 	end
+	# could really do with a file to list what its starting work on as a cleanup tool. doesnt matter if it doesnt get this far as there wont be anything to clean up
+	tname = "tracking.txt"
+	trackingfile = File.open(tname, "a")
+	trackingfile.puts( "am now working on " + former_id + " title:" + t )
+	trackingfile.close	
 	 creatorArray = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
 	 thesis.creator_string = [creatorArray.to_s]
 	
-	#abstract is currently the description. optional field so test presence
+	# abstract is currently the description. optional field so test presence
 	thesis_abstract = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
 	if thesis_abstract.length > 0
-	thesis.abstract = [thesis_abstract] #now multivalued
+	thesis.abstract = [thesis_abstract] # now multivalued
 	end
 	
-	#date_of_award (dateAccepted in the dc created by the model) 1 only
+	# date_of_award (dateAccepted in the dc created by the model) 1 only
 	thesis_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s
 	thesis.date_of_award = thesis_date
-	#advisor 0... 1 so check if present
+	# advisor 0... 1 so check if present
 	thesis_advisor = []
 	   doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:contributor/text()",ns).each do |i|
 		thesis_advisor.push(i.to_s)
@@ -597,14 +603,14 @@ puts "migrating a thesis"
 	thesis_advisor.each do |c|
 		thesis.advisor_string.push(c)
 	end	
-   #departments and institutions 
+   # departments and institutions 
    locations = []
 	 doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:publisher/text()",ns).each  do |i|
 	 locations.push(i.to_s)
 	 end
 	 inst_preflabels = []
 	 locations.each do |loc|
-		#awarding institution id (just check preflabel here as few options)
+		# awarding institution id (just check preflabel here as few options)
 		if loc.include? "University of York"
 			inst_preflabels.push("University of York")
 		elsif loc.include? "York." 
@@ -619,7 +625,7 @@ puts "migrating a thesis"
 			thesis.awarding_institution_resource_ids+=[id]
 		end
 				
-		#department
+		# department
 		dept_preflabels = get_department_preflabel(loc)		 
 		if dept_preflabels.empty?
 			puts "no department found"
@@ -631,12 +637,12 @@ puts "migrating a thesis"
 	end
 	
 	
-	#qualification level, name, resource type
+	# qualification level, name, resource type
 	typesToParse = []  #
 	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:type/text()",ns).each do |t|	
 	typesToParse.push(t)
 	end
-	#qualification names (object)
+	# qualification names (object)
 	qualification_name_preflabel = get_qualification_name_preflabel(typesToParse)
 	if qualification_name_preflabel != "unfound"   
 		qname_id = get_resource_id('qualification_name',qualification_name_preflabel)
@@ -648,7 +654,7 @@ puts "migrating a thesis"
 	else
 		puts "no qualification name preflabel found"
 	end	
-	#qualification levels (yml file). there can only be one
+	# qualification levels (yml file). there can only be one
 	typesToParse.each do |t|	
 	type_to_test = t.to_s
 	degree_level = get_qualification_level_term(type_to_test)
@@ -656,11 +662,11 @@ puts "migrating a thesis"
 		thesis.qualification_level += [degree_level]
 	end
 
-	#now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
-	#resource Types map to dc:subject. at present the only official value is Dissertations, Academic
+	# now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
+	# resource Types map to dc:subject. at present the only official value is Dissertations, Academic
 	theses = [ 'theses','Theses','Dissertations','dissertations' ] 
 	if theses.include? type_to_test	
-	#not using methods below yet - or are we? subjects[] no longer in model
+	# not using methods below yet - or are we? subjects[] no longer in model
 		subject_id = get_resource_id('subject',"Dissertations, Academic")
 		thesis.subject_resource_ids +=[subject_id]		 
 	end
@@ -669,7 +675,7 @@ end
 	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:language/text()",ns).each do |lan|
 	thesis_language.push(lan.to_s)
 	end
-	#this should return the key as that allows us to just search on the term
+	# this should return the key as that allows us to just search on the term
 	thesis_language.each do |lan|   #0 ..n
 	standard_language = "unfound"
 	    standard_language = get_standard_language(lan.titleize)#capitalise first letter
@@ -678,7 +684,7 @@ end
 		end
 	end	
 	
-	#dc.keyword (formerly subject, as existing ones from migration are free text not lookup
+	# dc.keyword (formerly subject, as existing ones from migration are free text not lookup
 	thesis_subject = []
 	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:subject/text()",ns).each do |s|
 	thesis_subject.push(s.to_s)
@@ -686,18 +692,18 @@ end
 	thesis_subject.each do |s|
 		thesis.keyword+=[s]   #TODO::THIS WAS ADDED TO FEDORA AS DC.RELATION NOT DC(OR DC11).SUBJECT!!!
 	end	
-	#dc11.subject??? not required for migration - see above
+	# dc11.subject??? not required for migration - see above
 		
-	#rights.	
-	#rights holder 0...1
-	#checked data on dlib. all have the same rights statement and url cited, so this should work fine, as everything else is rights holders   
+	# rights.	
+	# rights holder 0...1
+	# checked data on dlib. all have the same rights statement and url cited, so this should work fine, as everything else is rights holders   
    thesis_rightsholder = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[not(contains(.,'http')) and not (contains(.,'licenses')) ]",ns).to_s
    if thesis_rightsholder.length > 0
 	thesis.rights_holder=[thesis_rightsholder] 
    end
 
-	#license  set a default which will be overwritten if one is found. its the url, not the statement. use licenses.yml not rights_statement.yml
-	#For full york list see https://dlib.york.ac.uk/yodl/app/home/licences. edit in rights.yml
+	# license  set a default which will be overwritten if one is found. its the url, not the statement. use licenses.yml not rights_statement.yml
+	# For full york list see https://dlib.york.ac.uk/yodl/app/home/licences. edit in rights.yml
 	defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"
 	thesis_rights = defaultLicence
 	thesis_rights = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[contains(.,'http')]",ns).to_s
@@ -709,18 +715,18 @@ end
 		end	
 		
 	
-	#save	
+	# save	
 	thesis.save!
 	id = thesis.id
 	puts "thesis id was " +id 
-	#put in collection	
+	# put in collection	
 	col = Object::Collection.find(parentcol.to_s)	
 	puts "id of col was:" +col.id
 	puts " collection title was " + col.title[0].to_s
 	col.members << thesis  
 	col.save!
 	
-	#this is the section that keeps failing
+	# this is the section that keeps failing
 	begin
 		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 		users = Object::User.all #otherwise it will use one of the included modules
@@ -730,41 +736,46 @@ end
 		mfset.depositor = "ps552@york.ac.uk"
 		mfset.save!
 	
-		#THE NEXT FOUR LINES UPLOAD THE CONTENT INTO THE FILESET AND CREATE A THUMBNAIL
+		# THE NEXT FOUR LINES UPLOAD THE CONTENT INTO THE FILESET AND CREATE A THUMBNAIL
 	
-		local_file = Hydra::Derivatives::IoDecorator.new(File.open(localpdfloc, "rb"))	
+		# local_file = Hydra::Derivatives::IoDecorator.new(File.open(localpdfloc, "rb"))  #CHOSS IOdecorator gets called further down the stack anyway
+		local_file = File.open(localpdfloc, "rb")		
 		relation = "original_file"	
 		fileactor = CurationConcerns::Actors::FileActor.new(mfset,relation,user)
 		fileactor.ingest_file(local_file) #according to the documentation this method should produce derivatives as well
 		mfset.save!	
 	
-		#THe NEXT TWO LINES ARE NEEDED TO ATTACH THE FILESET AND CONTENT TO THE WORK 
+		# THe NEXT TWO LINES ARE NEEDED TO ATTACH THE FILESET AND CONTENT TO THE WORK 
 		actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
+		puts "CHOSS about to create metadata for thesis content"
 		actor.create_metadata(thesis)#name of object its to be added to #if you leave this out it wont create the metadata showing the related fileset
-		#create_content does not seem to be required if we are using fileactor.ingest_file, and does not make any difference to download icon
-		#actor.create_content(contentfile, relation = 'original_file' )
-		#actor.create_content(contentfile) #15.03.2017 CHOSS
-		#actor.create_content(local_file)
-		#TELL THESIS THIS IS THE MAIN_FILE. assume this also sets mainfile_ids[]
+		puts "CHOSS created metadata for thesis content"
+		# create_content does not seem to be required if we are using fileactor.ingest_file, and does not make any difference to download icon
+		# actor.create_content(contentfile, relation = 'original_file' )
+		# actor.create_content(contentfile) #15.03.2017 CHOSS
+		# actor.create_content(local_file)
+		# TELL THESIS THIS IS THE MAIN_FILE. assume this also sets mainfile_ids[]
     rescue
-		puts "*****************UPLOAD DIDNT WORK FOR " + thesis.title[0].to_s + "********************************"    
-		thesis.mainfile << mfset	   
-		thesis.save!
+	  # CHOSS this may creat a problem during multiple uploads
+		sleep 20 		
+		 thesis.mainfile << mfset	
+		sleep 20  
+		 thesis.save!
 		result = 1
 		return result
    end
-   #try explicitly cloing local_file and setting agents to nil so garbage will be collected
-   #puts "now about to close file "
-   #local_file.close   #doesnt seem to help
-   #puts " closed local file "
-   #fileactor = nil
-   #puts "fileactor nilled"
-   #actor = nil 
-   #puts "actor nilled"
-   #actor.nil
-   #puts "files closed, actors nilled"
-   puts "all done for file " + id
+   # try explicitly cloing local_file and setting agents to nil so garbage will be collected
+   # puts "now about to close file "
+   # local_file.close   #doesnt seem to help
+   # puts " closed local file "
+   # fileactor = nil
+   # puts "fileactor nilled"
+   # actor = nil 
+   # puts "actor nilled"
+   # actor.nil
+   # puts "files closed, actors nilled"
+   puts "all done for file " + id   
    result = 0
-   return result   #give it  a return value
+   return result   # give it  a return value
 end
-end #end of class
+end # end of class
