@@ -435,7 +435,6 @@ end
 # bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt
 # MEGASTACK rake migration_tasks:migrate_lots_of_theses[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
 # devserver rake migration_tasks:migrate_lots_of_theses[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
-# this. will need to restart rails first.
 def migrate_lots_of_theses(path_to_fox, path_to_foxdone, contentpath, collection_mapping_doc_path)
 puts "doing a bulk migration"
 fname = "tally.txt"
@@ -469,7 +468,42 @@ Dir.foreach(path_to_fox)do |item|
 end
 tallyfile.close
 # trackingfile.close
+end  # end migrate_lots_of_theses
+
+
+# bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt
+# MEGASTACK rake migration_tasks:migrate_lots_of_theses[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
+# devserver rake migration_tasks:migrate_lots_of_theses[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,http://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
+# this. will need to restart rails first.
+def migrate_lots_of_theses_with_content_url(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path)
+puts "doing a bulk migration"
+fname = "tally.txt"
+tallyfile = File.open(fname, "a")
+Dir.foreach(path_to_fox)do |item|	
+	# we dont want to try and act on the current and parent directories
+	next if item == '.' or item == '..'
+	# trackingfile.puts("now working on " + item)
+	itempath = path_to_fox + "/" + item
+	result = 2  # so this wont do the actions required if it isnt reset
+	begin
+		result = migrate_thesis_with_content_url(itempath,content_server_url,collection_mapping_doc_path)
+	rescue
+		result = 1	
+		tallyfile.puts("rescue says FAILED TO INGEST "+ itempath)  
+	end
+	if result == 0
+		tallyfile.puts("ingested " + itempath)
+		#sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  # move files once migrated
+	elsif result == 1   # this may well not work, as it may stop part way through before it ever gets here. rescue block might help?
+		tallyfile.puts("FAILED TO INGEST "+ itempath)
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+	else
+        tallyfile.puts(" didnt return expected value of 0 or 1 ")	
+	end
 end
+tallyfile.close
+end # end migrate_lots_of_theses_with_content_url
 
 
 # bundle exec rake migrate_thesis[/vagrant/files_to_test/york_847953.xml,9s1616164]
@@ -777,5 +811,270 @@ end
    puts "all done for file " + id   
    result = 0
    return result   # give it  a return value
-end
+end # end of migrate thesis
+
+#version of migration that adds the content file url but does not ingest the content pdf into the thesis
+# on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
+# new signature: # rake migration_tasks:migrate_thesis_with_content_url[/home/dlib/testfiles/foxml/york_xxxxx.xml,http://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
+def migrate_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path) 
+result = 1 # default is fail
+mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . 
+
+puts "migrating a thesis with content url"	
+	foxmlpath = path	
+	# enforce  UTF-8 compliance when opening foxml file
+	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+	# doesnt resolve nested namespaces, this fixes that
+    ns = doc.collect_namespaces	
+	
+	# establish parent collection - map old to new from mappings file
+	collection_mappings = {}
+	mapping_text = File.read(collection_mapping_doc_path)
+	csv = CSV.parse(mapping_text)
+	csv.each do |line|    
+		old_id = line[0]
+		new_id = line[2]		
+		collection_mappings[old_id] = new_id
+	end
+	
+	
+	# now see if the collection mapping is in here
+	# make sure we have current rels-ext version
+	rels_nums = doc.xpath("//foxml:datastream[@ID='RELS-EXT']/foxml:datastreamVersion/@ID",ns)	
+	rels_all = all = rels_nums.to_s
+	current_rels = rels_all.rpartition('.').last 
+	rels_current_version = 'RELS-EXT.' + current_rels
+	untrimmed_former_parent_pid  = doc.xpath("//foxml:datastream[@ID='RELS-EXT']/foxml:datastreamVersion[@ID='#{rels_current_version}']/foxml:xmlContent/rdf:RDF/rdf:Description/rel:isMemberOf/@rdf:resource",ns).to_s	
+	# remove unwanted bits 
+	former_parent_pid = untrimmed_former_parent_pid.sub 'info:fedora/york', 'york'
+	parentcol = collection_mappings[former_parent_pid]
+	# find max dc version
+	nums = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion/@ID",ns)	
+	all = nums.to_s
+	current = all.rpartition('.').last 
+	currentVersion = 'DC.' + current
+	
+	# find the max THESIS_MAIN version
+	thesis_nums = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion/@ID",ns)	
+	thesis_all = thesis_nums.to_s
+	thesis_current = thesis_all.rpartition('.').last 
+	currentThesisVersion = 'THESIS_MAIN.' + thesis_current
+	# GET CONTENT - get the location of the pdf as a string
+	pdf_loc = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion[@ID='#{currentThesisVersion}']/foxml:contentLocation/@REF",ns).to_s	
+	
+	# CONTENT FILES
+	# this has local.fedora.host, which will be wrong. need to replace this with whereever they will be sitting 
+	# reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
+	# needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
+	# newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'  # CHOSS we dont need this any more as we cant download remotely
+	externalpdfurl = pdf_loc.sub 'http://local.fedora.server', content_server_url #this will be added to below. once we have external urls can add in relevant url
+    puts "CHOSS content url is " + externalpdfurl
+	
+	
+	# create a new thesis implementing the dlibhydra models
+	thesis = Object::Thesis.new
+# trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviuously referenes something in a dunamic away
+# which is different for each object
+=begin
+	existing_state = "didnt find an active state" 
+	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='info:fedora/fedora-system:def/model#state']/@VALUE",ns)
+	puts '***************existing state:' + existing_state.to_s
+	if existing_state.to_s == "Active"
+	puts '***************FOUND existing state:' + existing_state.to_s
+	#pasted in from gui produced Thesis! not sure if required
+	 thesis.state = "http://fedora.info/definitions/1/0/access/ObjState#active"  
+	end
+=end
+	# once depositor and permissions defined, object can be saved at any time
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	thesis.depositor = "ps552@york.ac.uk"
+	
+	# start reading and populating  data
+	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
+	t = titleArray.to_s + " with external content "
+		
+	thesis.title = [t]	# 1 only	
+	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
+	former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
+	if former_id.length > 0
+	thesis.former_id = [former_id]
+	end
+	# could really do with a file to list what its starting work on as a cleanup tool. doesnt matter if it doesnt get this far as there wont be anything to clean up
+	tname = "tracking.txt"
+	trackingfile = File.open(tname, "a")
+	trackingfile.puts( "am now working on " + former_id + " title:" + t )
+	trackingfile.close	
+	 creatorArray = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
+	 thesis.creator_string = [creatorArray.to_s]
+	
+	# abstract is currently the description. optional field so test presence
+	thesis_abstract = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
+	if thesis_abstract.length > 0
+	thesis.abstract = [thesis_abstract] # now multivalued
+	end
+	
+	# date_of_award (dateAccepted in the dc created by the model) 1 only
+	thesis_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s
+	thesis.date_of_award = thesis_date
+	# advisor 0... 1 so check if present
+	thesis_advisor = []
+	   doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:contributor/text()",ns).each do |i|
+		thesis_advisor.push(i.to_s)
+	end
+	thesis_advisor.each do |c|
+		thesis.advisor_string.push(c)
+	end	
+   # departments and institutions 
+   locations = []
+	 doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:publisher/text()",ns).each  do |i|
+	 locations.push(i.to_s)
+	 end
+	 inst_preflabels = []
+	 locations.each do |loc|
+		# awarding institution id (just check preflabel here as few options)
+		if loc.include? "University of York"
+			inst_preflabels.push("University of York")
+		elsif loc.include? "York." 
+			inst_preflabels.push("University of York")
+		elsif loc.include? "York:"
+			inst_preflabels.push("University of York")
+		elsif loc.include? "Oxford Brookes University"
+			inst_preflabels.push("Oxford Brookes University") #I'v just added this as a minority of our theses come from here!
+		end
+		inst_preflabels.each do | preflabel|
+			id = get_resource_id('institution', preflabel)
+			thesis.awarding_institution_resource_ids+=[id]
+		end
+				
+		# department
+		dept_preflabels = get_department_preflabel(loc)		 
+		if dept_preflabels.empty?
+			puts "no department found"
+		end
+		dept_preflabels.each do | preflabel|
+			id = get_resource_id('department', preflabel)
+			thesis.department_resource_ids +=[id]
+		end
+	end
+	
+	
+	# qualification level, name, resource type
+	typesToParse = []  #
+	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:type/text()",ns).each do |t|	
+	typesToParse.push(t)
+	end
+	# qualification names (object)
+	qualification_name_preflabel = get_qualification_name_preflabel(typesToParse)
+	if qualification_name_preflabel != "unfound"   
+		qname_id = get_resource_id('qualification_name',qualification_name_preflabel)
+		if qname_id.to_s != "unfound"		
+			thesis.qualification_name_resource_ids+=[qname_id]
+		else
+			puts "no qualification nameid found"
+		end
+	else
+		puts "no qualification name preflabel found"
+	end	
+	# qualification levels (yml file). there can only be one
+	typesToParse.each do |t|	
+	type_to_test = t.to_s
+	degree_level = get_qualification_level_term(type_to_test)
+	if degree_level != "unfound"
+		thesis.qualification_level += [degree_level]
+	end
+
+	# now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
+	# resource Types map to dc:subject. at present the only official value is Dissertations, Academic
+	theses = [ 'theses','Theses','Dissertations','dissertations' ] 
+	if theses.include? type_to_test	
+	# not using methods below yet - or are we? subjects[] no longer in model
+		subject_id = get_resource_id('subject',"Dissertations, Academic")
+		thesis.subject_resource_ids +=[subject_id]		 
+	end
+end	
+	thesis_language = []
+	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:language/text()",ns).each do |lan|
+	thesis_language.push(lan.to_s)
+	end
+	# this should return the key as that allows us to just search on the term
+	thesis_language.each do |lan|   #0 ..n
+	standard_language = "unfound"
+	    standard_language = get_standard_language(lan.titleize)#capitalise first letter
+		if standard_language!= "unfound"
+			thesis.language+=[standard_language]
+		end
+	end	
+	
+	# dc.keyword (formerly subject, as existing ones from migration are free text not lookup
+	thesis_subject = []
+	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:subject/text()",ns).each do |s|
+	thesis_subject.push(s.to_s)
+	end
+	thesis_subject.each do |s|
+		thesis.keyword+=[s]   #TODO::THIS WAS ADDED TO FEDORA AS DC.RELATION NOT DC(OR DC11).SUBJECT!!!
+	end	
+	# dc11.subject??? not required for migration - see above
+		
+	# rights.	
+	# rights holder 0...1
+	# checked data on dlib. all have the same rights statement and url cited, so this should work fine, as everything else is rights holders   
+   thesis_rightsholder = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[not(contains(.,'http')) and not (contains(.,'licenses')) ]",ns).to_s
+   if thesis_rightsholder.length > 0
+	thesis.rights_holder=[thesis_rightsholder] 
+   end
+
+	# license  set a default which will be overwritten if one is found. its the url, not the statement. use licenses.yml not rights_statement.yml
+	# For full york list see https://dlib.york.ac.uk/yodl/app/home/licences. edit in rights.yml
+	defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"
+	thesis_rights = defaultLicence
+	thesis_rights = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[contains(.,'http')]",ns).to_s
+	
+	newrights =  get_standard_rights(thesis_rights)#  all theses currently York restricted 	
+		if newrights.length > 0
+		thesis_rights = newrights
+			thesis.rights=[thesis_rights]			
+		end	
+		
+	
+	# save	
+	thesis.save!
+	id = thesis.id
+	puts "thesis id was " +id 
+	# put in collection	
+	col = Object::Collection.find(parentcol.to_s)	
+	puts "id of col was:" +col.id
+	puts " collection title was " + col.title[0].to_s
+	col.members << thesis  
+	col.save!
+	
+	# this is the section that keeps failing
+	begin
+	  
+		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
+		users = Object::User.all #otherwise it will use one of the included modules
+		user = users[0]	
+		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
+		# add the external content URL
+		relation = "external_url"
+		actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
+		actor.create_metadata(thesis)#name of object its to be added to #if you leave this out it wont create the metadata showing the related fileset
+		Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, relation)
+		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		mfset.depositor = "ps552@york.ac.uk"
+		mfset.save!
+		puts "fileset_id was " +mfset.id
+    rescue
+	  # CHOSS this may create a problem during multiple uploads
+		sleep 20 		
+		 thesis.mainfile << mfset	
+		sleep 20  
+		 thesis.save!
+		result = 1
+		return result
+   end   
+   puts "all done for external content file " + id   
+   result = 0
+   return result   # give it  a return value
+end # end of migrate_thesis_with_content_url
+
 end # end of class

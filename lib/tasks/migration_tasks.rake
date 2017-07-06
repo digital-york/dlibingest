@@ -24,12 +24,25 @@ puts "Args were: #{args}"
 	r.make_collection_structure(args[:mapping_path])
 end
 
+task :migrate_lots_of_theses_with_content_url, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc] => :environment  do|t, args|
+puts "Args were: #{args}"
+puts "need to do sommat here"
+r = FoxmlReader.new
+r.migrate_lots_of_theses_with_content_url(args[:dirpath],args[:donedirpath],args[:contentserverurl],args[:collection_mapping_doc])
+end
 
 task :migrate_lots_of_theses, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "need to do sommat here"
 r = FoxmlReader.new
 r.migrate_lots_of_theses(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc])
+end
+
+task :migrate_thesis_with_content_url, [:path,:contentserverurl,:collection_mapping] => :environment  do|t, args|
+puts "Args were: #{args}"
+puts "hey there"
+	r = FoxmlReader.new
+	r.migrate_thesis_with_content_url(args[:path],args[:contentserverurl],args[:collection_mapping])
 end
 
 task :migrate_thesis, [:path,:contentpath,:collection_mapping] => :environment  do|t, args|
