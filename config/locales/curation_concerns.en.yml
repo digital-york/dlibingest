@@ -20,6 +20,8 @@ en:
     show:
       related_files:
         heading: 'Files included in Thesis'
+      related_external_files:
+        heading: 'External files'
       downloadable_content:
         heading: 'Downloadable Content'
         default_link: 'Download file'
@@ -88,27 +90,55 @@ en:
  # peri adding some stuff here. no idea what these do but it seems a good idea to update them. doesnt actually solve the show problem though
       abstract:
         property: abstract
+        value: abstract
+        type: "http://schema.org/Thing"
       department:
         property: department
+        value: department
+        type: "http://schema.org/Organization"
       awarding_institution:
         property: awardingInstitution
       date_of_award:
         property: dateOfAward
+        value: dateOfAward
+        type: "http://schema.org/CollegeOrUniversity"
       #advisor:
         #property: advisor
-      qualification_name:
+      qualification_name:  #http://schema.org/CollegeOrUniversity
         property: qualificationName
+        value: qualificationName
+        type: "http://schema.org/CollegeOrUniversity"
       qualification_level:
         property: qualificationLevel
+        value: qualificationLevel
+        type: "http://schema.org/CollegeOrUniversity"
       preflabel:
         property: preflabel
+      rights:
+        property: rights
+        value: rights
+        type: "http://schema.org/Organization"
       rights_holder:
         property: rightsHolder
+        value: rightsHolder
+        type: "http://schema.org/Organization"
+      permission_badge:
+        property: permission_badge
+        value: permission_badge
+        type: "http://schema.org/Organization"
+      visibility:
+        property: visibility
+        value: visibility
+        type: "http://schema.org/Organization"
       former_id:
         property: formerId
+        value: formerId
+        type: "http://schema.org/Thing"
       # end of peris stuff
-      language:
-        property: inLanguage
+      language_string:
+        property: language
+        value: language
+        type: "http://schema.org/Thing"
       publisher:
         type: "http://schema.org/Organization"
         property: publisher
@@ -120,8 +150,12 @@ en:
         value: name
       keyword:
         property: keywords
+        value: keywords
+        type: "http://schema.org/Thing"
       title:
-        property: name
+        property: title
+        value: title
+        type: "http://schema.org/Thing"
 
     visibility:
       open:
@@ -186,7 +220,9 @@ en:
           advisor_value_tesim: "Supervisor"
           date_of_award_tesim: "Date of Award"
           qualification_name_value_tesim: "Degree"
+          qualification_name_value: "Degree"
           qualification_level_tesim: "Degree Level"
+          qualification_level: "Degree Level"
           awarding_institution_value_tesim: "Awarding Institution"
           department_value_tesim: "Department"
           former_id_tesim: "Former Identifier"
