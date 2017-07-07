@@ -20,7 +20,7 @@ module AuthorityService
 		include ::LocalAuthorityConcern
 	end
 
-# File based
+# File based	
 	class RightsStatementsService < CurationConcerns::QaSelectService
 	include ::FileAuthorityConcern
 		def initialize
