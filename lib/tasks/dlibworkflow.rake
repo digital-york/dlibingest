@@ -17,11 +17,15 @@ namespace :dlibworkflow do
 
   desc "Create YODL collections from Fedora 3 repository"
   task create_collections: :environment do
+    puts 'in create_collections'
+
     #top_cols_xpath = "/collections/collection[@pid='YODL']/collection[@pid='york:822269']/collection[@pid='york:815851']"
-    top_cols_xpath = "/collections/collection[@pid='YODL']/collection[@pid='york:822269']/collection[@pid='york:11049']"
+    #top_cols_xpath = "/collections/collection[@pid='YODL']/collection[@pid='york:822269']/collection[@pid='york:11049']"
+    top_cols_xpath = "/collections/collection[@pid='YODL']/collection[@pid='york:18175']/collection[@pid='york:21267']/collection[@pid='york:23505']" # Computer Science Exam Papers
 
     doc      = Nokogiri::XML(File.open(Rails.root + 'lib/assets/lists/collections.xml'))
     top_cols = doc.xpath(top_cols_xpath)
+
     top_cols.each do |col|
       puts 'Creating ' + col.attr('label')
       col_obj = Collection.new
@@ -52,7 +56,7 @@ namespace :dlibworkflow do
       permission            = get_fedora3_permission(sub_col.attr('pid'))
       BasicProcessor.assign_permissions(user, permission, sub_col_obj)
 
-      sub_col_obj.former_id = sub_col.attr('pid')
+      sub_col_obj.former_id = [sub_col.attr('pid')]
       sub_col_obj.save!
       puts indent + 'Created collection: ' + sub_col_obj.id
       parent_obj.members << sub_col_obj
