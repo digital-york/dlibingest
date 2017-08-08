@@ -157,6 +157,16 @@ en:
         value: title
         type: "http://schema.org/Thing"
 
+      # date is used in ExamPaper
+      date:
+        property: date
+        value: date
+        type: "http://schema.org/CollegeOrUniversity"
+      module_code:
+        property: module_code
+        value: module_code
+        type: "http://schema.org/CollegeOrUniversity"
+
     visibility:
       open:
         text: "Open Access"

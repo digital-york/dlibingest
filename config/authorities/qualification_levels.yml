@@ -5,9 +5,9 @@ terms:
     - id: Diplomas (Postgraduate)
       term: Diplomas (Postgraduate)
       active: true
-    - id: Bachelors (Undergraduate)
-      term: Bachelors (Undergraduate)
-      active: true
     - id: Doctoral (Postgraduate)
       term: Doctoral (Postgraduate)
+      active: true
+    - id: Bachelors (Undergraduate)
+      term: Bachelors (Undergraduate)
       active: true

@@ -471,10 +471,8 @@ tallyfile.close
 end  # end migrate_lots_of_theses
 
 
-# bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt
-# MEGASTACK rake migration_tasks:migrate_lots_of_theses[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
-# devserver rake migration_tasks:migrate_lots_of_theses[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,http://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
-# this. will need to restart rails first.
+# MEGASTACK rake migration_tasks:migrate_lots_of_theses_with_content_url[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
+# devserver rake migration_tasks:migrate_lots_of_theses_with_content_url[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
 def migrate_lots_of_theses_with_content_url(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path)
 puts "doing a bulk migration"
 fname = "tally.txt"
@@ -514,7 +512,7 @@ end # end migrate_lots_of_theses_with_content_url
 # bundle exec rake migrate_thesis[/vagrant/files_to_test/york_807119.xml,/vagrant/files_to_test/col_mapping.txt]   
 # bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
 # bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847943.xml,/vagrant/files_to_test/col_mapping.txt]
-# on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
+# on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/testfiles/content/,/home/ubuntu/mapping_files/col_mapping.txt]
 # new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/york_xxxxx.xml,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
 def migrate_thesis(path, contentpath, collection_mapping_doc_path)
 # mfset = Dlibhydra::FileSet.new   # FILESET. # defin this at top because otherwise expects to find it in CurationConcerns module 
@@ -522,7 +520,7 @@ result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . 
 
 
-puts "migrating a thesis"	
+puts "migrating a thesis using path " + path +" and  contentPath " + contentpath + " collection_maPPING_DOC_PATH " + collection_mapping_doc_path		
 	foxmlpath = path	
 	# enforce  UTF-8 compliance when opening foxml file
 	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
@@ -567,7 +565,7 @@ puts "migrating a thesis"
 	# CONTENT FILES
 	# this has local.fedora.host, which will be wrong. need to replace this 
 	# reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
-	# needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
+	# needs to read (for development purposes on real machine) https://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 	# newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'  # CHOSS we dont need this any more as we cant download remotely
 	localpdfloc = pdf_loc.sub 'http://local.fedora.server', contentpath #this will be added to below. once we have external urls can add in relevant url
     # ADDED 14th June for base name**********************************************************	
@@ -765,6 +763,7 @@ end
 		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 		users = Object::User.all #otherwise it will use one of the included modules
 		user = users[0]	
+		mfset.filetype = 'embeddedfile'
 		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
 		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 		mfset.depositor = "ps552@york.ac.uk"
@@ -815,7 +814,7 @@ end # end of migrate thesis
 
 #version of migration that adds the content file url but does not ingest the content pdf into the thesis
 # on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
-# new signature: # rake migration_tasks:migrate_thesis_with_content_url[/home/dlib/testfiles/foxml/york_xxxxx.xml,http://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
+# new signature: # rake migration_tasks:migrate_thesis_with_content_url[/home/dlib/testfiles/foxml/mytest.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
 def migrate_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path) 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . 
@@ -867,8 +866,10 @@ puts "migrating a thesis with content url"
 	# reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
 	# needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 	# newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'  # CHOSS we dont need this any more as we cant download remotely
+	#and the content_server_url is set in the parameters :-)
 	externalpdfurl = pdf_loc.sub 'http://local.fedora.server', content_server_url #this will be added to below. once we have external urls can add in relevant url
-    puts "CHOSS content url is " + externalpdfurl
+     
+	#puts "CHOSS content url is " + externalpdfurl
 	
 	
 	# create a new thesis implementing the dlibhydra models
@@ -878,9 +879,7 @@ puts "migrating a thesis with content url"
 =begin
 	existing_state = "didnt find an active state" 
 	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='info:fedora/fedora-system:def/model#state']/@VALUE",ns)
-	puts '***************existing state:' + existing_state.to_s
 	if existing_state.to_s == "Active"
-	puts '***************FOUND existing state:' + existing_state.to_s
 	#pasted in from gui produced Thesis! not sure if required
 	 thesis.state = "http://fedora.info/definitions/1/0/access/ObjState#active"  
 	end
@@ -891,7 +890,7 @@ puts "migrating a thesis with content url"
 	
 	# start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
-	t = titleArray.to_s + " with external content "
+	t = titleArray.to_s
 		
 	thesis.title = [t]	# 1 only	
 	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
@@ -1053,24 +1052,29 @@ end
 		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 		users = Object::User.all #otherwise it will use one of the included modules
 		user = users[0]	
+		mfset.filetype = 'externalurl'
 		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
 		# add the external content URL
-		relation = "external_url"
+		mfset.external_file_url = externalpdfurl
 		actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
-		actor.create_metadata(thesis)#name of object its to be added to #if you leave this out it wont create the metadata showing the related fileset
-		Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, relation)
+		actor.create_metadata(thesis)
+		#Declare file as external resource
+        Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
 		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 		mfset.depositor = "ps552@york.ac.uk"
 		mfset.save!
-		puts "fileset_id was " +mfset.id
-    rescue
-	  # CHOSS this may create a problem during multiple uploads
+		puts "fileset " + mfset.id + " saved"
+    
+	  # CHOSS this is here because the system tended to lock up during multiple uploads - suspect competition for resources or threading issue somewhere
 		sleep 20 		
-		 thesis.mainfile << mfset	
+		 thesis.mainfile << mfset
 		sleep 20  
 		 thesis.save!
+	rescue
+	    puts "QUACK QUACK OOPS! addition of external file unsuccesful"
 		result = 1
 		return result
+		
    end   
    puts "all done for external content file " + id   
    result = 0

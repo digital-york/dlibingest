@@ -1,7 +1,10 @@
 source 'https://rubygems.org'
 
-gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'master'
-gem 'curation_concerns', '1.7.5'
+#gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'master'
+gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: 'external_fileset'
+#gem 'curation_concerns', '1.7.5'
+#update CC  its pinned to (this is the minimum required for new dlibhydra version)
+gem 'curation_concerns', '1.7.6'
 gem 'dotenv-rails', groups: [:development, :test, :production]
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
