@@ -501,6 +501,7 @@ Dir.foreach(path_to_fox)do |item|
 	end
 end
 tallyfile.close
+puts "all done"
 end # end migrate_lots_of_theses_with_content_url
 
 
@@ -817,7 +818,7 @@ end # end of migrate thesis
 # new signature: # rake migration_tasks:migrate_thesis_with_content_url[/home/dlib/testfiles/foxml/mytest.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
 def migrate_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path) 
 result = 1 # default is fail
-mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . 
+mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
 
 puts "migrating a thesis with content url"	
 	foxmlpath = path	
@@ -836,8 +837,6 @@ puts "migrating a thesis with content url"
 		collection_mappings[old_id] = new_id
 	end
 	
-	
-	# now see if the collection mapping is in here
 	# make sure we have current rels-ext version
 	rels_nums = doc.xpath("//foxml:datastream[@ID='RELS-EXT']/foxml:datastreamVersion/@ID",ns)	
 	rels_all = all = rels_nums.to_s
@@ -868,10 +867,30 @@ puts "migrating a thesis with content url"
 	# newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'  # CHOSS we dont need this any more as we cant download remotely
 	#and the content_server_url is set in the parameters :-)
 	externalpdfurl = pdf_loc.sub 'http://local.fedora.server', content_server_url #this will be added to below. once we have external urls can add in relevant url
-     
-	#puts "CHOSS content url is " + externalpdfurl
+
 	
-	
+# hash for any THESIS_ADDITIONAL URLs. needs to be done here rather than later to ensure we obtain overridden version og FileSet class rather than CC as local version not namespaced
+    additional_filesets = {}	
+	elems = doc.xpath("//foxml:datastream[@ID]",ns)
+	elems.each { |id| 
+		idname = id.attr('ID')		
+		if idname.start_with?('THESIS_ADDITIONAL')
+	#ok, now need to find the latest version 
+			version_nums = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion/@ID",ns)
+			current_version_num = version_nums.to_s.rpartition('.').last
+			current_version_name = idname + '.' + current_version_num
+			addit_file_loc = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/foxml:contentLocation/@REF",ns).to_s
+			addit_file_loc = addit_file_loc.sub 'http://local.fedora.server', content_server_url
+			fileset = Object::FileSet.new
+			fileset.filetype = 'externalurl'
+			fileset.external_file_url = addit_file_loc
+			fileset.title = [idname]
+			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+			fileset.depositor = "ps552@york.ac.uk"
+			additional_filesets[idname] = fileset
+		end
+	}
+		
 	# create a new thesis implementing the dlibhydra models
 	thesis = Object::Thesis.new
 # trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviuously referenes something in a dunamic away
@@ -1047,11 +1066,10 @@ end
 	col.save!
 	
 	# this is the section that keeps failing
+	users = Object::User.all #otherwise it will use one of the included modules
+	user = users[0]
 	begin
-	  
 		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
-		users = Object::User.all #otherwise it will use one of the included modules
-		user = users[0]	
 		mfset.filetype = 'externalurl'
 		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
 		# add the external content URL
@@ -1076,8 +1094,29 @@ end
 		return result
 		
    end   
-   puts "all done for external content file " + id   
-   result = 0
+     puts "all done for external content mainfile " + id  
+
+
+# process external THESIS_ADDITIONAL files
+for key in additional_filesets.keys() do		
+		additional_thesis_file_fs = additional_filesets[key]		
+		#add metadata to make fileset appear as a child of the object
+        actor = CurationConcerns::Actors::FileSetActor.new(additional_thesis_file_fs, user)
+        actor.create_metadata(thesis)
+		#Declare file as external resource
+		url = additional_thesis_file_fs.external_file_url
+        Hydra::Works::AddExternalFileToFileSet.call(additional_thesis_file_fs, url, 'external_url')
+        additional_thesis_file_fs.save!
+		thesis.members << additional_thesis_file_fs
+        thesis.save!
+		puts "all done for  additional file " + key
+end
+	#when done, explicity reset big things to empty to ensure resources not hung on to
+	additional_filesets = {} 
+    doc = nil
+	mapping_text = nil
+	collection_mappings = {}	
+   result = 0 #this needs to happen last
    return result   # give it  a return value
 end # end of migrate_thesis_with_content_url
 
