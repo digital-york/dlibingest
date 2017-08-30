@@ -867,7 +867,13 @@ puts "migrating a thesis with content url"
 	# newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'  # CHOSS we dont need this any more as we cant download remotely
 	#and the content_server_url is set in the parameters :-)
 	externalpdfurl = pdf_loc.sub 'http://local.fedora.server', content_server_url #this will be added to below. once we have external urls can add in relevant url
-
+    externalpdflabel = "THESIS_MAIN"  #default
+	# label needed for gui display
+			label = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion[@ID='#{currentThesisVersion}']/@LABEL",ns).to_s 
+			puts "label: " + label
+			if label.length > 0
+			externalpdflabel = label #in all cases I can think of this will be the same as the default, but just to be sure
+			end
 	
 # hash for any THESIS_ADDITIONAL URLs. needs to be done here rather than later to ensure we obtain overridden version og FileSet class rather than CC as local version not namespaced
     additional_filesets = {}	
@@ -885,6 +891,38 @@ puts "migrating a thesis with content url"
 			fileset.filetype = 'externalurl'
 			fileset.external_file_url = addit_file_loc
 			fileset.title = [idname]
+			# may have a label - needed for display-  that is different to the datastream title
+			label = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/@LABEL",ns).to_s 
+			if label.length > 0
+			fileset.label = label
+			end
+			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+			fileset.depositor = "ps552@york.ac.uk"
+			additional_filesets[idname] = fileset
+		end
+	}
+	
+	#also look for ORIGINAL_RESOURCE
+	elems = doc.xpath("//foxml:datastream[@ID]",ns)
+	elems.each { |id| 
+		idname = id.attr('ID')		
+		if idname.start_with?('ORIGINAL_RESOURCE')
+		
+	#ok, now need to find the latest version 
+			version_nums = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion/@ID",ns)
+			current_version_num = version_nums.to_s.rpartition('.').last
+			current_version_name = idname + '.' + current_version_num
+			addit_file_loc = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/foxml:contentLocation/@REF",ns).to_s
+			addit_file_loc = addit_file_loc.sub 'http://local.fedora.server', content_server_url
+			fileset = Object::FileSet.new
+			fileset.filetype = 'externalurl'
+			fileset.external_file_url = addit_file_loc
+			fileset.title = [idname]
+			# may have a label - needed for display-  that is different to the datastream title
+			label = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/@LABEL",ns).to_s 
+			if label.length > 0
+			fileset.label = label
+			end
 			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 			fileset.depositor = "ps552@york.ac.uk"
 			additional_filesets[idname] = fileset
@@ -1072,6 +1110,7 @@ end
 		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 		mfset.filetype = 'externalurl'
 		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
+		mfset.label = externalpdflabel
 		# add the external content URL
 		mfset.external_file_url = externalpdfurl
 		actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
