@@ -870,7 +870,6 @@ puts "migrating a thesis with content url"
     externalpdflabel = "THESIS_MAIN"  #default
 	# label needed for gui display
 			label = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion[@ID='#{currentThesisVersion}']/@LABEL",ns).to_s 
-			puts "label: " + label
 			if label.length > 0
 			externalpdflabel = label #in all cases I can think of this will be the same as the default, but just to be sure
 			end
@@ -951,7 +950,9 @@ puts "migrating a thesis with content url"
 		
 	thesis.title = [t]	# 1 only	
 	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
-	former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
+	#EEK! not all the records have dc:identifier populated
+	#former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
+	former_id = doc.xpath("//foxml:digitalObject/@PID",ns).to_s
 	if former_id.length > 0
 	thesis.former_id = [former_id]
 	end
