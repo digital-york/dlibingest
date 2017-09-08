@@ -1,4 +1,4 @@
-<% if external_member.solr_document._source["filetype_tesim"][0]=='externalurl' %>
+<% if external_member.solr_document._source["filetype_tesim"].present? && external_member.solr_document._source["filetype_tesim"][0]=='externalurl' %>
 
 <tr class="<%= dom_class(external_member) %> attributes">
   <td class="thumbnail">
