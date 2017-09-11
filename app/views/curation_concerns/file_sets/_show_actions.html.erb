@@ -3,7 +3,7 @@
   
   
     <% if presenter.solr_document._source["filetype_tesim"][0]!='externalurl' %>
-      <%= link_to "Download this File (embedded)", main_app.download_path(presenter), class: 'btn btn-default', data: { turbolinks: false }, target: :_blank %>
+      <%= link_to "Download this File", main_app.download_path(presenter), class: 'btn btn-default', data: { turbolinks: false }, target: :_blank %>
       <% if can? :edit, presenter.id %>
         <%= link_to "Edit this File", edit_polymorphic_path([main_app, presenter]), class: 'btn btn-default'  %>
       <% end %>
@@ -20,7 +20,7 @@
 	
 	
   <% else %>
-	<%= link_to "Download this File (no filetype specified)", main_app.download_path(presenter), class: 'btn btn-default', data: { turbolinks: false }, target: :_blank %>
+	<%= link_to "Download this File", main_app.download_path(presenter), class: 'btn btn-default', data: { turbolinks: false }, target: :_blank %>
     <% if can? :edit, presenter.id %>
       <%= link_to "Edit this File", edit_polymorphic_path([main_app, presenter]), class: 'btn btn-default'  %>
     <% end %>
