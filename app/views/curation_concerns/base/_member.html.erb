@@ -1,0 +1,34 @@
+
+<% # I have ammended this override as at present it only displays when the filetype is NOT external. so I have added a clause for this %>
+<% # although obviously at present both do exactly the same thing - needs clarifying what the difference should be %>
+<% if member.solr_document._source["filetype_tesim"].present? %>
+ <% if member.solr_document._source["filetype_tesim"][0]!='externalurl' %>
+ <% # its NOT an external file %>
+<tr class="<%= dom_class(member) %> attributes">
+  <td class="thumbnail">
+    <%= render_thumbnail_tag member, image_options: {:class => "york_thumbnail"} %>
+  </td>
+  <td class="attribute filename"><%= link_to(member.link_name, contextual_path(member, @presenter)) %></td>
+  <td class="attribute date_uploaded"><%= member.try(:date_uploaded) %></td>
+  <td class="attribute permission"><%= member.permission_badge %></td>
+  <td>
+    <%= render 'actions', member: member %>
+  </td>
+</tr>
+
+<% else %>
+<% # it IS an external file %>
+<tr class="<%= dom_class(member) %> attributes">
+  <td class="thumbnail">
+    <%= render_thumbnail_tag member, image_options: {:class => "york_thumbnail"} %>
+  </td>
+  <td class="attribute filename"><%= link_to(member.link_name, contextual_path(member, @presenter)) %></td>
+  <td class="attribute date_uploaded"><%= member.try(:date_uploaded) %></td>
+  <td class="attribute permission"><%= member.permission_badge %></td>
+  <td>
+    <%= render 'actions', member: member %>
+  </td>
+</tr>
+
+<% end %>
+<% end %>
