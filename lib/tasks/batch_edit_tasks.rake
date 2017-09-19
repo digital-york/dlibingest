@@ -26,10 +26,17 @@ task :edit_thesis_additional_labels, [:id_list_path] => :environment do|t, args|
 	b.edit_thesis_additional_labels(args[:id_list_path])
 end
 
+#change group permissions from public to york
+#use solr query has_model_ssim:"Thesis" and edits to get list
+task :change_thesis_permissions, [:id_list_path] => :environment do|t, args|
+	b = BatchEdit.new
+	b.change_thesis_permissions(args[:id_list_path])
+end
 
 
-#ok
-#try this one instead, which get the theses first and then gets their members
+
+
+#batch edit to add THESIS_MAIN label where missing
 task :edit_thesis_main_labels, [:id_list_path] => :environment do|t, args|
 b = BatchEdit.new
 	b.add_thesis_main_labels(args[:id_list_path])

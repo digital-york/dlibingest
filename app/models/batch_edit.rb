@@ -66,6 +66,29 @@ work_ids = IO.readlines(id_list_path)
 	end
 end
 
+#change group permissions to public
+#use solr query has_model_ssim:Thesis to get list
+def change_thesis_permissions(id_list_path)
+#work_ids = CSV.parse(id_list_file)
+work_ids = IO.readlines(id_list_path) 
+   # work_ids = ['s7526c41m', 'qj72p713s']  
+	work_ids.each do |i|
+	i = i.strip #trailing white space, line ends etc will cause a faulty uri error	
+		t = Object::Thesis.find(i)  
+		puts "got thesis for " + i
+		t.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		t.save!
+		members = t.members
+			members.each do |m|
+				id = m.id
+				fs = Object::FileSet.find(id)
+				fs.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		        fs.save!
+			end
+	end
+end
+
+
 # add  label to individual fileset (could also be used to change an existing one)
 #rake batch_edit_tasks:edit_single_fileset_label[id,label]
 def edit_single_fileset_label(fsid, labelname)

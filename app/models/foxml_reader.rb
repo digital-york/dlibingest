@@ -35,7 +35,7 @@ idmap ={}
 toppid = "york:18179"    #top level collection
 topcol = Object::Collection.new
 topcol.title = ["Masters dissertations"]
-topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 topcol.depositor = "ps552@york.ac.uk"
 topcol.save!
 topcol_id = topcol.id.to_s
@@ -66,7 +66,7 @@ csv.each do |line|
 	col = Object::Collection.new
 	# col = Dlibhydra::Collection.new
 	col.title = [line[1]]
-	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	col.depositor = "ps552@york.ac.uk"
 	col.save!
 	col_id = col.id.to_s
@@ -118,7 +118,7 @@ yearpidcount = yearpidcount +1
 	year_col_title = line[1].to_s
 	puts "got level 3 title which was " +year_col_title
 	year_col.title =  [year_col_title]
-	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	year_col.depositor = "ps552@york.ac.uk"
 	puts "saved permissions and depositor for year collection"
 	year_col.save!
@@ -180,7 +180,7 @@ puts "parent id was " + parent_id
 mapping = []
 coll = Object::Collection.new
 #coll.preflabel = "stuff I made"
-coll.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+coll.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 coll.depositor = "ps552@york.ac.uk"
 coll.title = [title]
 
@@ -598,7 +598,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	end
 =end
 	# once depositor and permissions defined, object can be saved at any time
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
 	
 	# start reading and populating  data
@@ -766,7 +766,7 @@ end
 		user = users[0]	
 		mfset.filetype = 'embeddedfile'
 		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
-		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 		mfset.depositor = "ps552@york.ac.uk"
 		mfset.save!
 	
@@ -895,7 +895,7 @@ puts "migrating a thesis with content url"
 			if label.length > 0
 			fileset.label = label
 			end
-			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 			fileset.depositor = "ps552@york.ac.uk"
 			additional_filesets[idname] = fileset
 		end
@@ -922,7 +922,7 @@ puts "migrating a thesis with content url"
 			if label.length > 0
 			fileset.label = label
 			end
-			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 			fileset.depositor = "ps552@york.ac.uk"
 			additional_filesets[idname] = fileset
 		end
@@ -941,7 +941,7 @@ puts "migrating a thesis with content url"
 	end
 =end
 	# once depositor and permissions defined, object can be saved at any time
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
 	
 	# start reading and populating  data
@@ -1118,7 +1118,7 @@ end
 		actor.create_metadata(thesis)
 		#Declare file as external resource
         Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
-		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 		mfset.depositor = "ps552@york.ac.uk"
 		mfset.save!
 		puts "fileset " + mfset.id + " saved"
