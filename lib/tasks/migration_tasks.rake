@@ -2,6 +2,7 @@ namespace :migration_tasks do
 
 
 require_relative '../../app/models/foxml_reader.rb'
+require_relative '../../app/models/exam_paper_migrator.rb'
 
 
 task :default do
@@ -18,10 +19,16 @@ task :test => :environment do
 	r.test
 end
 
-task :make_collection_structure, [:mapping_path]  => :environment do|t, args|
+task :make_collection_structure, [:mapping_path,:foxpath]  => :environment do|t, args|
 puts "Args were: #{args}"
 	r = FoxmlReader.new
-	r.make_collection_structure(args[:mapping_path])
+	r.make_exam_collection_structure(args[:mapping_path],args[:foxpath])
+end
+
+task :make_exam_collection_structure, [:mapping_path,:foxpath]  => :environment do|t, args|
+puts "Args were: #{args}"
+	e = ExamPaperMigrator.new
+	e.make_exam_collection_structure(args[:mapping_path],args[:foxpath])
 end
 
 task :migrate_lots_of_theses_with_content_url, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc] => :environment  do|t, args|

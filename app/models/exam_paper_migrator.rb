@@ -4,46 +4,55 @@ require 'open-uri'
 require 'dlibhydra'
 require 'csv'
 
-# methods to create the  collection structure and do migrations
-class FoxmlReader
+# methods to create the  collection structure and do Exam Paper migrations
+class ExamPaperMigrator
 include ::Dlibhydra
 include ::CurationConcerns
 include ::Hydra
 
 
-
 =begin
-*the list of possible collections under theses is quite extensive - get it from an risearch query
-*thesescollections.txt contains all the returned data from risearch for all levels
-*thesescollectionsLevel2|3.txt is a complete cleaned up list of level 2|3 collections ready for use. 
+we need to check if the collection structure here is similar to that for theses
+*the list of possible collections under theses is quite extensive - get it from  risearch querys, then find and replace to format
 *format is: old pid of collection,title of collection,old parent_pid
-*col_mapping.txt is output by the script and is the permanent mapping file. format:
-originalpid, title, newid 
-so call is like rake migration_tasks:make_collection_structure[/home/dlib/mapping_files/,/home/dlib/testfiles/foxml/]
-=end
+NO: PHYSICS HAS AN ODD STRUCTURE. A 4th layer 
+top level is york:21267 title is Exam Papers
+second level listfile is  exam_colls_level2.txt
+third level listfiles is exam_colls_level3.txt
+fourth level (physics) listfiles is exam_colls_level4_physics.txt
+*exam_col_mapping.txt is output by the script and is the permanent mapping file. format:
+originalpid, title, newid . 
+made the path to the various files used for this a parameter 
+on dev server use "/home/dlib/mapping_files/"  (with end slash)
+so call is like rake migration_tasks:make_exam_collection_structure[/home/dlib/mapping_files/].
+This works , but more infor needed in collections. could get this by writing a little method which can be called when creating each object to populate it. will obviously take longer to process but can be reused without rewriting for every collection.
 
-def make_collection_structure(mapping_path, foxpath)
-puts "running make_collection_structure"
-mapping_file = mapping_path +"col_mapping.txt"
-# make the top Theses level first, with a CurationConcerns (not dlibhydra) model.
+=end
+#mapping_path is path to the mapping file, foxpath is the path to the existing foxml collection files 
+def make_exam_collection_structure(mapping_path, foxpath)
+puts "running make_exam_collection_structure"
+mapping_file = mapping_path +"exam_col_mapping.txt"
+# make the top Exams level first, with a CurationConcerns (not dlibhydra) model.
 #array of lines including title
 topmapping = []
 # we also need a pid:id hash so we can extract id via a pid key
 idmap ={}
-toppid = "york:18179"    #top level collection
+toppid = "york:21267"    #top level collection
 topcol = Object::Collection.new
-topcol.title = ["Masters dissertations"]
+topcol.title = ["Exam papers"]
 topcol.former_id = [toppid]
-topcol = populate_collection(toppid, topcol, foxpath)  
-topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+topcol = populate_collection(toppid, topcol, foxpath)  #KALE
+topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 topcol.depositor = "ps552@york.ac.uk"
 topcol.save!
 topcol_id = topcol.id.to_s
 puts "topcol.id was " +topcol.id
-mappings_string = toppid + "," +  + topcol.title[0].to_s + "," + topcol_id 
-	topmapping.push(mappings_string) 
+mappings_string = toppid + "," + topcol.title[0].to_s + "," + topcol_id 
+topmapping.push(mappings_string) 
+# add to hash, old pid as key, new id as value
+	key = toppid	
+	idmap[key] = topcol.id
 # write to file as  permanent mapping that we can use when mapping theses against collections 
-# open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
 open(mapping_file, "a+")do |mapfile|
 mapfile.puts(topmapping)
 end
@@ -52,10 +61,8 @@ end
 now we need to read from the list which I will create, splitting into appropriate parts and for each create an id and add it to the top level collection
 =end
 # hardcode second level file, but could pass in as param
-# csv_text = File.read("/vagrant/files_to_test/thesescollectionsLevel2SMALL.txt")
-level2file = mapping_path + "thesescollectionsLevel2.txt"
+level2file = mapping_path + "exam_colls_level2.txt"
 csv_text = File.read(level2file)
-# csv_text = File.read("/vagrant/files_to_test/thesescollectionsLevel2.txt")
 csv = CSV.parse(csv_text)
 # we also need a file we can write to, as a permanent mapping
 mappings_level2 = []
@@ -67,15 +74,15 @@ csv.each do |line|
 	# col = Dlibhydra::Collection.new
 	col.title = [line[1]]
 	col.former_id = [line[0].strip]
-	col = populate_collection(line[0].strip, col, foxpath)
-	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	col = populate_collection(line[0].strip, col, foxpath)  #KALE
+	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	col.depositor = "ps552@york.ac.uk"
 	col.save!
 	col_id = col.id.to_s
 	puts "subject col id was" + col_id
 	topcol.members << col
 	topcol.save!
-	mappings_string = line[0] + "," +  + line[1] + "," + col_id 
+	mappings_string = line[0] + "," + line[1] + "," + col_id 
 	mappings_level2.push(mappings_string)
 	# add to hash, old pid as key, new id as value
 	key = line[0]	
@@ -84,22 +91,17 @@ end
 
 # write to file as  permanent mapping that we can use when mapping theses against collections
 open(mapping_file, "a+")do |mapfile| 
-# open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
 	mapfile.puts(mappings_level2)
 end
 
 # but we still have our mappings array, so  now use this to make third level collections
-
 sleep 5 # wait 5 seconds before moving on to allow 2nd level collections some time to index before the level3s start trying to find them
 
 # read in third level file
 mappings_level3 = []
-# csv_text3 = File.read("/vagrant/files_to_test/thesescollectionsLevel3SMALL.txt")
-level3collsfile = mapping_path + "thesescollectionsLevel3.txt"
+level3collsfile = mapping_path + "exam_colls_level3.txt"
 csv_text3 = File.read(level3collsfile)
-# csv_text3 = File.read("/vagrant/files_to_test/thesescollectionsLevel3.txt")
 csv_level3 = CSV.parse(csv_text3)
-
 yearpidcount = 1
 puts "starting third level (years)"
 csv_level3.each do |line|
@@ -113,46 +115,71 @@ yearpidcount = yearpidcount +1
 	puts "got level 3 title which was " +year_col_title
 	year_col.title =  [year_col_title]
 	year_col.former_id = [line[0].strip]
-	year_col = populate_collection(line[0].strip, year_col, foxpath)
-	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	year_col = populate_collection(line[0].strip, year_col, foxpath)  #KALE
+	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	year_col.depositor = "ps552@york.ac.uk"
-	puts "saved permissions and depositor for year collection"
 	year_col.save!
-	puts "saved collection"
 	year_col_id = year_col.id.to_s
-	puts "year col id was " + year_col_id
 	# need to find the right parent collection here	
 	parent_pid = line[2]# old parent pid, key to find new parent id
-	puts " subject col pid was " + parent_pid
 	mapped_parent_id = idmap[parent_pid]	
-	puts "mapped parent id was " + mapped_parent_id
 	parent = Object::Collection.find(mapped_parent_id)
 	parent.members << year_col
-	puts "parent id was" + parent.id.to_s
-	puts "year collection id was" + year_col.id.to_s
 	parent.save!
-	puts "parent.members were" + parent.members.to_s
-	mappings_string = line[0] + "," +  + line[1] + "," + year_col_id 
+	mappings_string = line[0] + "," + line[1] + "," + year_col_id 
 	mappings_level3.push(mappings_string)
+	# add to hash, old pid as key, new id as value
+	key = line[0].strip	
+	idmap[key] = year_col.id
 end
-
-# and write to permanent mapping file - these can be all the same whether level 2 or 3 or  1
-# but test first with different
+# and write to permanent mapping file - these can be all the same file whatever level
 open(mapping_file, "a+")do |mapfile|
-# open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
-# open("/vagrant/files_to_test/col_mapping_lev3.txt", "a+")do |mapfile|
 	mapfile.puts(mappings_level3)
 end
 
-puts "done"
-=begin
-information we need for each collection is the old pid as a key, plus its parent pid, plus the collection name and the new id once it is created
-top level will be the top level theses ie current Masters Dissertations (york:18179). 
-second level  is discipline eg Archaeology, Education etc
-OPTIONAL third level is year eg 1973. Not all disciplines have this level
-=end
+# level 4
+sleep 5 # wait 5 seconds before moving on to allow 2nd level collections some time to index before the level3s start trying to find them
+mappings_level4 = []
+level4collsfile = mapping_path + "exam_colls_level4_physics.txt"
+csv_text4 = File.read(level4collsfile)
+csv_level4 = CSV.parse(csv_text4) 
+yearpidcount = 1
+puts "starting fourth level (physics years)"
+csv_level4.each do |line|
+yearpidcount = yearpidcount +1
+    puts "starting number " +yearpidcount.to_s+ " in list"
+    puts line[0]
+	physics_year_col = Object::Collection.new
+	puts "started new physics year collection"
+	# col = Dlibhydra::Collection.new extend cc collection instead
+	year_col_title = line[1].to_s
+	puts "got level 4 title which was " +year_col_title
+	physics_year_col.title =  [year_col_title]
+	physics_year_col.former_id = [line[0].strip]
+	physics_year_col = populate_collection(line[0].strip, physics_year_col, foxpath)  #KALE
+	physics_year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	physics_year_col.depositor = "ps552@york.ac.uk"
+	physics_year_col.save!
+	physics_year_col_id = physics_year_col.id.to_s
+	# need to find the right parent collection here	
+	parent_pid = line[2]# old parent pid, key to find new parent id
+	mapped_parent_id = idmap[parent_pid]	
+	parent = Object::Collection.find(mapped_parent_id)
+	parent.members << physics_year_col
+	parent.save!
+	mappings_string = line[0] + ","   + line[1] + "," + physics_year_col.id 
+	mappings_level4.push(mappings_string)
+end
+# write to permanent mapping file - these can be all the same file whatever level
+open(mapping_file, "a+")do |mapfile|
+	mapfile.puts(mappings_level4)
+end
+#end of level 4
 
-end  # of method
+
+puts "all collections done"
+
+end  # of make collection structure method
 
 #could do with populating collection objects further, although no model mapping avail in google  docs
 #in exams i can see creator, description, title,rights,subject, and I think we also need former id
@@ -197,49 +224,6 @@ end
 collection.rights=[coll_rights]
 return collection
 end  #end of populate_collection method
-
-=begin
-keep this for present as it is the only way of making a new child collection within the existing structure (the one on the interface does not allow 
-you to specify the correct parent to add to - only shows some, and no way to distinguish between groups of year collections
-call is like rake migration_tasks:make_collection_structure[/home/ubuntu/dlib/mapping_files/]
-so where the child being added has pid york:1234, is called 1999, and is a child of york:4567
-so to create the old english/
-new english id is m039k4882
-  old year collection title was 2015 
-  old year collection id was york:932220
- call is like rake migration_tasks:recreate_child_collection[york:932220,2015,m039k4882,/home/ubuntu/mapping_files/]
- rake migration_tasks:recreate_child_collection[york:932221,2016,m039k4882,/home/ubuntu/mapping_files/]
-=end
-def recreate_child_collection(old_pid, title, parent_id, mapping_path)
-#coll = Object::Collection.new
-mapping_file = mapping_path +"col_mapping.txt"
-puts "mapping file was " + mapping_file
-puts "old year pid was " + old_pid
-puts "old year title was " + title
-puts "parent id was " + parent_id
-mapping = []
-coll = Object::Collection.new
-#coll.preflabel = "stuff I made"
-coll.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-coll.depositor = "ps552@york.ac.uk"
-coll.title = [title]
-
-coll.save!
-child_id = coll.id
-puts "collection id was " +child_id
-parent_col = Object::Collection.find(parent_id)	
-	puts " collection title was " + parent_col.title[0].to_s
-parent_col.members << coll	
-parent_col.save!   #saving this IS neccesary
-mapping_string = old_pid + "," +  + coll.title[0].to_s + "," + child_id #former pid of child +title of child plus new id of child
-mapping.push(mapping_string)
-#add to mapping file
-open(mapping_file, "a+")do |mapfile|
-	mapfile.puts(mapping)
-end
-
-end #end recreate_child_collection
-
 
 # this is defined in yaml
 # return standard term from approved authority list
@@ -461,6 +445,7 @@ end
 
 # will need to expand this for other collections, but not Theses, as all have smae rights
 def get_standard_rights(searchterm)
+puts "at get_standard_rights searchTeerm was " + searchterm
 if searchterm.include?("yorkrestricted")
   term = 'York Restricted'
 end
@@ -587,7 +572,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	rels_current_version = 'RELS-EXT.' + current_rels
 	untrimmed_former_parent_pid  = doc.xpath("//foxml:datastream[@ID='RELS-EXT']/foxml:datastreamVersion[@ID='#{rels_current_version}']/foxml:xmlContent/rdf:RDF/rdf:Description/rel:isMemberOf/@rdf:resource",ns).to_s	
 	# remove unwanted bits 
-	former_parent_pid = untrimmed_former_parent_pid.sub 'info:fedora/york', 'york'
+	former_parent_pid = untrimmed_former_parent_pid.sub 'york', 'york'
 	parentcol = collection_mappings[former_parent_pid]
 	# find max dc version
 	nums = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion/@ID",ns)	
@@ -629,7 +614,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 # which is different for each object
 =begin
 	existing_state = "didnt find an active state" 
-	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='info:fedora/fedora-system:def/model#state']/@VALUE",ns)
+	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='fedora-system:def/model#state']/@VALUE",ns)
 	puts '***************existing state:' + existing_state.to_s
 	if existing_state.to_s == "Active"
 	puts '***************FOUND existing state:' + existing_state.to_s
@@ -638,7 +623,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	end
 =end
 	# once depositor and permissions defined, object can be saved at any time
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
 	
 	# start reading and populating  data
@@ -806,7 +791,7 @@ end
 		user = users[0]	
 		mfset.filetype = 'embeddedfile'
 		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
-		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 		mfset.depositor = "ps552@york.ac.uk"
 		mfset.save!
 	
@@ -884,7 +869,7 @@ puts "migrating a thesis with content url"
 	rels_current_version = 'RELS-EXT.' + current_rels
 	untrimmed_former_parent_pid  = doc.xpath("//foxml:datastream[@ID='RELS-EXT']/foxml:datastreamVersion[@ID='#{rels_current_version}']/foxml:xmlContent/rdf:RDF/rdf:Description/rel:isMemberOf/@rdf:resource",ns).to_s	
 	# remove unwanted bits 
-	former_parent_pid = untrimmed_former_parent_pid.sub 'info:fedora/york', 'york'
+	former_parent_pid = untrimmed_former_parent_pid.sub 'york', 'york'
 	parentcol = collection_mappings[former_parent_pid]
 	# find max dc version
 	nums = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion/@ID",ns)	
@@ -935,7 +920,7 @@ puts "migrating a thesis with content url"
 			if label.length > 0
 			fileset.label = label
 			end
-			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 			fileset.depositor = "ps552@york.ac.uk"
 			additional_filesets[idname] = fileset
 		end
@@ -962,7 +947,7 @@ puts "migrating a thesis with content url"
 			if label.length > 0
 			fileset.label = label
 			end
-			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 			fileset.depositor = "ps552@york.ac.uk"
 			additional_filesets[idname] = fileset
 		end
@@ -974,14 +959,14 @@ puts "migrating a thesis with content url"
 # which is different for each object
 =begin
 	existing_state = "didnt find an active state" 
-	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='info:fedora/fedora-system:def/model#state']/@VALUE",ns)
+	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='fedora-system:def/model#state']/@VALUE",ns)
 	if existing_state.to_s == "Active"
 	#pasted in from gui produced Thesis! not sure if required
 	 thesis.state = "http://fedora.info/definitions/1/0/access/ObjState#active"  
 	end
 =end
 	# once depositor and permissions defined, object can be saved at any time
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
 	
 	# start reading and populating  data
@@ -990,9 +975,7 @@ puts "migrating a thesis with content url"
 		
 	thesis.title = [t]	# 1 only	
 	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
-	#EEK! not all the records have dc:identifier populated
-	#former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
-	former_id = doc.xpath("//foxml:digitalObject/@PID",ns).to_s
+	former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s
 	if former_id.length > 0
 	thesis.former_id = [former_id]
 	end
@@ -1158,7 +1141,7 @@ end
 		actor.create_metadata(thesis)
 		#Declare file as external resource
         Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
-		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 		mfset.depositor = "ps552@york.ac.uk"
 		mfset.save!
 		puts "fileset " + mfset.id + " saved"

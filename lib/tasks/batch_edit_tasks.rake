@@ -33,6 +33,13 @@ task :change_thesis_permissions, [:id_list_path] => :environment do|t, args|
 	b.change_thesis_permissions(args[:id_list_path])
 end
 
+#change group permissions from public to york
+#use solr query has_model_ssim:"Thesis" and edits to get list
+task :change_collection_permissions, [:id_list_path] => :environment do|t, args|
+	b = BatchEdit.new
+	b.change_collection_permissions(args[:id_list_path])
+end
+
 
 
 
