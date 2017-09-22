@@ -190,7 +190,8 @@ end
 defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"
 coll_rights = defaultLicence
 coll_rights = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[contains(.,'http')]",ns).to_s
-newrights =  get_standard_rights(coll_rights)#  all theses currently York restricted 	
+common = CommonMigrationMethods.new
+newrights =  common.get_standard_rights(coll_rights)#  all theses currently York restricted 	
 if newrights.length > 0
 	coll_rights = newrights	
 end	
@@ -239,235 +240,6 @@ open(mapping_file, "a+")do |mapfile|
 end
 
 end #end recreate_child_collection
-
-
-# this is defined in yaml
-# return standard term from approved authority list
-def get_qualification_level_term(searchterm)
-masters = ['Masters','masters']
-bachelors = ['Bachelors','Bachelor','Batchelors', 'Batchelor']
-diplomas = ['Diploma','(Dip', '(Dip', 'Diploma (Dip)']
-doctoral = ['Phd','Doctor of Philosophy (PhD)']
-standardterm="unfound"
-if masters.include? searchterm
-	standardterm = 'Masters (Postgraduate)'
-elsif bachelors.include? searchterm
-	standardterm = 'Bachelors (Undergraduate)'
-elsif diplomas.include? searchterm
-	standardterm = 'Diplomas (Postgraduate)' #my guess
-elsif doctoral.include? searchterm
-    standardterm = 'Doctoral (Postgraduate)'	
-end
-if standardterm != "unfound"
-	#pass the id, get back the term. in this case both are currently identical
-	auth = Qa::Authorities::Local::FileBasedAuthority.new('qualification_levels')
-	approvedterm = auth.find(standardterm)['term']
-else 
-	approvedterm = "unfound"
-end
-return approvedterm
-end #end get_qualification_level_term
-
-#this returns the  id of an value from  an authority list where each value is stored as a fedora object
-#the parameters should be one of the authority types with a relevant class listed in Dlibhydra::Terms and the preflabel is the exact preflabel for the value (eg "University of York. Department of Philosophy") 
-def get_resource_id(authority_type, preflabel)
-id="unfound"
-preflabel = preflabel.to_s
-	if authority_type == "department"
-		service = Dlibhydra::Terms::DepartmentTerms.new		 
-	elsif authority_type == "qualification_name"
-	    service = Dlibhydra::Terms::QualificationNameTerms.new
-	elsif authority_type == "institution"  #not sure about this since we only have two? york and oxford brookes?
-		service = Dlibhydra::Terms::CurrentOrganisationTerms.new
-	elsif authority_type == "subject"   
-	    service = Dlibhydra::Terms::SubjectTerms.new 
-	elsif authority_type == "person_name"   #no pcurrent_person objects yet created
-	    service = Dlibhydra::Terms::CurrentPersonTerms.new
-	end
-	id = service.find_id(preflabel)
-end
-
-# this returns the  correct preflabels to be used when calling get_resource_id to get the object ref for the department
-# note there may be more than one! hence the array - test for length
-# its a separate method as multiple variants map to the same preflabel/object. 'loc' is the  
-def get_department_preflabel(stringtomatch)
-preflabels=[]
-=begin
-Full list of preflabels at https://github.com/digital-york/dlibingest/blob/new_works/lib/assets/lists/departments.csv
-
-and here is the equivalent list of dc:publisher from risearch (GET all values of dc:publisher for objects with type Theses  (make sure to tick Force Distinct")
-select  $dept
- from <#ri>
- where $object <dc:type> 'Theses' 
-and $object <dc:publisher> $dept)
-
-note the variants - hence need to reduce the search strings to minimum and decapitalise
- 
-University of York. Dept. of History of Art
-University of York. Dept. of Chemistry
-University of York. Institute of Advanced Architectural Studies
-Institute of Advanced Architectural Studies
-University of York. York Management School
-University of York. Dept. of Management Studies
-University of York. Centre for Medieval Studies
-University of York. Dept. of History
-University of York. Dept. of Sociology
-University of York. Dept. of Education
-University of York. Dept. of Economics and Related Studies
-University of York. Dept. of Music.
-University of York. Dept. of Archaeology
-University of York. Dept. of Biology
-University of York. Dept. of Health Sciences
-University of York. Dept. of English and Related Literature
-University of York. Dept. of Language and Linguistic Science
-University of York. Dept. of Politics
-University of York. Dept. of Philosophy
-University of York. Dept. of Social Policy and Social Work
-"York Management School (York, England)"
-University of York. Institute of Advanced Architectural Studies.
-University of York. Centre for Conservation Studies
-University of York. Department of Archaeology
-University of York. Dept of Archaeology
-niversity of York. Dept. of Archaeology
-University of York: Dept. of Archaeology
-University of York. Post-war Reconstruction and Development Unit
-University of York. York Management School.
-University of York. Centre for Medieval Studies.
-University of York. The York Management School.
-The University of York. York Management School.
-University of York. York Management School'
-University of York. Dept.of History of Art
-University of York. Dept. of History of Art.
-University of York. Dept of History of Art
-University of York. Departments of English and History of Art
-University of York. Centre for Eighteenth Century Studies
-Oxford Brookes University    									#this is an awarding institution not a dept
-
-=end
-	loc = stringtomatch.downcase  #get ride of case inconsistencies
-	if loc.include? "reconstruction"
-		preflabels.push("University of York. Post-war Reconstruction and Development Unit") 
-	elsif loc.include? "advanced architectural"
-	    preflabels.push("University of York. Institute of Advanced Architectural Studies")
-	elsif loc.include? "medieval"
-	    preflabels.push("University of York. Centre for Medieval Studies")
-	elsif loc.include? "history of art"
-	    preflabels.push("University of York. Department of History of Art") 
-	elsif loc.include? "conservation"
-	    preflabels.push("University of York. Centre for Conservation Studies")
-	elsif loc.include? "eighteenth century"
-	    preflabels.push("University of York. Centre for Eighteenth Century Studies")
-	elsif loc.include? "chemistry"
-	    preflabels.push("University of York. Department of Chemistry")
-	elsif loc.include? "history"   #ok because of order
-	    preflabels.push("University of York. Department of History")
-	elsif loc.include? "sociology"
-	    preflabels.push( "University of York. Department of Sociology")
-	elsif loc.include? "education"
-	    preflabels.push("University of York. Department of Education")
-	elsif loc.include? "economics and related"
-	    preflabels.push( "University of York. Department of Economics and Related Studies")
-	elsif loc.include? "music"
-	    preflabels.push( "University of York. Department of Music")
-	elsif loc.include? "archaeology"
-	    preflabels.push( "University of York. Department of Archaeology")
-	elsif loc.include? "biology"
-	    preflabels.push( "University of York. Department of Biology")
-	elsif loc.include? "english and related literature"
-	    preflabels.push( "University of York. Department of English and Related Literature")
-	elsif loc.include? "health sciences"
-	    preflabels.push( "University of York. Department of Health Sciences")
-	elsif loc.include? "politics"
-	    preflabels.push("University of York. Department of Politics")
-	elsif loc.include? "philosophy"
-	    preflabels.push( "University of York. Department of Philosophy")
-	elsif loc.include? "social policy and social work"
-	    preflabels.push( "University of York. Department of Social Policy and Social Work")
-	elsif loc.include? "management"
-	    preflabels.push( "University of York. The York Management School")
-	elsif loc.include? "language and linguistic science"
-	    preflabels.push("University of York. Department of Language and Linguistic Science")
-	elsif loc.include? "departments of english and history of art"   #damn! two departments to return!
-	    preflabels.push( "University of York. Department of Department of English and Related Literature")
-		preflabels.push("University of York. Department of Department of Language and Linguistic Science")
-	end
-	return preflabels
-end
-
-# this returns the  correct preflabel to be used when calling get_resource_id to get the object ref for the degree
-# its a separate method as multiple variants map to the same preflabel/object. it really can only have one return - anything else would be nonsense. its going to be quite complex as some cross checking accross the various types may be  needed
-# type_array will be an array consisting of all the types for an object!
-def get_qualification_name_preflabel(type_array)
-
-#Arrays of qualification name variants
-artMasters = ['Master of Arts (MA)', 'Master of Arts', 'Master of Art (MA)', 'MA (Master of Arts)','Masters of Arts (MA)', 'MA']
-artBachelors = ['Batchelor of Arts (BA)', '"Bachelor of Arts (BA),"', 'BA', 'Bachelor of Arts (BA)']
-artsByResearch = ['Master of Arts by research (MRes)', '"Master of Arts, by research (MRes)"' ]
-scienceByResearch = ['Master of Science by research (MRes)', '"Master of Science, by research (MRes)"' ]
-scienceBachelors = ['Batchelor of science (BSc)', '"Bachelor of Science (BSc),"', 'BSc', ]
-scienceMasters = ['Master of Science (MSc.)', '"Master of Science (MSc),"',"'Master of Science (MSc)",'Master of Science (MSc)','MSc', ]
-philosophyBachelors = ['Bachelor of Philosophy (BPhil)', 'BPhil']
-philosophyMasters = ['Master of Philosophy (MPhil)','MPhil']
-researchMasters = ['Master of Research (Mres)','Master of Research (MRes)','Mres','MRes']#this is the only problematic one
-#the variant single quote character in  Conservation Studies is invalid and causes invalid multibyte char (UTF-8) error so  handled this in nokogiri open document call. however we also need to ensure the resulting string is included in the lookup array so the match will still be found. this means recreating it and inserting it into the array
-not_valid = "Postgraduate Diploma in ‘Conservation Studies’ (PGDip)"
-valid_now = not_valid.encode('UTF-8', :invalid => :replace, :undef => :replace)
-pgDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
-
-
-qualification_name_preflabel = "unfound" #initial value
-#by testing all we should find one of those below
-type_array.each do |t,|	    #loop1
-	type_to_test = t.to_s
-	
-	#outer loop tests for creation of qualification_name_preflabel
-	if qualification_name_preflabel == "unfound"   #loop2
-		if artMasters.include? type_to_test #loop2a
-		 qualification_name_preflabel = "Master of Arts (MA)"		 
-		elsif artBachelors.include? type_to_test
-		 qualification_name_preflabel = "Bachelor of Arts (BA)"		 
-		elsif artsByResearch.include? type_to_test
-		 qualification_name_preflabel = "Master of Arts by Research (MRes)"		 
-		elsif scienceBachelors.include? type_to_test
-		 qualification_name_preflabel = "Bachelor of Science (BSc)"		 
-		elsif scienceMasters.include? type_to_test
-		 qualification_name_preflabel = "Master of Science (MSc)"		 
-		elsif scienceByResearch.include? type_to_test
-		 qualification_name_preflabel = "Master of Science by Research (MRes)"		 
-	    elsif philosophyBachelors.include? type_to_test
-		 qualification_name_preflabel = "Bachelor of Philosophy (BPhil)"		 
-		elsif philosophyMasters.include? type_to_test
-		 qualification_name_preflabel = "Master of Philosophy (MPhil)"		
-		elsif pgDiplomas.include? type_to_test
-		 qualification_name_preflabel = "Postgraduate Diploma (PGDip)"		 
-		end #end loop2a
-	end #end loop2
-		
-	#not found? check for plain research masters without arts or science specified (order of testing here is crucial)
-		if qualification_name_preflabel == "unfound"    #loop3
-			if researchMasters.include? type_to_test #loop 4 not done with main list as "MRes" may be listed as separate type as well as a more specific type
-				qualification_name_preflabel = "Master of Research (MRes)"
-			end#end loop 4
-		end   #'end loop 3
-	end #end loop1	
-	return qualification_name_preflabel
-end  #this is where the get_qualification_name_preflabel method should end
-
-def get_standard_language(searchterm)
-	s = searchterm.titleize
-	auth = Qa::Authorities::Local::FileBasedAuthority.new('languages')
-	approved_language = auth.search(s)[0]['id']
-end
-
-# will need to expand this for other collections, but not Theses, as all have smae rights
-def get_standard_rights(searchterm)
-if searchterm.include?("yorkrestricted")
-  term = 'York Restricted'
-end
-	auth = Qa::Authorities::Local::FileBasedAuthority.new('licenses') 
-	rights = auth.search(term)[0]['id']
-end
-
 
 
 
@@ -559,7 +331,7 @@ def migrate_thesis(path, contentpath, collection_mapping_doc_path)
 # mfset = Dlibhydra::FileSet.new   # FILESET. # defin this at top because otherwise expects to find it in CurationConcerns module 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . 
-
+common = CommonMigrationMethods.new
 
 puts "migrating a thesis using path " + path +" and  contentPath " + contentpath + " collection_maPPING_DOC_PATH " + collection_mapping_doc_path		
 	foxmlpath = path	
@@ -625,18 +397,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	
 	# create a new thesis implementing the dlibhydra models
 	thesis = Object::Thesis.new
-# trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviuously referenes something in a dunamic away
-# which is different for each object
-=begin
-	existing_state = "didnt find an active state" 
-	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='info:fedora/fedora-system:def/model#state']/@VALUE",ns)
-	puts '***************existing state:' + existing_state.to_s
-	if existing_state.to_s == "Active"
-	puts '***************FOUND existing state:' + existing_state.to_s
-	#pasted in from gui produced Thesis! not sure if required
-	 thesis.state = "http://fedora.info/definitions/1/0/access/ObjState#active"  
-	end
-=end
+
 	# once depositor and permissions defined, object can be saved at any time
 	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
@@ -694,7 +455,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 			inst_preflabels.push("Oxford Brookes University") #I'v just added this as a minority of our theses come from here!
 		end
 		inst_preflabels.each do | preflabel|
-			id = get_resource_id('institution', preflabel)
+			id = common.get_resource_id('institution', preflabel)
 			thesis.awarding_institution_resource_ids+=[id]
 		end
 				
@@ -704,7 +465,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 			puts "no department found"
 		end
 		dept_preflabels.each do | preflabel|
-			id = get_resource_id('department', preflabel)
+			id = common.get_resource_id('department', preflabel)
 			thesis.department_resource_ids +=[id]
 		end
 	end
@@ -718,7 +479,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	# qualification names (object)
 	qualification_name_preflabel = get_qualification_name_preflabel(typesToParse)
 	if qualification_name_preflabel != "unfound"   
-		qname_id = get_resource_id('qualification_name',qualification_name_preflabel)
+		qname_id = common.get_resource_id('qualification_name',qualification_name_preflabel)
 		if qname_id.to_s != "unfound"		
 			thesis.qualification_name_resource_ids+=[qname_id]
 		else
@@ -730,7 +491,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	# qualification levels (yml file). there can only be one
 	typesToParse.each do |t|	
 	type_to_test = t.to_s
-	degree_level = get_qualification_level_term(type_to_test)
+	degree_level = common.get_qualification_level_term(type_to_test)
 	if degree_level != "unfound"
 		thesis.qualification_level += [degree_level]
 	end
@@ -740,7 +501,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	theses = [ 'theses','Theses','Dissertations','dissertations' ] 
 	if theses.include? type_to_test	
 	# not using methods below yet - or are we? subjects[] no longer in model
-		subject_id = get_resource_id('subject',"Dissertations, Academic")
+		subject_id = common.get_resource_id('subject',"Dissertations, Academic")
 		thesis.subject_resource_ids +=[subject_id]		 
 	end
 end	
@@ -751,7 +512,7 @@ end
 	# this should return the key as that allows us to just search on the term
 	thesis_language.each do |lan|   #0 ..n
 	standard_language = "unfound"
-	    standard_language = get_standard_language(lan.titleize)#capitalise first letter
+	    standard_language = common.get_standard_language(lan.titleize)#capitalise first letter
 		if standard_language!= "unfound"
 			thesis.language+=[standard_language]
 		end
@@ -781,7 +542,7 @@ end
 	thesis_rights = defaultLicence
 	thesis_rights = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[contains(.,'http')]",ns).to_s
 	
-	newrights =  get_standard_rights(thesis_rights)#  all theses currently York restricted 	
+	newrights =  common.get_standard_rights(thesis_rights)#  all theses currently York restricted 	
 		if newrights.length > 0
 		thesis_rights = newrights
 			thesis.rights=[thesis_rights]			
@@ -859,7 +620,7 @@ end # end of migrate thesis
 def migrate_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path) 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
-
+common = CommonMigrationMethods.new
 puts "migrating a thesis with content url"	
 	foxmlpath = path	
 	# enforce  UTF-8 compliance when opening foxml file
@@ -970,16 +731,7 @@ puts "migrating a thesis with content url"
 		
 	# create a new thesis implementing the dlibhydra models
 	thesis = Object::Thesis.new
-# trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviuously referenes something in a dunamic away
-# which is different for each object
-=begin
-	existing_state = "didnt find an active state" 
-	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='info:fedora/fedora-system:def/model#state']/@VALUE",ns)
-	if existing_state.to_s == "Active"
-	#pasted in from gui produced Thesis! not sure if required
-	 thesis.state = "http://fedora.info/definitions/1/0/access/ObjState#active"  
-	end
-=end
+
 	# once depositor and permissions defined, object can be saved at any time
 	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
@@ -1039,7 +791,7 @@ puts "migrating a thesis with content url"
 			inst_preflabels.push("Oxford Brookes University") #I'v just added this as a minority of our theses come from here!
 		end
 		inst_preflabels.each do | preflabel|
-			id = get_resource_id('institution', preflabel)
+			id = common.get_resource_id('institution', preflabel)
 			thesis.awarding_institution_resource_ids+=[id]
 		end
 				
@@ -1049,7 +801,7 @@ puts "migrating a thesis with content url"
 			puts "no department found"
 		end
 		dept_preflabels.each do | preflabel|
-			id = get_resource_id('department', preflabel)
+			id = common.get_resource_id('department', preflabel)
 			thesis.department_resource_ids +=[id]
 		end
 	end
@@ -1063,7 +815,7 @@ puts "migrating a thesis with content url"
 	# qualification names (object)
 	qualification_name_preflabel = get_qualification_name_preflabel(typesToParse)
 	if qualification_name_preflabel != "unfound"   
-		qname_id = get_resource_id('qualification_name',qualification_name_preflabel)
+		qname_id = common.get_resource_id('qualification_name',qualification_name_preflabel)
 		if qname_id.to_s != "unfound"		
 			thesis.qualification_name_resource_ids+=[qname_id]
 		else
@@ -1075,7 +827,7 @@ puts "migrating a thesis with content url"
 	# qualification levels (yml file). there can only be one
 	typesToParse.each do |t|	
 	type_to_test = t.to_s
-	degree_level = get_qualification_level_term(type_to_test)
+	degree_level = common.get_qualification_level_term(type_to_test)
 	if degree_level != "unfound"
 		thesis.qualification_level += [degree_level]
 	end
@@ -1085,7 +837,7 @@ puts "migrating a thesis with content url"
 	theses = [ 'theses','Theses','Dissertations','dissertations' ] 
 	if theses.include? type_to_test	
 	# not using methods below yet - or are we? subjects[] no longer in model
-		subject_id = get_resource_id('subject',"Dissertations, Academic")
+		subject_id = common.get_resource_id('subject',"Dissertations, Academic")
 		thesis.subject_resource_ids +=[subject_id]		 
 	end
 end	
@@ -1096,7 +848,7 @@ end
 	# this should return the key as that allows us to just search on the term
 	thesis_language.each do |lan|   #0 ..n
 	standard_language = "unfound"
-	    standard_language = get_standard_language(lan.titleize)#capitalise first letter
+	    standard_language = common.get_standard_language(lan.titleize)#capitalise first letter
 		if standard_language!= "unfound"
 			thesis.language+=[standard_language]
 		end
@@ -1126,7 +878,7 @@ end
 	thesis_rights = defaultLicence
 	thesis_rights = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:rights/text()[contains(.,'http')]",ns).to_s
 	
-	newrights =  get_standard_rights(thesis_rights)#  all theses currently York restricted 	
+	newrights =  common.get_standard_rights(thesis_rights)#  all theses currently York restricted 	
 		if newrights.length > 0
 		thesis_rights = newrights
 			thesis.rights=[thesis_rights]			
