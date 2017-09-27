@@ -183,6 +183,7 @@ currentVersion = 'DC.' + current
 creatorArray = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
 collection.creator_string = [creatorArray.to_s]
 description = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
+description.gsub!("&amp;","&")]
 collection.description = [description]
 #subjects (for now)
 keywords = []
