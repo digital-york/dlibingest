@@ -10,6 +10,11 @@ include ::Dlibhydra
 include ::CurationConcerns
 include ::Hydra
 
+#check its at least valid ruby
+def test
+puts "yup, foxml_reader still working"
+end
+
 
 
 =begin
@@ -65,7 +70,8 @@ csv.each do |line|
     puts line[0]
 	col = Object::Collection.new
 	# col = Dlibhydra::Collection.new
-	col.title = [line[1]]
+	#col.title = [line[1]]
+	col.title = [line[1].gsub!("&amp;","&")]
 	col.former_id = [line[0].strip]
 	col = populate_collection(line[0].strip, col, foxpath)
 	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
@@ -109,9 +115,9 @@ yearpidcount = yearpidcount +1
 	year_col = Object::Collection.new
 	puts "started new year collection"
 	# col = Dlibhydra::Collection.new extend cc collection instead
-	year_col_title = line[1].to_s
-	puts "got level 3 title which was " +year_col_title
-	year_col.title =  [year_col_title]
+	year_col_title = line[1].to_st 
+	puts "got level 3 title which was " + year_col_title
+	year_col.title = [year_col_title.gsub!("&amp;", "&")] #just in case
 	year_col.former_id = [line[0].strip]
 	year_col = populate_collection(line[0].strip, year_col, foxpath)
 	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
@@ -137,10 +143,7 @@ yearpidcount = yearpidcount +1
 end
 
 # and write to permanent mapping file - these can be all the same whether level 2 or 3 or  1
-# but test first with different
 open(mapping_file, "a+")do |mapfile|
-# open("/vagrant/files_to_test/col_mapping.txt", "a+")do |mapfile|
-# open("/vagrant/files_to_test/col_mapping_lev3.txt", "a+")do |mapfile|
 	mapfile.puts(mappings_level3)
 end
 
@@ -151,7 +154,6 @@ top level will be the top level theses ie current Masters Dissertations (york:18
 second level  is discipline eg Archaeology, Education etc
 OPTIONAL third level is year eg 1973. Not all disciplines have this level
 =end
-
 end  # of method
 
 #could do with populating collection objects further, although no model mapping avail in google  docs
@@ -185,6 +187,7 @@ collection.description = [description]
 #subjects (for now)
 keywords = []
 doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:subject/text()",ns).each do |s|
+    s.gsub!("&amp;","&")
 	keywords.push(s.to_s)
 end
 defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"
@@ -405,6 +408,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	# start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
 	t = titleArray.to_s 
+	t.gsub!("&amp;","&")
 		
 	thesis.title = [t]	# 1 only	
 	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
@@ -423,7 +427,8 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	# abstract is currently the description. optional field so test presence
 	thesis_abstract = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
 	if thesis_abstract.length > 0
-	thesis.abstract = [thesis_abstract] # now multivalued
+		thesis_abstract.gsub!("&amp;","&")
+		thesis.abstract = [thesis_abstract] # now multivalued
 	end
 	
 	# date_of_award (dateAccepted in the dc created by the model) 1 only
@@ -524,6 +529,7 @@ end
 	thesis_subject.push(s.to_s)
 	end
 	thesis_subject.each do |s|
+		s.gsub!("&amp;","&")
 		thesis.keyword+=[s]   #TODO::THIS WAS ADDED TO FEDORA AS DC.RELATION NOT DC(OR DC11).SUBJECT!!!
 	end	
 	# dc11.subject??? not required for migration - see above
@@ -739,6 +745,7 @@ puts "migrating a thesis with content url"
 	# start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
 	t = titleArray.to_s
+	t.gsub!("&amp;","&")
 		
 	thesis.title = [t]	# 1 only	
 	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
@@ -759,6 +766,7 @@ puts "migrating a thesis with content url"
 	# abstract is currently the description. optional field so test presence
 	thesis_abstract = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
 	if thesis_abstract.length > 0
+	thesis_abstract.gsub!("&amp;","&")
 	thesis.abstract = [thesis_abstract] # now multivalued
 	end
 	
@@ -860,6 +868,7 @@ end
 	thesis_subject.push(s.to_s)
 	end
 	thesis_subject.each do |s|
+		s.gsub!("&amp;","&")
 		thesis.keyword+=[s]   #TODO::THIS WAS ADDED TO FEDORA AS DC.RELATION NOT DC(OR DC11).SUBJECT!!!
 	end	
 	# dc11.subject??? not required for migration - see above
