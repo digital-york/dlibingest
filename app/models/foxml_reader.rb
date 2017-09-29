@@ -40,7 +40,8 @@ topcol = Object::Collection.new
 topcol.title = ["Masters dissertations"]
 topcol.former_id = [toppid]
 topcol = populate_collection(toppid, topcol, foxpath)  
-topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+#the top collection is visible to the general public but not the underlying records or collections
+topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 topcol.depositor = "ps552@york.ac.uk"
 topcol.save!
 topcol_id = topcol.id.to_s
@@ -74,7 +75,7 @@ csv.each do |line|
 	col.title = [line[1].gsub!("&amp;","&")]
 	col.former_id = [line[0].strip]
 	col = populate_collection(line[0].strip, col, foxpath)
-	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 	col.depositor = "ps552@york.ac.uk"
 	col.save!
 	col_id = col.id.to_s
@@ -120,7 +121,7 @@ yearpidcount = yearpidcount +1
 	year_col.title = [year_col_title.gsub!("&amp;", "&")] #just in case
 	year_col.former_id = [line[0].strip]
 	year_col = populate_collection(line[0].strip, year_col, foxpath)
-	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 	year_col.depositor = "ps552@york.ac.uk"
 	puts "saved permissions and depositor for year collection"
 	year_col.save!
@@ -161,7 +162,6 @@ end  # of method
 #available attributes:  collections_category: [], former_id: [], publisher: [], rights_holder: [], rights: [], license: [], language: [], language_string: [], keyword: [], description: [], date: [], creator_string: [], title: [], rdfs_label: nil, preflabel: nil, altlabel: [], depositor: nil, date_uploaded: nil, date_modified: nil, head: [], tail: [], publisher_resource_ids: [], subject_resource_ids: [], creator_resource_ids: [], access_control_id: nil, representative_id: nil, thumbnail_id: nil>
 #will need to export the full list of foxml objects first, doh
 def populate_collection(former_id, collection, foxpath)
-# title is already set
 #former_id is already set
 #creator_string
 #description[]
@@ -183,7 +183,7 @@ currentVersion = 'DC.' + current
 creatorArray = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
 collection.creator_string = [creatorArray.to_s]
 description = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns).to_s
-description.gsub!("&amp;","&")]
+description.gsub!("&amp;","&")
 collection.description = [description]
 #subjects (for now)
 keywords = []
@@ -225,7 +225,7 @@ puts "parent id was " + parent_id
 mapping = []
 coll = Object::Collection.new
 #coll.preflabel = "stuff I made"
-coll.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+coll.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 coll.depositor = "ps552@york.ac.uk"
 coll.title = [title]
 
@@ -403,7 +403,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	thesis = Object::Thesis.new
 
 	# once depositor and permissions defined, object can be saved at any time
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
 	
 	# start reading and populating  data
@@ -574,7 +574,7 @@ end
 		user = users[0]	
 		mfset.filetype = 'embeddedfile'
 		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
-		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 		mfset.depositor = "ps552@york.ac.uk"
 		mfset.save!
 	
@@ -703,7 +703,7 @@ puts "migrating a thesis with content url"
 			if label.length > 0
 			fileset.label = label
 			end
-			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 			fileset.depositor = "ps552@york.ac.uk"
 			additional_filesets[idname] = fileset
 		end
@@ -730,7 +730,7 @@ puts "migrating a thesis with content url"
 			if label.length > 0
 			fileset.label = label
 			end
-			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 			fileset.depositor = "ps552@york.ac.uk"
 			additional_filesets[idname] = fileset
 		end
@@ -740,7 +740,7 @@ puts "migrating a thesis with content url"
 	thesis = Object::Thesis.new
 
 	# once depositor and permissions defined, object can be saved at any time
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 	thesis.depositor = "ps552@york.ac.uk"
 	
 	# start reading and populating  data
@@ -920,7 +920,7 @@ end
 		actor.create_metadata(thesis)
 		#Declare file as external resource
         Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
-		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 		mfset.depositor = "ps552@york.ac.uk"
 		mfset.save!
 		puts "fileset " + mfset.id + " saved"
