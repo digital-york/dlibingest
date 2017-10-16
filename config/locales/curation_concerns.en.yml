@@ -85,8 +85,11 @@ en:
         value: name
       date_created:
         property: dateCreated
+        type: "http://schema.org/Thing"
       description:
         property: description
+        value: description
+        type: "http://schema.org/Thing"
  # peri adding some stuff here. no idea what these do but it seems a good idea to update them. doesnt actually solve the show problem though
       abstract:
         property: abstract
@@ -98,38 +101,40 @@ en:
         type: "http://schema.org/Organization"
       awarding_institution:
         property: awardingInstitution
+        value: awardingInstitution
+        type: "http://schema.org/CollegeOrUniversity"
       date_of_award:
         property: dateOfAward
         value: dateOfAward
-        type: "http://schema.org/CollegeOrUniversity"
+        type: "http://schema.org/Thing"
       #advisor:
         #property: advisor
       qualification_name:  #http://schema.org/CollegeOrUniversity
         property: qualificationName
         value: qualificationName
-        type: "http://schema.org/CollegeOrUniversity"
+        type: "http://schema.org/Thing"
       qualification_level:
         property: qualificationLevel
         value: qualificationLevel
-        type: "http://schema.org/CollegeOrUniversity"
+        type: "http://schema.org/Thing"
       preflabel:
         property: preflabel
       rights:
         property: rights
         value: rights
-        type: "http://schema.org/Organization"
+        type: "http://schema.org/Thing"
       rights_holder:
         property: rightsHolder
         value: rightsHolder
-        type: "http://schema.org/Organization"
+        type: "http://schema.org/Person"
       permission_badge:
         property: permission_badge
         value: permission_badge
-        type: "http://schema.org/Organization"
+        type: "http://schema.org/Thing"
       visibility:
         property: visibility
         value: visibility
-        type: "http://schema.org/Organization"
+        type: "http://schema.org/Thing"
       former_id:
         property: formerId
         value: formerId
@@ -161,11 +166,15 @@ en:
       date:
         property: date
         value: date
-        type: "http://schema.org/CollegeOrUniversity"
+        type:  "http://schema.org/Thing"
       module_code:
         property: module_code
         value: module_code
-        type: "http://schema.org/CollegeOrUniversity"
+        type: "http://schema.org/Thing"
+      format:
+        property: format
+        value: format
+        type: "http://schema.org/Thing"
 
     visibility:
       open:
@@ -239,6 +248,7 @@ en:
           date_tesim: "Date"
           creator_value_tesim: "Creator"
           module_code_tesim: "Module Code"
+          format_tesim: "Format"
           language_tesim: "Language Code"
           language_string_tesim: "Language"
         show:
@@ -249,6 +259,7 @@ en:
           qualification_level: "Degree Level"
           former_id: "Former Identifier"
           module_code: "Module Code"
+          format: "Format"
           language: "Language Code"
           language_string: "Language"
   file_manager:
