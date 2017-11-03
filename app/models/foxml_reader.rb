@@ -72,7 +72,9 @@ csv.each do |line|
 	col = Object::Collection.new
 	# col = Dlibhydra::Collection.new
 	#col.title = [line[1]]
-	col.title = [line[1].gsub!("&amp;","&")]
+	title = line[1]
+	title.gsub!("&amp;","&")
+	col.title = [title]
 	col.former_id = [line[0].strip]
 	col = populate_collection(line[0].strip, col, foxpath)
 	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
@@ -483,23 +485,25 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	typesToParse.push(t)
 	end
 	# qualification names (object)
-	qualification_name_preflabel = get_qualification_name_preflabel(typesToParse)
-	if qualification_name_preflabel != "unfound"   
-		qname_id = common.get_resource_id('qualification_name',qualification_name_preflabel)
+	qualification_name_preflabels = common.get_qualification_name_preflabel(typesToParse)
+	if qualification_name_preflabels.length == 0 
+		puts "no qualification name preflabel found"
+	end
+	qualification_name_preflabels.each do |q|	
+		qname_id = common.get_resource_id('qualification_name',q)
 		if qname_id.to_s != "unfound"		
 			thesis.qualification_name_resource_ids+=[qname_id]
 		else
 			puts "no qualification nameid found"
 		end
-	else
-		puts "no qualification name preflabel found"
 	end	
+	
 	# qualification levels (yml file). there can only be one
 	typesToParse.each do |t|	
 	type_to_test = t.to_s
-	degree_level = common.get_qualification_level_term(type_to_test)
-	if degree_level != "unfound"
-		thesis.qualification_level += [degree_level]
+	degree_levels = common.get_qualification_level_term(type_to_test)
+	degree_levels.each do |dl|
+		thesis.qualification_level += [dl]
 	end
 
 	# now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
@@ -805,7 +809,7 @@ puts "migrating a thesis with content url"
 		end
 				
 		# department
-		dept_preflabels = get_department_preflabel(loc)		 
+		dept_preflabels = common.get_department_preflabel(loc)		 
 		if dept_preflabels.empty?
 			puts "no department found"
 		end
@@ -822,22 +826,26 @@ puts "migrating a thesis with content url"
 	typesToParse.push(t)
 	end
 	# qualification names (object)
-	qualification_name_preflabel = get_qualification_name_preflabel(typesToParse)
-	if qualification_name_preflabel != "unfound"   
-		qname_id = common.get_resource_id('qualification_name',qualification_name_preflabel)
+	
+	qualification_name_preflabels = common.get_qualification_name_preflabel(typesToParse)
+	if qualification_name_preflabels.length == 0 
+		puts "no qualification name preflabel found"
+	end
+	qualification_name_preflabels.each do |q|	
+		qname_id = common.get_resource_id('qualification_name',q)
 		if qname_id.to_s != "unfound"		
 			thesis.qualification_name_resource_ids+=[qname_id]
 		else
 			puts "no qualification nameid found"
 		end
-	else
-		puts "no qualification name preflabel found"
 	end	
-	# qualification levels (yml file). there can only be one
+	
+	
+	# qualification levels (yml file). 
 	typesToParse.each do |t|	
 	type_to_test = t.to_s
-	degree_level = common.get_qualification_level_term(type_to_test)
-	if degree_level != "unfound"
+	degree_levels = common.get_qualification_level_term(type_to_test)
+	degree_levels.each do |degree_level|
 		thesis.qualification_level += [degree_level]
 	end
 

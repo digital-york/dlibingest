@@ -10,7 +10,12 @@ include ::Dlibhydra
 include ::CurationConcerns
 include ::Hydra
 
+def say_hi
+puts "hi"
+end
 
+
+#this element is not found in every existing exam paper record
 # this is defined in yaml
 # return standard term from approved authority list
 def get_qualification_level_term(searchterm)
@@ -18,24 +23,25 @@ masters = ['Masters','masters']
 bachelors = ['Bachelors','Bachelor','Batchelors', 'Batchelor']
 diplomas = ['Diploma','(Dip', '(Dip', 'Diploma (Dip)']
 doctoral = ['Phd','Doctor of Philosophy (PhD)']
-standardterm="unfound"
+#standardterm="unfound"
+standardterms = []
 if masters.include? searchterm
-	standardterm = 'Masters (Postgraduate)'
+	standardterms.push('Masters (Postgraduate)')
 elsif bachelors.include? searchterm
-	standardterm = 'Bachelors (Undergraduate)'
+	standardterms.push('Bachelors (Undergraduate)')
 elsif diplomas.include? searchterm
-	standardterm = 'Diplomas (Postgraduate)' #my guess
+	standardterms.push('Diplomas (Postgraduate)')
 elsif doctoral.include? searchterm
-    standardterm = 'Doctoral (Postgraduate)'	
+	standardterms.push('Doctoral (Postgraduate)')
 end
-if standardterm != "unfound"
+
+approved_terms = []
+standardterms.each do |st|
 	#pass the id, get back the term. in this case both are currently identical
 	auth = Qa::Authorities::Local::FileBasedAuthority.new('qualification_levels')
-	approvedterm = auth.find(standardterm)['term']
-else 
-	approvedterm = "unfound"
+	approved_terms.push(auth.find(st)['term'])
 end
-return approvedterm
+return approved_terms
 end #end get_qualification_level_term
 
 #this returns the  id of an value from  an authority list where each value is stored as a fedora object
@@ -58,6 +64,7 @@ preflabel = preflabel.to_s
 end
 
 # this returns the  correct preflabels to be used when calling get_resource_id to get the object ref for the department
+# see https://wiki.york.ac.uk/display/dlib/Cataloguing+exam+papers and  http://authorities.loc.gov/cgi-bin/Pwebrecon.cgi?Search_Arg=University+of+York&Search_Code=NHED_&PID=N-xo2_UKwOcdvDBzaktyDy18W_Uhp&SEQ=20171101100058&CNT=100&HIST=1
 # note there may be more than one! hence the array - test for length
 # its a separate method as multiple variants map to the same preflabel/object. 'loc' is the  
 def get_department_preflabel(stringtomatch)
@@ -113,10 +120,31 @@ University of York. Departments of English and History of Art
 University of York. Centre for Eighteenth Century Studies
 Oxford Brookes University    									#this is an awarding institution not a dept
 
+
+need to handle the following additional department string
+University of York. Language for All
+Core Knowledge, Values and Engagement Skills  (this appears to be health sciences, did a search)
+University of York. Dept. of Biochemistry
 =end
 	loc = stringtomatch.downcase  #get ride of case inconsistencies
 	if loc.include? "reconstruction"
-		preflabels.push("University of York. Post-war Reconstruction and Development Unit") 
+		preflabels.push("University of York. Post-war Reconstruction and Development Unit")
+	elsif loc.include? "for all" #at top so looks for single subjects later
+		preflabels.push("University of York. Languages for All")
+	elsif loc.include? "electronics" #at top so looks for single subjects later
+		preflabels.push("University of York. Department of Electronics")
+	elsif loc.include? "theatre" #at top so looks for single subjects later
+		preflabels.push("University of York. Department of Theatre, Film and Television")
+	elsif loc.include? "physics" #at top so looks for single subjects later
+		preflabels.push("University of York. Department of Physics")
+	elsif loc.include? "computer" #at top so looks for single subjects later
+		preflabels.push("University of York. Department of Computer Science") 
+	elsif loc.include? "economics and philosophy" #at top so looks for single subjects later
+		preflabels.push("University of York. School of Politics Economics and Philosophy") 
+	elsif loc.include? "law" #at top so looks for single subjects later
+		preflabels.push("University of York. York Law School") 
+	elsif loc.include? "mathematics"
+		preflabels.push("University of York. Department of Mathematics") 
 	elsif loc.include? "advanced architectural"
 	    preflabels.push("University of York. Institute of Advanced Architectural Studies")
 	elsif loc.include? "medieval"
@@ -157,6 +185,9 @@ Oxford Brookes University    									#this is an awarding institution not a dep
 	    preflabels.push( "University of York. The York Management School")
 	elsif loc.include? "language and linguistic science"
 	    preflabels.push("University of York. Department of Language and Linguistic Science")
+	elsif loc.include? "languages"
+	puts "loc included languages"
+	    preflabels.push("University of York. Department of Language and Linguistic Science")
 	elsif loc.include? "departments of english and history of art"   #damn! two departments to return!
 	    preflabels.push( "University of York. Department of Department of English and Related Literature")
 		preflabels.push("University of York. Department of Department of Language and Linguistic Science")
@@ -168,60 +199,120 @@ end
 # its a separate method as multiple variants map to the same preflabel/object. it really can only have one return - anything else would be nonsense. its going to be quite complex as some cross checking accross the various types may be  needed
 # type_array will be an array consisting of all the types for an object!
 def get_qualification_name_preflabel(type_array)
+#how to handle? there may be multiple qualification names
+#have updated the unqueried qualifications, need to do the others. need to update qual authorities and also to update the mappings for the postgrad diplomas
+
 
 #Arrays of qualification name variants
-artMasters = ['Master of Arts (MA)', 'Master of Arts', 'Master of Art (MA)', 'MA (Master of Arts)','Masters of Arts (MA)', 'MA']
-artBachelors = ['Batchelor of Arts (BA)', '"Bachelor of Arts (BA),"', 'BA', 'Bachelor of Arts (BA)']
+
+#Bachelor of Arts (MA) is a genuine variant that I assume to be a mistake (query sent to Ilka)
+artBachelors = ['Batchelor of Arts (BA)', '"Bachelor of Arts (BA),"', 'BA', 'Bachelor of Arts (BA)','Bachelor of Art (BA)', 'Bachelor of Arts', 'Bachelor of Arts (MA)']
 artsByResearch = ['Master of Arts by research (MRes)', '"Master of Arts, by research (MRes)"' ]
 scienceByResearch = ['Master of Science by research (MRes)', '"Master of Science, by research (MRes)"' ]
-scienceBachelors = ['Batchelor of science (BSc)', '"Bachelor of Science (BSc),"', 'BSc', ]
-scienceMasters = ['Master of Science (MSc.)', '"Master of Science (MSc),"',"'Master of Science (MSc)",'Master of Science (MSc)','MSc', ]
+#Bachelor of Science (MSc) is a genuine variant that I assume to be a mistake, as is Bachelor of Science (BA)
+scienceBachelors = ['Batchelor of science (BSc)', 'Bachelor of Science (BSc)', '"Bachelor of Science (BSc)"', 'BSc', 'Bachelor of Science (BA)','Bachelor of Science (BSc )','Bachelor of Science', 'Bachelor of Science (Bsc)','Bachelor of Science (MSc)']
 philosophyBachelors = ['Bachelor of Philosophy (BPhil)', 'BPhil']
+engineeringBachelors = ['Bachelor of Engineering (BEng)', 'Bachelor of Engineering']
+lawBachelors = ['Bachelor of Laws (LLB)']
+
+mathMasters = ['Master of Mathematics (MMath)','Master of Mathematics (MMAth)']
+chemistryMasters = ['Master of Chemistry (MChem)']
+scienceMasters = ['Master of Science (MSc.)', '"Master of Science (MSc),"',"'Master of Science (MSc)",'Master of Science (MSc)','MSc', 'Master of Science']
+physicsMasters = ['Master of Physics (MPhys)']
 philosophyMasters = ['Master of Philosophy (MPhil)','MPhil']
+artMasters = ['Master of Arts (MA)', 'Master of Arts', 'Master of Art (MA)', 'MA (Master of Arts)','Masters of Arts (MA)', 'MA']
+lawMasters = ['Master of Laws (LLM)']
+engineeringMasters = ['Master of Engineering (BEng)', 'Master of Engineering (MEng']
+envMasters = ['MEnv']
+publicAdminMasters = ['Master of Public Administration (MPA)']
 researchMasters = ['Master of Research (Mres)','Master of Research (MRes)','Mres','MRes']#this is the only problematic one
 #the variant single quote character in  Conservation Studies is invalid and causes invalid multibyte char (UTF-8) error so  handled this in nokogiri open document call. however we also need to ensure the resulting string is included in the lookup array so the match will still be found. this means recreating it and inserting it into the array
 not_valid = "Postgraduate Diploma in ‘Conservation Studies’ (PGDip)"
 valid_now = not_valid.encode('UTF-8', :invalid => :replace, :undef => :replace)
-pgDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
+#pgDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
+pgDiplomas = ['PGDip', 'Diploma','(Dip', 'Dip', 'Diploma (Dip)']
+medievalDiplomas = ['Postgraduate Diploma in Medieval Studies (PGDip)']
+conservationDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
+dipHEs = ['Diploma of Higher Education (DipHE)']
+cpds = ['Continuing Professional Development (CPD)']
+pgcerts = ['Postgraduate Certificate (PgCert)']
+pgces = ['Postgraduate Certificate in Education (PGCE)']
+philosophyDoctorates = ['Doctor of Philosophy (PhD)']
+pgMedicalCerts = ['Postgraduate Certificate in Medical Education (PGCert)']
+scienceDoctorates = ['Doctor of Science (ScD)']
 
 
-qualification_name_preflabel = "unfound" #initial value
-#by testing all we should find one of those below
+qualification_name_preflabels = [] 
+
 type_array.each do |t,|	    #loop1
 	type_to_test = t.to_s
-	
-	#outer loop tests for creation of qualification_name_preflabel
-	if qualification_name_preflabel == "unfound"   #loop2
-		if artMasters.include? type_to_test #loop2a
-		 qualification_name_preflabel = "Master of Arts (MA)"		 
-		elsif artBachelors.include? type_to_test
-		 qualification_name_preflabel = "Bachelor of Arts (BA)"		 
-		elsif artsByResearch.include? type_to_test
-		 qualification_name_preflabel = "Master of Arts by Research (MRes)"		 
+	#outer loop tests for creation of qualification_name_preflabel			 
+		if artBachelors.include? type_to_test #loop2a
+		 qualification_name_preflabels.push("Bachelor of Arts (BA)")
+		elsif philosophyBachelors.include? type_to_test
+		 qualification_name_preflabels.push("Bachelor of Philosophy (BPhil)")
 		elsif scienceBachelors.include? type_to_test
-		 qualification_name_preflabel = "Bachelor of Science (BSc)"		 
-		elsif scienceMasters.include? type_to_test
-		 qualification_name_preflabel = "Master of Science (MSc)"		 
-		elsif scienceByResearch.include? type_to_test
-		 qualification_name_preflabel = "Master of Science by Research (MRes)"		 
-	    elsif philosophyBachelors.include? type_to_test
-		 qualification_name_preflabel = "Bachelor of Philosophy (BPhil)"		 
+		 qualification_name_preflabels.push("Bachelor of Science (BSc)")	
+		elsif engineeringBachelors.include? type_to_test
+		 qualification_name_preflabels.push("Bachelor of Engineering (BEng)")
+        elsif lawBachelors.include? type_to_test
+		 qualification_name_preflabels.push("Bachelor of Laws (LLB)")
+		elsif artMasters.include? type_to_test 
+		 qualification_name_preflabels.push("Master of Arts (MA)")
+		elsif artsByResearch.include? type_to_test
+		 qualification_name_preflabels.push("Master of Arts by Research (MRes)")
 		elsif philosophyMasters.include? type_to_test
-		 qualification_name_preflabel = "Master of Philosophy (MPhil)"		
+		 qualification_name_preflabels.push("Master of Philosophy (MPhil)")
+		elsif scienceMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Science (MSc)")
+		elsif scienceByResearch.include? type_to_test
+		 qualification_name_preflabels.push("Master of Science by Research (MRes)")
+		elsif engineeringMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Engineering (MEng)")
+		elsif physicsMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Physics (MPhys)")
+		elsif publicAdminMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Public Administration (MPA)")
+		elsif chemistryMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Chemistry (MChem)")
+	    elsif mathMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Mathematics (MMath)")  
+		elsif envMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Environmental Science (MEnv)")
+		elsif lawMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Laws (LLM)")
 		elsif pgDiplomas.include? type_to_test
-		 qualification_name_preflabel = "Postgraduate Diploma (PGDip)"		 
-		end #end loop2a
-	end #end loop2
+		 qualification_name_preflabels.push("Postgraduate Diploma (PGDip)")
+		elsif conservationDiplomas.include? type_to_test
+		 qualification_name_preflabels.push("Postgraduate Diploma in Conservation Studies (PGDip)")
+		elsif medievalDiplomas.include? type_to_test
+		 qualification_name_preflabels.push("Postgraduate Diploma in Medieval Studies (PGDip)")
+		elsif pgces.include? type_to_test
+		 qualification_name_preflabels.push("Postgraduate Certificate in Education (PGCE)")
+		elsif pgMedicalCerts.include? type_to_test
+		 qualification_name_preflabels.push("Postgraduate Certificate in Medical Education (PGCert)")
+		elsif philosophyDoctorates.include? type_to_test
+		 qualification_name_preflabels.push("Doctor of Philosophy (PhD)")
+		elsif scienceDoctorates.include? type_to_test
+		 qualification_name_preflabels.push("Doctor of Science (ScD)")
+		elsif cpds.include? type_to_test
+		 qualification_name_preflabels.push("Continuing Professional Development (CPD)")
+		elsif dipHEs.include? type_to_test
+		 qualification_name_preflabels.push("Diploma of Higher Education (DipHE)")
+		elsif pgcerts.include? type_to_test
+		 qualification_name_preflabels.push("Postgraduate Certificate (PgCert)")
+	end #end loop1
 		
-	#not found? check for plain research masters without arts or science specified (order of testing here is crucial)
-		if qualification_name_preflabel == "unfound"    #loop3
-			if researchMasters.include? type_to_test #loop 4 not done with main list as "MRes" may be listed as separate type as well as a more specific type
-				qualification_name_preflabel = "Master of Research (MRes)"
-			end#end loop 4
-		end   #'end loop 3
-	end #end loop1	
-	return qualification_name_preflabel
-end  #this is where the get_qualification_name_preflabel method should end
+	#maybe say  instead only look for this if array length less than zero
+	#not found? check for plain research masters without arts or science specified (order of testing here is crucial) (required for theses)
+	      if qualification_name_preflabels.length <= 0  #loop2
+			if researchMasters.include? type_to_test #loop 3 not done with main list as "MRes" may be listed as separate type as well as a more specific type
+				qualification_name_preflabels.push("Master of Research (MRes)")
+			end#end loop3
+		end   #'end loop 2
+	end #end loop1
+	return qualification_name_preflabels
+end  #end get_qualification_name_preflabel 
 
 def get_standard_language(searchterm)
 	s = searchterm.titleize
@@ -229,17 +320,261 @@ def get_standard_language(searchterm)
 	approved_language = auth.search(s)[0]['id']
 end
 
-# will need to expand this for other collections, but not Theses, as all have smae rights
+# will need to expand this for other collections, but not Theses, as all have same rights
 def get_standard_rights(searchterm)
 if searchterm.include?("yorkrestricted")
   term = 'York Restricted'
+else
+  term = 'undetermined'
 end
 	auth = Qa::Authorities::Local::FileBasedAuthority.new('licenses') 
 	rights = auth.search(term)[0]['id']
 end
 
+#utility method to list all the datastream IDs to a text file
+#by calling in the migration method we can then do search and replaces to output all unique DS IDs in a collection of fedora objects
+#the dslistfile param is the  filename to allow different lists for different collections if required
+#the idname should consist purely of the ID, without any  version number
+def write_to_ds_list(dslistfile,idname)
+listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ dslistfile, "a")
+	listfile.puts( idname)
+	listfile.close	
+end
+
+#utility method to list all the datastream LABELs to a text file
+#by calling in the migration method we can then do search and replaces to output all unique DS LABELs in a collection of fedora objects
+#the dslistfile param is the  filename to allow different lists for different collections if required
+#the labelname should consist purely of the LABEL, without any  version number
+def write_to_labels_list(labellistfile,labelname)
+listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ labellistfile, "a")
+	listfile.puts( labelname)
+	listfile.close	
+	
+end
+
+
+def list_all_labels_in_set(foxmlpath,outputfilename)
+labelmap = []
+Dir.foreach(foxmlpath)do |item|
+# we dont want to try and act on the current and parent directories
+next if item == '.' or item == '..'
+    path = foxmlpath +"/" + item.to_s
+	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+	# doesnt resolve nested namespaces, this fixes that
+    ns = doc.collect_namespaces	
+	ds_labels = doc.xpath("//foxml:datastreamVersion[@LABEL]",ns)
+	ds_labels.each { |label| 
+		labelname = label.attr('LABEL')
+			if !labelmap.include? labelname
+				labelmap.push(labelname)			
+			end	 
+	}	
+end
+	labelmap.each { |label| 
+		write_to_labels_list(outputfilename,label) 
+	}
+	doc = nil
+	puts "all done, written to /home/dlib/lists/uniqueDSlists/" + outputfilename
+end#end method
 
 
 
+def list_all_ds_in_set(foxmlpath,outputfilename)
+idmap = []
+Dir.foreach(foxmlpath)do |item|
+# we dont want to try and act on the current and parent directories
+next if item == '.' or item == '..'
+    path = foxmlpath +"/" + item.to_s
+	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+	# doesnt resolve nested namespaces, this fixes that
+    ns = doc.collect_namespaces	
+	ds_ids = doc.xpath("//foxml:datastream[@ID]",ns)
+	ds_ids.each { |id| 
+		idname = id.attr('ID')
+			if !idmap.include? idname
+				idmap.push(idname)			
+			end	 
+	}	
+end
+	idmap.each { |id| 
+		write_to_ds_list(outputfilename,id) 
+	}
+	doc = nil
+end#end method
+
+
+# check values of 'dc_type' as some of these are used for lookups, so we need to know all possible variants (there are many)
+#rake migration_tasks:list_dc_type_values[/home/dlib/testfiles/foxml,dc_type_list.txt]
+def list_dc_type_values(foxmlpath,outputfilename)
+   
+	valuemap= []
+	Dir.foreach(foxmlpath)do |item|	
+		next if item == '.' or item == '..'
+		puts "now on " + item.to_s
+		path = foxmlpath +"/" + item.to_s
+		doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+		ns = doc.collect_namespaces
+		#not gonna worry about versions on this occasion, only expecting one
+		dctypes = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:type/text()",ns)
+		#puts "dcypes size was " + dctypes.size.to_s
+		dctypes.each { |t|
+			if !valuemap.include? t.to_s
+			   valuemap.push(t.to_s)			
+			end
+		}
+		
+	end
+	valuemap.each {|v| 
+		listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ outputfilename, "a")
+				listfile.puts(v)
+				listfile.close
+	}
+	doc = nil
+end #end method
+
+
+# check values of 'dc_creator' to get department values
+#rake migration_tasks:list_dc_creator_values[/home/dlib/testfiles/foxml,dc_creator_list.txt]
+def list_dc_creator_values(foxmlpath,outputfilename)
+   
+	valuemap= []
+	Dir.foreach(foxmlpath)do |item|	
+		next if item == '.' or item == '..'
+		puts "now on " + item.to_s
+		path = foxmlpath +"/" + item.to_s
+		doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+		ns = doc.collect_namespaces
+		#not gonna worry about versions on this occasion, only expecting one
+		dccreators = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns)
+		#puts "dcypes size was " + dctypes.size.to_s
+		dccreators.each { |c|
+		#puts "t was:" + t.to_s + ":"
+			if !valuemap.include? c.to_s
+			   valuemap.push(c.to_s)			
+			end
+		}
+		
+	end
+	valuemap.each {|v| 
+		listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ outputfilename, "a")
+				listfile.puts(v)
+				listfile.close
+	}
+	doc = nil
+end #end method
+
+#possibly a 'one-of' to check values of 'format' but could be useful for others too
+def check_format_values(foxmlpath,outputfilename)
+   
+	valuemap= []
+	Dir.foreach(foxmlpath)do |item|	
+		next if item == '.' or item == '..'
+		path = foxmlpath +"/" + item.to_s
+		doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+		ns = doc.collect_namespaces
+		#not gonna worry about versions on this occasion, only expecting one
+		formats = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:format/text()",ns)
+		formats.each { |format|
+			if !valuemap.include? format
+			   valuemap.push(format)			
+			end
+		}
+		
+	end
+	valuemap.each {|v| 
+		listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ outputfilename, "a")
+				listfile.puts(v)
+				listfile.close
+	}
+	doc = nil
+end #end method
+
+#suspect this wont work as would actually fail at an early stage in nokogiri when it first tries to open it
+# check coding valid - run against file list before migration. 
+def check_encoding(foxmlpath,outputfilename)
+#test it against just the likely elements
+#dc:description, dc:title, dc:subject, dc:creator,  dc:abstract
+valuemap= []
+	Dir.foreach(foxmlpath)do |item|	
+		next if item == '.' or item == '..'
+		puts "now on " + item.to_s
+		path = foxmlpath +"/" + item.to_s		
+		
+		doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+		ns = doc.collect_namespaces
+		#not gonna worry about versions on this occasion, only expecting one
+		#get current dc version
+		nums = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion/@ID",ns)	
+		all = nums.to_s
+		current = all.rpartition('.').last 
+		currentVersion = 'DC.' + current
+		
+		#test = "\x999"
+		#test.force_encoding "utf-8"
+		#if !test.valid_encoding?
+		# puts "test 1 failed, as was intended"
+		#end
+		#titles
+		dctitles = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns)
+		dctitles.each { |t|
+			#t= t.to_s + "\x99999"   #this proved an invalid sequence would be found
+			t= t.to_s
+			t.force_encoding "utf-8"
+			if !t.valid_encoding?			
+			   valuemap.push("dc:title " + t + " in " + item.to_s)			
+			end
+		} 
+		
+		#creators
+		dccreators = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns)
+		dccreators.each { |c|
+			c= c.to_s
+			c.force_encoding "utf-8"
+			if !c.valid_encoding?
+			   valuemap.push(valuemap.push("dc:creator " + c + " in " + item.to_s))
+			end
+		} 
+		
+		#subject
+		dcsubjects = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:subject/text()",ns)
+		dcsubjects.each { |s|
+			s= s.to_s
+			s.force_encoding "utf-8"
+			if !s.valid_encoding?
+			   valuemap.push(valuemap.push("dc:subject " + s + " in " + item.to_s))		
+			end
+		} 
+		
+		#abstract
+		dcabstracts = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:abstract/text()",ns)
+		dcabstracts.each { |a|
+		    a= a.to_s
+			a.force_encoding "utf-8"
+			if !a.valid_encoding?
+			   valuemap.push(valuemap.push("dc:abstract " + a + " in " + item.to_s))		
+			end
+		} 
+		
+		#description
+		dcdescriptions = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:description/text()",ns)
+		#puts "dcypes size was " + dctypes.size.to_s
+		dcdescriptions.each { |d|
+			d = d.to_s
+			d.force_encoding "utf-8"
+			if !d.valid_encoding?
+			   valuemap.push(valuemap.push("dc:description " + d + " in " + item.to_s))
+			end
+		} 
+		
+	end #end of Dir.foreach
+	
+	valuemap.each {|v| 
+		listfile = File.open( "/home/dlib/lists/"+ outputfilename, "a")
+				listfile.puts(v)
+				listfile.close
+	} #end of valuemap.each
+	
+	doc = nil
+end #end method
 
 end # end of class
