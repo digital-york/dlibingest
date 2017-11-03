@@ -6,6 +6,7 @@ class ExamPaper < Dlibhydra::ExamPaper
   # Change this to restrict which works can be added as a child.
   # self.valid_child_concerns = []
   self.human_readable_type = 'Exam Paper'
+  
   validates :title, presence: { message: 'Your work must have a title.' }
 
   class ExamPaperIndexer < CurationConcerns::WorkIndexer

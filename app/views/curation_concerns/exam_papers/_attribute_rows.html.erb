@@ -7,7 +7,8 @@
   <%= presenter.attribute_to_html(:description) %>
   <%#= presenter.attribute_to_html(:contributor, label: 'Contributors', render_as: :linked) %>
   <%#= presenter.attribute_to_html(:publisher) %>
-  <%= presenter.attribute_to_html(:language_string) %>
+  <%= presenter.attribute_to_html(:language_string) %>  
+  <%= presenter.attribute_to_html(:keyword, render_as: :linked ) %>
   <%= presenter.attribute_to_html(:date) %>
   <%= presenter.attribute_to_html(:former_id) %>
   <%= presenter.attribute_to_html(:module_code) %>
