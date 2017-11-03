@@ -54,6 +54,19 @@ b = BatchEdit.new
 	b.add_thesis_main_labels(args[:id_list_path])
 end
 
+#add former pids to existing theses by crossreferencing old fedora data from risearch derived csv file of pids:titles
+task :add_former_pids, [:oldpids,:newids]  => :environment do|t, args|
+puts "Args were: #{args}"
+	b = BatchEdit.new
+	b.add_former_pids(args[:oldpids],args[:newids])
+end
+
+#add remaining former ids to thesis from simple mapping file
+task :add_former_pids_from_file => :environment do
+	b = BatchEdit.new
+	b.add_former_pids_from_file
+end
+
 
 
 end #end of tasks

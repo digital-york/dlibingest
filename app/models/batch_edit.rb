@@ -75,14 +75,16 @@ work_ids = IO.readlines(id_list_path)
 	i = i.strip #trailing white space, line ends etc will cause a faulty uri error	
 		t = Object::Thesis.find(i)  
 		puts "got thesis for " + i
-		t.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		# t.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		t.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 		t.save!
 		members = t.members
 			members.each do |m|
 				id = m.id
 				fs = Object::FileSet.find(id)
-				fs.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-		        fs.save!
+				#fs.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		        fs.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+				fs.save!
 			end
 	end
 end
@@ -174,7 +176,73 @@ def edit_single_fileset_label(fsid, labelname)
 				fs.save!
 end
 
+#rake batch_edit_tasks:add_former_pids_from_file
+def add_former_pids_from_file
+former_pids_added = File.open("formerpidsadded.txt", "a")
+failedfile = File.open("formerpidfails.txt", "a")
+matchtext = File.read("/home/dlib/lists/pid-id_mappings.txt")
+csv = CSV.parse(matchtext)
+csv.each do |line|    
+		old_pid = line[0].to_s
+		new_id = line[1].to_s				
+		thesis = Object::Thesis.find(new_id)
+		thesis.former_id = [old_pid]
+		if thesis.save! 
+			former_pids_added.puts "added former id " + old_pid + " to thesis " +  new_id  
+		else
+			failedfile.puts "failed to add former id " + old_pid + " to " + new_id
+		end
+end
+former_pids_added.close
+failedfile.close
+end #end of add__former_ids_from_file
 
+#[/home/dlib/mapping_files/col_mapping_test.txt,/home/dlib/testfiles/foxml/]
+#rake batch_edit_tasks:add_former_pids[/home/dlib/lists/pid_title.txt,/home/dlib/lists/id_title.txt]
+def add_former_pids(pid_list_path, id_list_path)
+
+trackingfile = File.open("pidtracking.txt", "a")
+nomatchfile = File.open("matchfails.txt", "a")
+old_list = {}
+new_list = {}
+#the old fedora list
+puts "pid list file is " + pid_list_path
+puts "id list file is " + id_list_path
+pid_text = File.read(pid_list_path,)
+#pid_text = File.read(pid_list_path, Encoding::UTF_8)
+csv = CSV.parse(pid_text)
+csv.each do |line| 
+	the_pid = line[0].strip
+	the_title = line[1]	.strip	
+	old_list[the_pid] = the_title
+end
+
+id_text = File.read(id_list_path)
+csv2 = CSV.parse(id_text)
+csv2.each do |line| 
+	the_id = line[0].strip
+	the_title = line[1].strip
+	new_list[the_id] = the_title
+end
+
+
+#iterate through the keys (ids) in the new list
+	new_list.each do |id, title|
+		the_title = title
+		match = old_list.key(the_title)
+		if match != nil 
+			thesis = Object::Thesis.find(id)
+			thesis.former_id = [match]
+			thesis.save!
+			trackingfile.puts "found former id " + match + " to thesis " +  id  
+		else
+			puts "no match"
+			nomatchfile.puts "could not match title for " + id + " unmatched title was " + the_title
+		end
+	end
+trackingfile.close
+nomatchfile.close
+end  #end of add_former_id
 
 
 
