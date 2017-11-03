@@ -128,6 +128,10 @@ end
   def module_code
     self[Solrizer.solr_name('module_code')]
   end
+  
+  def format
+    self[Solrizer.solr_name('format')]
+  end
 
   def qualification_level
     self[Solrizer.solr_name('qualification_level')]
