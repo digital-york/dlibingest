@@ -524,12 +524,23 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	
 	# find the max EXAM_PAPER version. no variants on this
 	exam_paper_nums = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion/@ID",ns)	
+	idstate = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/@STATE",ns)  
+	#if EXAM_PAPER state isnt active, stop processing and return error result code
+	puts "idstate found " + idstate.to_s
+	if !idstate.to_s=="A"
+		result = 1 
+		return result
+	end	
 	exam_paper_all = exam_paper_nums.to_s
 	exam_paper_current = exam_paper_all.rpartition('.').last 
 	currentExamPaperVersion = 'EXAM_PAPER.' + exam_paper_current
 	# GET CONTENT - get the location of the pdf as a string
 	pdf_loc = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion[@ID='#{currentExamPaperVersion}']/foxml:contentLocation/@REF",ns).to_s	
-	
+	#if EXAM_PAPERlocation isnt found, stop processing and return error result code
+	if pdf_loc.length <= 0              #KALE
+		result = 1 
+	return result
+	end	
 	#establish permissions from ACL datastream before setting in object. set a variable accordingly for easy reference 
 	#throughout class
 	# find max ACL version
@@ -609,7 +620,8 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	# start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
 	t = titleArray.to_s
-		
+	title = t[0]
+	title = title.gsub!("&amp;","&")		
 	exam.title = [t]	# 1 only	
 	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
 	#better than using dc:identifier as this element is not always present in older records
@@ -646,7 +658,6 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 		end
 		dept_preflabels.each do | preflabel|
 			id = common.get_resource_id('department', preflabel)
-			puts "department id was " + id.to_s
 			exam.creator_resource_ids = [id]	 
 		end
 	 end
@@ -682,7 +693,6 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	# qualification level, name, resource type
 	typesToParse = []  #
 	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:type/text()",ns).each do |t|	
-	puts "t was " + t.to_s
 		if t.to_s.strip == "Master of Science (MSc), Master of Mathematics (MMath)"
 			typesToParse.push("Master of Science (MSc)")
 			typesToParse.push("Master of Mathematics (MMath)")
@@ -690,7 +700,7 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 			typesToParse.push(t)
 		end
 	end
-	puts "length of typesToParse was " + typesToParse.length.to_s
+	
 	# qualification names (object)
 	#this now needs to handle multiple qualifications   #KALE  TODO
 	#however it is also possible that there wil not be a qualification name given
@@ -727,19 +737,10 @@ end
 	#it will always be english
 	
 	# this should return the key as that allows us to just search on the term
+	#exams will always be english
 	standard_language = common.get_standard_language("English")#capitalise first letter		
 	exam.language+=[standard_language]	
-	
-	# dc.keyword (formerly subject, as existing ones from migration are free text not lookup
-	#confirmed with ilka that we don not require the dc:subject to be migrated into the new records
-	#exam_subject = []
-	#doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:subject/text()",ns).each do |s|
-	#exam_subject.push(s.to_s)
-	#end
-	#exam_subject.each do |s|
-	#	exam.keyword+=[s]   #TODO::THIS WAS ADDED TO FEDORA AS DC.RELATION NOT DC(OR DC11).SUBJECT!!!
-	#end	
-	# dc11.subject??? not required for migration - see above
+		
 	
 	#dc:description
 	description = []
@@ -748,6 +749,18 @@ end
 	end
 	description.each do |s|
 		exam.description+=[s]
+	end	
+	
+	# I am going to migrate this data element even though metadata team dont think it is neccesary because "once theyre gone, theyre gone" - we do not have to actually display these in the interface if we choose not to, however if it later appears there is a need for them after all, we still have them!
+	# dc.keyword (formerly subject, as existing ones from migration are free text .
+	exam_subjects = []
+	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:subject/text()",ns).each do |s|
+	exam_subjects.push(s.to_s)
+	end
+	#subjects in dc are keywords in samvera model
+	exam_subjects.each do |s|
+		s.gsub!("&amp;","&")
+		exam.keyword+=[s]   
 	end	
 	
 	#date  (date of exam) [0,1]

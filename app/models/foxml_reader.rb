@@ -332,7 +332,7 @@ end # end migrate_lots_of_theses_with_content_url
 # bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
 # bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847943.xml,/vagrant/files_to_test/col_mapping.txt]
 # on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/testfiles/content/,/home/ubuntu/mapping_files/col_mapping.txt]
-# new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/york_xxxxx.xml,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
+# new signature: # rake migration_tasks:migrate_thesis_embedded_only[/home/dlib/testfiles/foxml/york_xxxxx.xml,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
 def migrate_thesis(path, contentpath, collection_mapping_doc_path)
 # mfset = Dlibhydra::FileSet.new   # FILESET. # defin this at top because otherwise expects to find it in CurationConcerns module 
 result = 1 # default is fail
@@ -627,7 +627,7 @@ end # end of migrate thesis
 
 #version of migration that adds the content file url but does not ingest the content pdf into the thesis
 # on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
-# new signature: # rake migration_tasks:migrate_thesis_with_content_url[/home/dlib/testfiles/foxml/mytest.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
+# new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/mytest.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
 def migrate_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path) 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
@@ -666,11 +666,23 @@ puts "migrating a thesis with content url"
 	
 	# find the max THESIS_MAIN version
 	thesis_nums = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion/@ID",ns)	
+	#check the state is active
+	idstate = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/@STATE",ns)
+	#if THESIS_MAIN state isnt active, stop processing and return error result code
+	if !idstate.to_s=="A"
+		result = 1 #this needs to happen last
+		return result
+	end	
 	thesis_all = thesis_nums.to_s
 	thesis_current = thesis_all.rpartition('.').last 
 	currentThesisVersion = 'THESIS_MAIN.' + thesis_current
 	# GET CONTENT - get the location of the pdf as a string
 	pdf_loc = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion[@ID='#{currentThesisVersion}']/foxml:contentLocation/@REF",ns).to_s	
+	#if THESIS_MAIN location isnt found, stop processing and return error result code
+	if pdf_loc.length <= 0
+		result = 1 
+		return result
+	end	
 	
 	# CONTENT FILES
 	# this has local.fedora.host, which will be wrong. need to replace this with whereever they will be sitting 
@@ -692,6 +704,9 @@ puts "migrating a thesis with content url"
 	elems.each { |id| 
 		idname = id.attr('ID')		
 		if idname.start_with?('THESIS_ADDITIONAL')
+		#check its active
+		idstate = id.attr('STATE')
+		if idstate == "A"
 	#ok, now need to find the latest version 
 			version_nums = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion/@ID",ns)
 			current_version_num = version_nums.to_s.rpartition('.').last
@@ -710,6 +725,7 @@ puts "migrating a thesis with content url"
 			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 			fileset.depositor = "ps552@york.ac.uk"
 			additional_filesets[idname] = fileset
+			end
 		end
 	}
 	
@@ -718,25 +734,28 @@ puts "migrating a thesis with content url"
 	elems.each { |id| 
 		idname = id.attr('ID')		
 		if idname.start_with?('ORIGINAL_RESOURCE')
-		
+		#check its active
+		idstate = id.attr('STATE')
+		if idstate == "A"		
 	#ok, now need to find the latest version 
-			version_nums = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion/@ID",ns)
-			current_version_num = version_nums.to_s.rpartition('.').last
-			current_version_name = idname + '.' + current_version_num
-			addit_file_loc = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/foxml:contentLocation/@REF",ns).to_s
-			addit_file_loc = addit_file_loc.sub 'http://local.fedora.server', content_server_url
-			fileset = Object::FileSet.new
-			fileset.filetype = 'externalurl'
-			fileset.external_file_url = addit_file_loc
-			fileset.title = [idname]
-			# may have a label - needed for display-  that is different to the datastream title
-			label = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/@LABEL",ns).to_s 
-			if label.length > 0
-			fileset.label = label
+				version_nums = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion/@ID",ns)
+				current_version_num = version_nums.to_s.rpartition('.').last
+				current_version_name = idname + '.' + current_version_num
+				addit_file_loc = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/foxml:contentLocation/@REF",ns).to_s
+				addit_file_loc = addit_file_loc.sub 'http://local.fedora.server', content_server_url
+				fileset = Object::FileSet.new
+				fileset.filetype = 'externalurl'
+				fileset.external_file_url = addit_file_loc
+				fileset.title = [idname]
+				# may have a label - needed for display-  that is different to the datastream title
+				label = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/@LABEL",ns).to_s 
+				if label.length > 0
+					fileset.label = label
+				end
+				fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", 	:access => "edit"})]
+				fileset.depositor = "ps552@york.ac.uk"
+				additional_filesets[idname] = fileset
 			end
-			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-			fileset.depositor = "ps552@york.ac.uk"
-			additional_filesets[idname] = fileset
 		end
 	}
 		
@@ -750,9 +769,10 @@ puts "migrating a thesis with content url"
 	# start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
 	t = titleArray.to_s
-	t.gsub!("&amp;","&")
+	title = t[0]
+	title.gsub!("&amp;","&")
 		
-	thesis.title = [t]	# 1 only	
+	thesis.title = [title]	# 1 only	
 	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
 	#EEK! not all the records have dc:identifier populated
 	#former_id = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:identifier/text()",ns).to_s

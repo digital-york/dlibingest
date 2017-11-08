@@ -303,7 +303,6 @@ type_array.each do |t,|	    #loop1
 		 qualification_name_preflabels.push("Postgraduate Certificate (PgCert)")
 	end #end loop1
 		
-	#maybe say  instead only look for this if array length less than zero
 	#not found? check for plain research masters without arts or science specified (order of testing here is crucial) (required for theses)
 	      if qualification_name_preflabels.length <= 0  #loop2
 			if researchMasters.include? type_to_test #loop 3 not done with main list as "MRes" may be listed as separate type as well as a more specific type
@@ -577,4 +576,37 @@ valuemap= []
 	doc = nil
 end #end method
 
+#see how many exam papers dont have a main exam paper datastream!
+def check_has_main(foxmlpath,outputfilename)
+
+listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ outputfilename, "a")
+Dir.foreach(foxmlpath)do |item|
+# we dont want to try and act on the current and parent directories
+next if item == '.' or item == '..'
+dsmap = []
+    path = foxmlpath +"/" + item.to_s
+	puts "working on " + item.to_s
+	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+    ns = doc.collect_namespaces	
+	ds_ids = nil
+	ds_ids = doc.xpath("/foxml:digitalObject/foxml:datastream[@ID]",ns)  #KALE
+	ds_ids.each { |id| 	
+		idname = id.attr('ID')
+		idname = idname.to_s
+		idstate = id.attr('STATE')
+		if !dsmap.include? idname
+			if idstate.to_s == "A"
+				dsmap.push(idname)
+			end
+		end	
+	}	
+	if !dsmap.include? "EXAM_PAPER"
+				puts "this record had no EXAM_PAPER"				
+				listfile.puts("no active EXAM_PAPER in " + item)
+	end	
+end
+    listfile.close
+	doc = nil
+	puts "all done, written to /home/dlib/lists/uniqueDSlists/" + outputfilename
+end #end of check_has_main
 end # end of class
