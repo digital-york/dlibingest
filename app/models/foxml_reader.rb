@@ -225,7 +225,7 @@ puts "old year pid was " + old_pid
 puts "old year title was " + title
 puts "parent id was " + parent_id
 mapping = []
-coll = Object::Collection.new
+coll = Object::Collection.newpcoll 
 #coll.preflabel = "stuff I made"
 coll.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 coll.depositor = "ps552@york.ac.uk"
@@ -767,9 +767,8 @@ puts "migrating a thesis with content url"
 	thesis.depositor = "ps552@york.ac.uk"
 	
 	# start reading and populating  data
-	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
-	t = titleArray.to_s
-	title = t[0]
+	title =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
+	title = title.to_s
 	title.gsub!("&amp;","&")
 		
 	thesis.title = [title]	# 1 only	
@@ -921,18 +920,26 @@ end
 		thesis_rights = newrights
 			thesis.rights=[thesis_rights]			
 		end	
-		
 	
+	#check the collection exists before saving and putting in collection
 	# save	
-	thesis.save!
-	id = thesis.id
-	puts "thesis id was " +id 
-	# put in collection	
-	col = Object::Collection.find(parentcol.to_s)	
-	puts "id of col was:" +col.id
-	puts " collection title was " + col.title[0].to_s
-	col.members << thesis  
-	col.save!
+	if Object::Collection.exists?(parentcol.to_s)
+		thesis.save!
+		id = thesis.id
+		puts "thesis id was " +id 
+		puts "parent col was " + parentcol.to_s
+		col = Object::Collection.find(parentcol.to_s)
+		puts "id of col was:" +col.id
+		puts " collection title was " + col.title[0].to_s
+		col.members << thesis  
+		col.save!
+	else
+		puts "couldnt find collection " + parentcol.to_s
+		return
+	end
+	
+	
+	
 	
 	# this is the section that keeps failing
 	users = Object::User.all #otherwise it will use one of the included modules

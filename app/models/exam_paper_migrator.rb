@@ -449,19 +449,20 @@ end  #end of populate_collection method
 #start working thru this for exams :-)
 
 # MEGASTACK rake migration_tasks:migrate_lots_of_theses_with_content_url[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
-# devserver rake migration_tasks:migrate_lots_of_theses_with_content_url[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
-def migrate_lots_of_exams_with_content_url(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path)
-puts "doing a bulk migration"
-fname = "tally.txt"
+# devserver rake migration_tasks:migrate_lots_of_exams[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
+def migrate_lots_of_exams(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path)
+puts "doing a bulk migration of exams"
+fname = "exam_tally.txt"
 tallyfile = File.open(fname, "a")
+	
 Dir.foreach(path_to_fox)do |item|	
 	# we dont want to try and act on the current and parent directories
 	next if item == '.' or item == '..'
-	# trackingfile.puts("now working on " + item)
+	
 	itempath = path_to_fox + "/" + item
 	result = 2  # so this wont do the actions required if it isnt reset
 	begin
-		result = migrate_thesis_with_content_url(itempath,content_server_url,collection_mapping_doc_path)
+		result = migrate_exam(itempath,content_server_url,collection_mapping_doc_path)
 	rescue
 		result = 1	
 		tallyfile.puts("rescue says FAILED TO INGEST "+ itempath)  
@@ -527,17 +528,19 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	idstate = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/@STATE",ns)  
 	#if EXAM_PAPER state isnt active, stop processing and return error result code
 	puts "idstate found " + idstate.to_s
-	if !idstate.to_s=="A"
-		result = 1 
-		return result
+	if !(idstate.to_s == "A")	
+		puts " EXAM_PAPER state not active"
+		return result  #default value is 1 until is changed after success
 	end	
+	
 	exam_paper_all = exam_paper_nums.to_s
 	exam_paper_current = exam_paper_all.rpartition('.').last 
 	currentExamPaperVersion = 'EXAM_PAPER.' + exam_paper_current
 	# GET CONTENT - get the location of the pdf as a string
 	pdf_loc = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion[@ID='#{currentExamPaperVersion}']/foxml:contentLocation/@REF",ns).to_s	
 	#if EXAM_PAPERlocation isnt found, stop processing and return error result code
-	if pdf_loc.length <= 0              #KALE
+	if pdf_loc.length <= 0
+        puts 	"couldnt get the pdf location"
 		result = 1 
 	return result
 	end	
@@ -607,7 +610,6 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	 thesis.state = "http://fedora.info/definitions/1/0/access/ObjState#active"  
 	end
 =end
-
 	
 	# once depositor and permissions defined, object can be saved at any time
 	if yorkaccess == 'DENY'
@@ -618,20 +620,21 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	exam.depositor = "ps552@york.ac.uk"
 	
 	# start reading and populating  data
-	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
-	t = titleArray.to_s
-	title = t[0]
-	title = title.gsub!("&amp;","&")		
-	exam.title = [t]	# 1 only	
+	title =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
+	#title = t[0]
+	title = title.to_s
+	title.gsub!("&amp;","&")
+	title = title 
+	puts "title is" + title
+	exam.title = [title]	# 1 only	
 	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
 	#better than using dc:identifier as this element is not always present in older records
 	former_id = doc.xpath("//foxml:digitalObject/@PID",ns).to_s   
 	exam.former_id = [former_id]
-	
 	# could really do with a file to list what its starting work on as a cleanup tool. doesnt matter if it doesnt get this far as there wont be anything to clean up
-	tname = "tracking.txt"
+	tname = "exam_tracking.txt"
 	trackingfile = File.open(tname, "a")
-	trackingfile.puts( "am now working on " + former_id + " title:" + t )
+	trackingfile.puts( "am now working on " + former_id + " title:" + title )
 	trackingfile.close	
 	#creator
 	#this needs to consult the authority list as it will be a department
@@ -704,8 +707,6 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	# qualification names (object)
 	#this now needs to handle multiple qualifications   #KALE  TODO
 	#however it is also possible that there wil not be a qualification name given
-	#qualification_name_preflabel = common.get_qualification_name_preflabel(typesToParse)   #KALE
-	#qualification_name_preflabel = common.get_qualification_name_preflabel(typesToParse) 
 	qualification_name_preflabels = common.get_qualification_name_preflabel(typesToParse)
 	
 	 qualification_name_preflabels.each do |q|
@@ -771,7 +772,7 @@ end
 	date.each do |d|
 		exam.date+=[d]
 	end	
-		
+	
 	# rights.	
 	# rights holder 0...1
 	# checked data on dlib. all have the same rights statement and url cited, so this should work fine, as everything else is rights holders   
@@ -779,7 +780,7 @@ end
    if exam_rightsholder.length > 0
 	exam.rights_holder=[exam_rightsholder] 
    end
-
+   
 	# license  set a default which will be overwritten if one is found. its the url, not the statement. use licenses.yml not rights_statement.yml
 	# For full york list see https://dlib.york.ac.uk/yodl/app/home/licences. edit in rights.yml
 	defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"
@@ -792,20 +793,28 @@ end
 			exam.rights=[exam_rights]			
 		end	
 		
+	#check the collection exists before saving and putting in collection
 	# save	
-	exam.save!
-	id = exam.id
-	puts "exam id was " +id 
-	# put in collection	
-	col = Object::Collection.find(parentcol.to_s)	
-	puts "id of col was:" +col.id
-	puts " collection title was " + col.title[0].to_s
-	col.members << exam  
-	col.save!
+	if Object::Collection.exists?(parentcol.to_s)
+		exam.save!
+		id = exam.id
+		puts "exam id was " +id 
+		puts "parent col was " + parentcol.to_s
+		col = Object::Collection.find(parentcol.to_s)
+		puts "id of col was:" +col.id
+		puts " collection title was " + col.title[0].to_s
+		col.members << exam  
+		col.save!
+	else
+		puts "couldnt find collection " + parentcol.to_s
+		return
+	end
 	
+		
 	# this is the section that keeps failing
 	users = Object::User.all #otherwise it will use one of the included modules
 	user = users[0]
+	puts "line 806"
 	begin
 		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 		mfset.filetype = 'externalurl'
@@ -856,6 +865,7 @@ for key in additional_filesets.keys() do
 		puts "all done for  additional file " + key
 end
 	#when done, explicity reset big things to empty to ensure resources not hung on to
+	puts "line 861"
 	additional_filesets = {} 
     doc = nil
 	mapping_text = nil
