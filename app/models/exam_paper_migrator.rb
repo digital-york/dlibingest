@@ -448,7 +448,7 @@ end  #end of populate_collection method
 
 #start working thru this for exams :-)
 
-# MEGASTACK rake migration_tasks:migrate_lots_of_theses_with_content_url[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
+# MEGASTACK rake migration_tasks:migrate_lots_of_exams[/home/dlib/testfiles/foxml/test,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
 # devserver rake migration_tasks:migrate_lots_of_exams[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
 def migrate_lots_of_exams(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path)
 puts "doing a bulk migration of exams"
@@ -491,13 +491,12 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	result = 1 # default is fail
 	mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
 	common = CommonMigrationMethods.new
-	puts "migrating an exam with content url"	
-	foxmlpath = path	
+	puts "migrating  exam with content url"	
+	foxmlpath = path.to_s		
 	# enforce  UTF-8 compliance when opening foxml file
 	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
 	# doesnt resolve nested namespaces, this fixes that
     ns = doc.collect_namespaces	
-	
 	# stage 1 to establish parent collection - map old to new from mappings file
 	collection_mappings = {}
 	mapping_text = File.read(collection_mapping_doc_path)
@@ -507,7 +506,6 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 		new_id = line[2]		
 		collection_mappings[old_id] = new_id
 	end
-	
 	# make sure we have current rels-ext version
 	rels_nums = doc.xpath("//foxml:datastream[@ID='RELS-EXT']/foxml:datastreamVersion/@ID",ns)	
 	rels_all = all = rels_nums.to_s
@@ -814,7 +812,6 @@ end
 	# this is the section that keeps failing
 	users = Object::User.all #otherwise it will use one of the included modules
 	user = users[0]
-	puts "line 806"
 	begin
 		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 		mfset.filetype = 'externalurl'
@@ -838,9 +835,11 @@ end
     
 	  # CHOSS this is here because the system tended to lock up during multiple uploads - suspect competition for resources or threading issue somewhere
 		sleep 20 		
+		puts "************************setting mainfile*****"
 		 exam.mainfile << mfset
 		sleep 20  
 		 exam.save!
+		 puts "************************ mainfile is*****" + exam.mainfile_ids[0]
 	rescue
 	    puts "QUACK QUACK OOPS! addition of external file unsuccesful"
 		result = 1
@@ -865,7 +864,6 @@ for key in additional_filesets.keys() do
 		puts "all done for  additional file " + key
 end
 	#when done, explicity reset big things to empty to ensure resources not hung on to
-	puts "line 861"
 	additional_filesets = {} 
     doc = nil
 	mapping_text = nil

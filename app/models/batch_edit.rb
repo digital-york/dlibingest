@@ -12,6 +12,45 @@ include ::CurationConcerns
 include ::Hydra
 
 
+
+#need a bulk deletion task. experiment here
+#rake batch_edit_tasks:delete_works[/home/dlib/lists/deletelist.txt,ExamPaper]
+def delete_works(idlist, worktype)
+
+work_ids = IO.readlines(idlist)
+work_ids.each do |i|	
+i = i.strip
+	record = nil
+		if worktype == "Thesis"
+			record = Object::Thesis.find(i)
+			validtype = true
+		elsif worktype == "ExamPaper"
+			record = Object::ExamPaper.find(i)
+			validtype = true
+		else
+			puts "unknown worktype"
+			validtype = false
+		end
+		
+		if validtype
+		#this may need elaboration if filesets include embedded files
+		puts "about to start deleting " + i
+		puts "proof " + record.title[0]
+			filesets = record.members
+			filesets.each do |m|
+				id = m.id 
+				fs = FileSet.find(id)
+				fs.delete
+			end
+			record.delete
+		else
+			return
+		end
+	end#end of foreach for work_ids (whole list)
+end #end delete_work
+
+
+
 # add  label to  THESIS_MAIN filesets for a specified range of theses
 #using this in preference as should exclude unwanted 'orphan' filesets created as tests etc
 #rake batch_edit_tasks:edit_thesis_main_labels[/home/dlib/testfiles/id_listtest.txt]
@@ -98,7 +137,7 @@ work_ids = IO.readlines(id_list_path)
 	i = i.strip #trailing white space, line ends etc will cause a faulty uri error	
 		c = Object::Collection.find(i)  
 		puts "got collection for " + i
-		c.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		c.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 		c.save!		
 	end
 end

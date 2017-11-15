@@ -67,6 +67,13 @@ task :add_former_pids_from_file => :environment do
 	b.add_former_pids_from_file
 end
 
+#batch deletion
+task :delete_works, [:deletelist,:worktype]  => :environment do|t, args|
+puts "Args were: #{args}"
+	b = BatchEdit.new
+	b.delete_works(args[:deletelist],args[:worktype])
+end
+
 
 
 end #end of tasks

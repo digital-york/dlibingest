@@ -51,6 +51,12 @@ r = FoxmlReader.new
 r.migrate_lots_of_theses_with_content_url(args[:dirpath],args[:donedirpath],args[:contentserverurl],args[:collection_mapping_doc])
 end
 
+task :migrate_lots_of_exams, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc] => :environment  do|t, args|
+puts "Args were: #{args}"
+e = ExamPaperMigrator.new
+e.migrate_lots_of_exams(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc])
+end
+
 task :migrate_lots_of_theses, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "need to do sommat here"
@@ -58,14 +64,14 @@ r = FoxmlReader.new
 r.migrate_lots_of_theses(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc])
 end
 
-task :migrate_thesis_with_content_url, [:path,:contentserverurl,:collection_mapping] => :environment  do|t, args|
+task :migrate_thesis, [:path,:contentserverurl,:collection_mapping] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "hey there"
 	r = FoxmlReader.new
 	r.migrate_thesis_with_content_url(args[:path],args[:contentserverurl],args[:collection_mapping])
 end
 
-task :migrate_thesis, [:path,:contentpath,:collection_mapping] => :environment  do|t, args|
+task :migrate_thesis_embedded_only, [:path,:contentpath,:collection_mapping] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "hey there"
 	r = FoxmlReader.new
@@ -126,12 +132,18 @@ puts "Args were: #{args}"
 	c.list_dc_type_values(args[:foxmlfolderpath],args[:outputfilename])
 end
 
-#check the elements most likely to contain characters not in valid utf-8. if others are found can add more
+#check the elements most likely to contain characters not in valid utf-8
 task :list_invalid_utf8, [:foxmlfolderpath,:outputfilename] => :environment do|t, args|
 puts "Args were: #{args}"
 	c = CommonMigrationMethods.new
 	c.check_encoding(args[:foxmlfolderpath],args[:outputfilename])
 end
 
+#check the elements most likely to contain characters not in valid utf-8
+task :list_missing_exam_ds, [:foxmlfolderpath,:outputfilename] => :environment do|t, args|
+puts "Args were: #{args}"
+	c = CommonMigrationMethods.new
+	c.check_has_main(args[:foxmlfolderpath],args[:outputfilename])
+end 
 
 end #end of tasks
