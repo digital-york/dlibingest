@@ -525,7 +525,6 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	exam_paper_nums = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion/@ID",ns)	
 	idstate = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/@STATE",ns)  
 	#if EXAM_PAPER state isnt active, stop processing and return error result code
-	puts "idstate found " + idstate.to_s
 	if !(idstate.to_s == "A")	
 		puts " EXAM_PAPER state not active"
 		return result  #default value is 1 until is changed after success
@@ -671,9 +670,8 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	end
 	
 	dcids.each do |dc_identifier|
-	if (!dc_identifier.start_with?('york:') )
-			puts "found module code " + dc_identifier			
-			exam.module_code = [dc_identifier.strip]		
+	if (!dc_identifier.start_with?('york:') )		
+			exam.module_code += [dc_identifier.strip]		
 		end	
 	end
 	
@@ -834,12 +832,11 @@ end
 		puts "fileset " + mfset.id + " saved"
     
 	  # CHOSS this is here because the system tended to lock up during multiple uploads - suspect competition for resources or threading issue somewhere
-		sleep 20 		
-		puts "************************setting mainfile*****"
+		sleep 5 				
 		 exam.mainfile << mfset
-		sleep 20  
+		sleep 5  
 		 exam.save!
-		 puts "************************ mainfile is*****" + exam.mainfile_ids[0]
+		 
 	rescue
 	    puts "QUACK QUACK OOPS! addition of external file unsuccesful"
 		result = 1
