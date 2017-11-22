@@ -13,7 +13,7 @@ include ::Hydra
 
 
 
-#need a bulk deletion task. experiment here
+# bulk deletion task. removes records of a single type, plus their members
 #rake batch_edit_tasks:delete_works[/home/dlib/lists/deletelist.txt,ExamPaper]
 def delete_works(idlist, worktype)
 
@@ -113,15 +113,13 @@ work_ids = IO.readlines(id_list_path)
 	work_ids.each do |i|
 	i = i.strip #trailing white space, line ends etc will cause a faulty uri error	
 		t = Object::Thesis.find(i)  
-		puts "got thesis for " + i
-		# t.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+		puts "got thesis for " + i		
 		t.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 		t.save!
 		members = t.members
 			members.each do |m|
 				id = m.id
-				fs = Object::FileSet.find(id)
-				#fs.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
+				fs = Object::FileSet.find(id)				
 		        fs.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 				fs.save!
 			end

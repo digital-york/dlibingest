@@ -26,69 +26,68 @@ task :test_theses => :environment do
 	r.test
 end
 
-task :make_collection_structure, [:mapping_path,:foxpath]  => :environment do|t, args|
+task :make_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
 puts "Args were: #{args}"
 	r = FoxmlReader.new
-	r.make_exam_collection_structure(args[:mapping_path],args[:foxpath])
+	r.make_exam_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
-task :make_restricted_exam_collection_structure, [:mapping_path,:foxpath]  => :environment do|t, args|
+task :make_restricted_exam_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
 puts "Args were: #{args}"
 	e = ExamPaperMigrator.new
-	e.make_restricted_exam_collection_structure(args[:mapping_path],args[:foxpath])
+	e.make_restricted_exam_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
-task :make_exam_collection_structure, [:mapping_path,:foxpath]  => :environment do|t, args|
+task :make_exam_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
 puts "Args were: #{args}"
 	e = ExamPaperMigrator.new
-	e.make_exam_collection_structure(args[:mapping_path],args[:foxpath])
+	e.make_exam_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
-task :migrate_lots_of_theses_with_content_url, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc] => :environment  do|t, args|
+task :migrate_lots_of_theses_with_content_url, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "need to do sommat here"
 r = FoxmlReader.new
-r.migrate_lots_of_theses_with_content_url(args[:dirpath],args[:donedirpath],args[:contentserverurl],args[:collection_mapping_doc])
+r.migrate_lots_of_theses_with_content_url(args[:dirpath],args[:donedirpath],args[:contentserverurl],args[:collection_mapping_doc],args[:user])
 end
 
-task :migrate_lots_of_exams, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc] => :environment  do|t, args|
+task :migrate_lots_of_exams, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
 e = ExamPaperMigrator.new
-e.migrate_lots_of_exams(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc])
+e.migrate_lots_of_exams(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc],args[:user])
 end
 
-task :migrate_lots_of_theses, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc] => :environment  do|t, args|
+task :migrate_lots_of_theses, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "need to do sommat here"
 r = FoxmlReader.new
-r.migrate_lots_of_theses(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc])
+r.migrate_lots_of_theses(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc],args[:user])
 end
 
-task :migrate_thesis, [:path,:contentserverurl,:collection_mapping] => :environment  do|t, args|
+task :migrate_thesis, [:path,:contentserverurl,:collection_mapping,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "hey there"
 	r = FoxmlReader.new
-	r.migrate_thesis_with_content_url(args[:path],args[:contentserverurl],args[:collection_mapping])
+	r.migrate_thesis_with_content_url(args[:path],args[:contentserverurl],args[:collection_mapping],args[:user])
 end
 
-task :migrate_thesis_embedded_only, [:path,:contentpath,:collection_mapping] => :environment  do|t, args|
+task :migrate_thesis_embedded_only, [:path,:contentpath,:collection_mapping,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "hey there"
 	r = FoxmlReader.new
-	r.migrate_thesis(args[:path],args[:contentpath],args[:collection_mapping])
+	r.migrate_thesis(args[:path],args[:contentpath],args[:collection_mapping],args[:user])
 end
 
-task :migrate_exam_paper, [:path,:contentpath,:collection_mapping] => :environment  do|t, args|
+task :migrate_exam_paper, [:path,:contentpath,:collection_mapping,:user] => :environment  do|t, args|
 puts "Hi there. Args were: #{args}"
 	e = ExamPaperMigrator.new
-	e.migrate_exam(args[:path],args[:contentpath],args[:collection_mapping])
+	e.migrate_exam(args[:path],args[:contentpath],args[:collection_mapping],args[:user])
 end
 
 #use this to add a new child method that was in the former fedora collection structure but missed out of the new structure
-task :recreate_child_collection, [:former_pid,:title,:parent_id,:collection_mapping_doc] => :environment do|t, args|
+task :recreate_child_collection, [:former_pid,:title,:parent_id,:collection_mapping_doc,:user] => :environment do|t, args|
 puts "Args were: #{args}"
-	r = FoxmlReader.new
-	r.recreate_child_collection(args[:former_pid],args[:title],args[:parent_id],args[:collection_mapping_doc])
+	r = FoxmlReader.new	r.recreate_child_collection(args[:former_pid],args[:title],args[:parent_id],args[:collection_mapping_doc],args[:user])
 end
 
 #use this to add a new child collection that was created in the gui into another collection. not for migrated collections.

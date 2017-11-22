@@ -27,7 +27,7 @@ originalpid, title, newid
 so call is like rake migration_tasks:make_collection_structure[/home/dlib/mapping_files/,/home/dlib/testfiles/foxml/]
 =end
 
-def make_collection_structure(mapping_path, foxpath)
+def make_collection_structure(mapping_path, foxpath, user)
 puts "running make_collection_structure"
 mapping_file = mapping_path +"col_mapping.txt"
 # make the top Theses level first, with a CurationConcerns (not dlibhydra) model.
@@ -42,7 +42,7 @@ topcol.former_id = [toppid]
 topcol = populate_collection(toppid, topcol, foxpath)  
 #the top collection is visible to the general public but not the underlying records or collections
 topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-topcol.depositor = "ps552@york.ac.uk"
+topcol.depositor = user
 topcol.save!
 topcol_id = topcol.id.to_s
 puts "topcol.id was " +topcol.id
@@ -78,7 +78,7 @@ csv.each do |line|
 	col.former_id = [line[0].strip]
 	col = populate_collection(line[0].strip, col, foxpath)
 	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	col.depositor = "ps552@york.ac.uk"
+	col.depositor = user
 	col.save!
 	col_id = col.id.to_s
 	puts "subject col id was" + col_id
@@ -124,7 +124,7 @@ yearpidcount = yearpidcount +1
 	year_col.former_id = [line[0].strip]
 	year_col = populate_collection(line[0].strip, year_col, foxpath)
 	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	year_col.depositor = "ps552@york.ac.uk"
+	year_col.depositor = user
 	puts "saved permissions and depositor for year collection"
 	year_col.save!
 	puts "saved collection"
@@ -217,7 +217,7 @@ new english id is m039k4882
  call is like rake migration_tasks:recreate_child_collection[york:932220,2015,m039k4882,/home/ubuntu/mapping_files/]
  rake migration_tasks:recreate_child_collection[york:932221,2016,m039k4882,/home/ubuntu/mapping_files/]
 =end
-def recreate_child_collection(old_pid, title, parent_id, mapping_path)
+def recreate_child_collection(old_pid, title, parent_id, mapping_path, user)
 #coll = Object::Collection.new
 mapping_file = mapping_path +"col_mapping.txt"
 puts "mapping file was " + mapping_file
@@ -228,7 +228,7 @@ mapping = []
 coll = Object::Collection.newpcoll 
 #coll.preflabel = "stuff I made"
 coll.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-coll.depositor = "ps552@york.ac.uk"
+coll.depositor = user
 coll.title = [title]
 
 coll.save!
@@ -253,7 +253,7 @@ end #end recreate_child_collection
 # bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt
 # MEGASTACK rake migration_tasks:migrate_lots_of_theses[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
 # devserver rake migration_tasks:migrate_lots_of_theses[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
-def migrate_lots_of_theses(path_to_fox, path_to_foxdone, contentpath, collection_mapping_doc_path)
+def migrate_lots_of_theses(path_to_fox, path_to_foxdone, contentpath, collection_mapping_doc_path, user)
 puts "doing a bulk migration"
 fname = "tally.txt"
 # tname = "tracking.txt"  PUT THIS IN MIGRATE_THESIS TO GET TITLE 
@@ -268,7 +268,7 @@ Dir.foreach(path_to_fox)do |item|
 	# migrate_thesis(itempath,collection_mapping_doc_path)
 	result = 2  # so this wont do the actions required if it isnt reset
 	begin
-		result = migrate_thesis(itempath,contentpath,collection_mapping_doc_path)
+		result = migrate_thesis(itempath,contentpath,collection_mapping_doc_path,user)
 	rescue
 		result = 1	
 		tallyfile.puts("rescue says FAILED TO INGEST "+ itempath)  
@@ -291,7 +291,7 @@ end  # end migrate_lots_of_theses
 
 # MEGASTACK rake migration_tasks:migrate_lots_of_theses_with_content_url[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
 # devserver rake migration_tasks:migrate_lots_of_theses_with_content_url[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
-def migrate_lots_of_theses_with_content_url(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path)
+def migrate_lots_of_theses_with_content_url(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path, user)
 puts "doing a bulk migration"
 fname = "tally.txt"
 tallyfile = File.open(fname, "a")
@@ -302,7 +302,7 @@ Dir.foreach(path_to_fox)do |item|
 	itempath = path_to_fox + "/" + item
 	result = 2  # so this wont do the actions required if it isnt reset
 	begin
-		result = migrate_thesis_with_content_url(itempath,content_server_url,collection_mapping_doc_path)
+		result = migrate_thesis_with_content_url(itempath,content_server_url,collection_mapping_doc_path,user)
 	rescue
 		result = 1	
 		tallyfile.puts("rescue says FAILED TO INGEST "+ itempath)  
@@ -333,7 +333,7 @@ end # end migrate_lots_of_theses_with_content_url
 # bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847943.xml,/vagrant/files_to_test/col_mapping.txt]
 # on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/testfiles/content/,/home/ubuntu/mapping_files/col_mapping.txt]
 # new signature: # rake migration_tasks:migrate_thesis_embedded_only[/home/dlib/testfiles/foxml/york_xxxxx.xml,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
-def migrate_thesis(path, contentpath, collection_mapping_doc_path)
+def migrate_thesis(path, contentpath, collection_mapping_doc_path, user)
 # mfset = Dlibhydra::FileSet.new   # FILESET. # defin this at top because otherwise expects to find it in CurationConcerns module 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . 
@@ -406,7 +406,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 
 	# once depositor and permissions defined, object can be saved at any time
 	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	thesis.depositor = "ps552@york.ac.uk"
+	thesis.depositor = user
 	
 	# start reading and populating  data
 	titleArray =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
@@ -579,7 +579,7 @@ end
 		mfset.filetype = 'embeddedfile'
 		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
 		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-		mfset.depositor = "ps552@york.ac.uk"
+		mfset.depositor = user
 		mfset.save!
 	
 		# THE NEXT FOUR LINES UPLOAD THE CONTENT INTO THE FILESET AND CREATE A THUMBNAIL
@@ -628,7 +628,7 @@ end # end of migrate thesis
 #version of migration that adds the content file url but does not ingest the content pdf into the thesis
 # on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
 # new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/mytest.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
-def migrate_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path) 
+def migrate_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path, user) 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
 common = CommonMigrationMethods.new
@@ -723,7 +723,7 @@ puts "migrating a thesis with content url"
 			fileset.label = label
 			end
 			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-			fileset.depositor = "ps552@york.ac.uk"
+			fileset.depositor = user
 			additional_filesets[idname] = fileset
 			end
 		end
@@ -753,7 +753,7 @@ puts "migrating a thesis with content url"
 					fileset.label = label
 				end
 				fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", 	:access => "edit"})]
-				fileset.depositor = "ps552@york.ac.uk"
+				fileset.depositor = user
 				additional_filesets[idname] = fileset
 			end
 		end
@@ -764,7 +764,7 @@ puts "migrating a thesis with content url"
 
 	# once depositor and permissions defined, object can be saved at any time
 	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	thesis.depositor = "ps552@york.ac.uk"
+	thesis.depositor = user
 	
 	# start reading and populating  data
 	title =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
@@ -956,7 +956,7 @@ end
 		#Declare file as external resource
         Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
 		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-		mfset.depositor = "ps552@york.ac.uk"
+		mfset.depositor = user
 		mfset.save!
 		puts "fileset " + mfset.id + " saved"
     

@@ -23,7 +23,7 @@ include ::Hydra
 # on dlibdev0: # rake migration_tasks:migrate_thesis_with_content_url[id,https://dlib.york.ac.uk]
 #def migrate_bhutan_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path) 
 #dont need the thesis pid because this is a one-off for a very odd and anomalous record
-def migrate_bhutan_thesis_with_content_urls(collection_id,content_server_url) 
+def migrate_bhutan_thesis_with_content_urls(collection_id, content_server_url, user) 
 
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
 puts "migrating the bhutan thesis"	
@@ -48,8 +48,8 @@ common = CommonMigrationMethods.new
 			# should this be the original title of the content file in this case? 			
 			#both were given name of Appendix 2 in the foxml record, listened and compared to work out which was which. amcertain I have allocated the titles correctly, Appendix numbers not in original 
 			fileset1.label = "Appendix 1: Interview of the Gup (Head of Talo Block) (audio, m4a)"
-			fileset1.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-			fileset1.depositor = "ps552@york.ac.uk"
+			fileset1.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+			fileset1.depositor = user
 			additional_filesets["ORIGINAL_RESOURCE1"] = fileset1	
 			
 			#audio file Appendix 2
@@ -59,14 +59,14 @@ common = CommonMigrationMethods.new
 			fileset2.title = ["ORIGINAL_RESOURCE"]
 			# should this be the original title of the content file in this case? 			
 			fileset2.label = "Appendix 2:Interview with the villagers (audio, m4a)"
-			fileset2.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-			fileset2.depositor = "ps552@york.ac.uk"
+			fileset2.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+			fileset2.depositor = user
 			additional_filesets["ORIGINAL_RESOURCE2"] = fileset2	
 	puts "total of " + additional_filesets.size.to_s + "additional filesets created"
 	# create a new thesis implementing the dlibhydra models
 	thesis = Object::Thesis.new
-	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-	thesis.depositor = "ps552@york.ac.uk"
+	thesis.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+	thesis.depositor = user
 	# start populating  data	
 	thesis.title = ["Heritage of the community, and for the community: a case study from Bhutan"]	# 1 only	
 	# thesis.preflabel =  thesis.title[0] # skos preferred lexical label (which in this case is same as the title. 1 0nly but can be at same time as title 
@@ -164,8 +164,8 @@ common = CommonMigrationMethods.new
 		actor.create_metadata(thesis)
 		#Declare file as external resource
         Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
-		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-		mfset.depositor = "ps552@york.ac.uk"
+		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+		mfset.depositor = user
 		mfset.save!
 		puts "fileset " + mfset.id + " saved"
     

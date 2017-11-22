@@ -35,7 +35,7 @@ end
 
 #mapping_path is path to the mapping file, foxpath is the path to the existing foxml collection files 
 #note there are two collectiuon hierarchies, one of which is admin restricted and in the admin only collection on dlib, the papers within here are also required
-def make_exam_collection_structure(mapping_path, foxpath)
+def make_exam_collection_structure(mapping_path, foxpath, user)
 puts "running make_exam_collection_structure"
 mapping_file = mapping_path +"exam_col_mapping.txt"
 # make the top Exams level first, with a CurationConcerns (not dlibhydra) model.
@@ -50,7 +50,7 @@ topcol.former_id = [toppid]
 topcol = populate_collection(toppid, topcol, foxpath)
 #the top collection is visible to the general public but not the underlying records or collections
 topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "public", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-topcol.depositor = "ps552@york.ac.uk"
+topcol.depositor = user
 topcol.save!
 topcol_id = topcol.id.to_s
 puts "topcol.id was " +topcol.id
@@ -85,7 +85,7 @@ csv.each do |line|
 	col.former_id = [line[0].strip]
 	col = populate_collection(line[0].strip, col, foxpath) 
 	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	col.depositor = "ps552@york.ac.uk"
+	col.depositor = user
 	col.save!
 	col_id = col.id.to_s
 	puts "subject col id was" + col_id
@@ -127,7 +127,7 @@ yearpidcount = yearpidcount +1
 	year_col.former_id = [line[0].strip]
 	year_col = populate_collection(line[0].strip, year_col, foxpath)
 	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	year_col.depositor = "ps552@york.ac.uk"
+	year_col.depositor = user
 	year_col.save!
 	year_col_id = year_col.id.to_s
 	# need to find the right parent collection here	
@@ -169,7 +169,7 @@ csv_level4.each do |line|
 	physics_year_col.former_id = [line[0].strip]
 	physics_year_col = populate_collection(line[0].strip, physics_year_col, foxpath)  
 	physics_year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	physics_year_col.depositor = "ps552@york.ac.uk"
+	physics_year_col.depositor = user
 	physics_year_col.save!
 	physics_year_col_id = physics_year_col.id.to_s
 	# need to find the right parent collection here	
@@ -192,7 +192,7 @@ end  # of make collection structure method
 #mapping_path is path to the mapping file, foxpath is the path to the existing foxml collection files 
 #note there are two collectiuon hierarchies, one of which is admin restricted and in the admin only collection on dlib, the papers within here are also required
 #rake migration_tasks:make_restricted_exam_collection_structure[/home/dlib/mapping_files/tests/,/home/dlib/testfiles/foxml/]
-def make_restricted_exam_collection_structure(mapping_path, foxpath)
+def make_restricted_exam_collection_structure(mapping_path, foxpath, user)
 puts "running make_exam_collection_structure"
 mapping_file = mapping_path +"exam_col_mapping.txt"
 # make the top Exams level first, with a CurationConcerns (not dlibhydra) model.
@@ -207,7 +207,7 @@ topcol.former_id = [toppid]
 topcol = populate_collection(toppid, topcol, foxpath)
 #the top collection is NOT visible to the general public 
 topcol.permissions = [Hydra::AccessControls::Permission.new({:name=> "admin", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-topcol.depositor = "ps552@york.ac.uk"
+topcol.depositor = user
 topcol.save!
 topcol_id = topcol.id.to_s
 mappings_string = toppid + "," + topcol.title[0].to_s + "," + topcol_id 
@@ -242,7 +242,7 @@ csv.each do |line|
 	col.former_id = [former_id]
 	col = populate_collection(former_id, col, foxpath) 
 	col.permissions = [Hydra::AccessControls::Permission.new({:name=> "admin", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	col.depositor = "ps552@york.ac.uk"
+	col.depositor = user
 	col.save!
 	col_id = col.id.to_s
 	topcol.members << col
@@ -282,7 +282,7 @@ yearpidcount = yearpidcount +1
 	year_col.former_id = [former_id]
 	year_col = populate_collection(former_id, year_col, foxpath)
 	year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "admin", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	year_col.depositor = "ps552@york.ac.uk"
+	year_col.depositor = user
 	year_col.save!
 	year_col_id = year_col.id.to_s
 	# need to find the right parent collection here	
@@ -323,7 +323,7 @@ csv_level4.each do |line|
 	physics_year_col.former_id = [year_col_pid]
 	physics_year_col = populate_collection(year_col_pid, physics_year_col, foxpath)  
 	physics_year_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "admin", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	physics_year_col.depositor = "ps552@york.ac.uk"
+	physics_year_col.depositor = user
 	physics_year_col.save!
 	physics_year_col_id = physics_year_col.id.to_s
 	# need to find the right parent collection here	
@@ -367,7 +367,7 @@ csv_level5.each do |line|
 	level5_col.former_id = [formerpid]
 	level5_col = populate_collection(formerpid, level5_col, foxpath) 
 	level5_col.permissions = [Hydra::AccessControls::Permission.new({:name=> "admin", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-	level5_col.depositor = "ps552@york.ac.uk"
+	level5_col.depositor = user
 	level5_col.save!
 	new_id = level5_col.id.to_s
 	# need to find the right parent collection here	
@@ -450,7 +450,7 @@ end  #end of populate_collection method
 
 # MEGASTACK rake migration_tasks:migrate_lots_of_exams[/home/dlib/testfiles/foxml/test,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
 # devserver rake migration_tasks:migrate_lots_of_exams[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
-def migrate_lots_of_exams(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path)
+def migrate_lots_of_exams(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path, user)
 puts "doing a bulk migration of exams"
 fname = "exam_tally.txt"
 tallyfile = File.open(fname, "a")
@@ -462,7 +462,7 @@ Dir.foreach(path_to_fox)do |item|
 	itempath = path_to_fox + "/" + item
 	result = 2  # so this wont do the actions required if it isnt reset
 	begin
-		result = migrate_exam(itempath,content_server_url,collection_mapping_doc_path)
+		result = migrate_exam(itempath,content_server_url,collection_mapping_doc_path,user)
 	rescue
 		result = 1	
 		tallyfile.puts("rescue says FAILED TO INGEST "+ itempath)  
@@ -487,7 +487,7 @@ end # end migrate_lots_of_theses_with_content_url
 #version of migration that adds the content file url but does not ingest the content pdf into the thesis
 # on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
 # new signature: # rake migration_tasks:migrate_exam_paper[/home/dlib/testfiles/foxml/test/york_21369.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
-def migrate_exam(path, content_server_url, collection_mapping_doc_path) 
+def migrate_exam(path, content_server_url, collection_mapping_doc_path, user) 
 	result = 1 # default is fail
 	mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
 	common = CommonMigrationMethods.new
@@ -589,8 +589,8 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 			else
 				fileset.label = "EXAM_PAPER_ADDITIONAL" #give it a default label
 			end #end check of label length
-			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"ps552@york.ac.uk", :type=> "person", :access => "edit"})]
-			fileset.depositor = "ps552@york.ac.uk"
+			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+			fileset.depositor = user
 			additional_filesets[idname] = fileset
 		end #end check of idname
 	 } #should be end of foreach loop	
@@ -614,7 +614,7 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path)
 	else
 		exam.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 	end 
-	exam.depositor = "ps552@york.ac.uk"
+	exam.depositor = user
 	
 	# start reading and populating  data
 	title =  doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:title/text()",ns).to_s
@@ -826,8 +826,8 @@ end
 		else
 			mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 		end 
-	exam.depositor = "ps552@york.ac.uk"
-		mfset.depositor = "ps552@york.ac.uk"
+		exam.depositor = user
+		mfset.depositor = user
 		mfset.save!
 		puts "fileset " + mfset.id + " saved"
     
