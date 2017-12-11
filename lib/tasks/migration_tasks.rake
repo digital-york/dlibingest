@@ -4,6 +4,7 @@ namespace :migration_tasks do
 require_relative '../../app/models/foxml_reader.rb'
 require_relative '../../app/models/exam_paper_migrator.rb'
 require_relative '../../app/models/common_migration_methods.rb'
+require_relative '../../app/models/undergraduate_paper_migrator.rb'
 
 
 task :default do
@@ -19,6 +20,25 @@ puts "rake task says hi"
 	e = ExamPaperMigrator.new
 	e.say_hello
 end
+
+task :test_undergrads => :environment do
+puts "rake task says hi"
+	e = UndergraduatePaperMigrator.new
+	e.test
+end
+
+task :migrate_undergrad_paper, [:path,:serverurl,:collection_mapping,:user] => :environment do|t, args|
+puts "doing it.Args were: #{args}"
+u = UndergraduatePaperMigrator.new
+u.migrate_undergraduate_paper(args[:path],args[:serverurl],args[:collection_mapping],args[:user])
+end
+
+task :migrate_undergrad_paper_batch, [:path_to_fox,:path_to_foxdone,:content_server_url,:collection_mapping,:user] => :environment do|t, args|
+puts "doing it.Args were: #{args}"
+u = UndergraduatePaperMigrator.new
+u.migrate_lots_of_ug_papers(args[:path_to_fox],args[:path_to_foxdone],args[:content_server_url],args[:collection_mapping],args[:user])
+end
+
 
 #calls a test method, definable in foxml_reader
 task :test_theses => :environment do
@@ -42,6 +62,14 @@ task :make_exam_collection_structure, [:mapping_path,:foxpath,:user]  => :enviro
 puts "Args were: #{args}"
 	e = ExamPaperMigrator.new
 	e.make_exam_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
+end
+
+
+
+task :make_undergraduate_paper_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
+puts "Args were: #{args}"
+	e = UndergraduatePaperMigrator.new
+	e.make_undergraduate_paper_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
 task :migrate_lots_of_theses_with_content_url, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc,:user] => :environment  do|t, args|
@@ -78,24 +106,12 @@ puts "hey there"
 	r.migrate_thesis(args[:path],args[:contentpath],args[:collection_mapping],args[:user])
 end
 
-task :migrate_exam_paper, [:path,:contentpath,:collection_mapping,:user] => :environment  do|t, args|
+task :migrate_exam_paper, [:path,:content_server_url,:collection_mapping,:user] => :environment  do|t, args|
 puts "Hi there. Args were: #{args}"
 	e = ExamPaperMigrator.new
-	e.migrate_exam(args[:path],args[:contentpath],args[:collection_mapping],args[:user])
+	e.migrate_exam(args[:path],args[:content_server_url],args[:collection_mapping],args[:user])
 end
 
-#use this to add a new child method that was in the former fedora collection structure but missed out of the new structure
-task :recreate_child_collection, [:former_pid,:title,:parent_id,:collection_mapping_doc,:user] => :environment do|t, args|
-puts "Args were: #{args}"
-	r = FoxmlReader.new	r.recreate_child_collection(args[:former_pid],args[:title],args[:parent_id],args[:collection_mapping_doc],args[:user])
-end
-
-#use this to add a new child collection that was created in the gui into another collection. not for migrated collections.
-task :add_childcollection_to_parent, [:child_id,:parent_id] => :environment do|t, args|
-puts "Args were: #{args}"
-	r = FoxmlReader.new
-	r.add_new_childcollection_to_parent(args[:child_id],args[:parent_id])
-end
 
 #write list of every datastream in a folder of objects
 task :list_datastreams, [:foxmlfolderpath,:outputfilename] => :environment do|t, args|
