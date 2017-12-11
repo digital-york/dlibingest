@@ -460,7 +460,7 @@ Dir.foreach(path_to_fox)do |item|
 	next if item == '.' or item == '..'
 	
 	itempath = path_to_fox + "/" + item
-	result = 2  # so this wont do the actions required if it isnt reset
+	result = 5  # so this wont do the actions required if it isnt reset
 	begin
 		result = migrate_exam(itempath,content_server_url,collection_mapping_doc_path,user)
 	rescue
@@ -474,8 +474,12 @@ Dir.foreach(path_to_fox)do |item|
 	elsif result == 1   # this may well not work, as it may stop part way through before it ever gets here. rescue block might help?
 		tallyfile.puts("FAILED TO INGEST "+ itempath)
 		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+	elsif result == 2   # apparently some records may not have an actual exam paper of any id!
+		tallyfile.puts("ingested metadata but NO EXAM_PAPER IN "+ itempath)
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  # move files once migrated
 	else
-        tallyfile.puts(" didnt return expected value of 0 or 1 ")	
+        tallyfile.puts(" didnt return expected value of 0 or 1 or 2")	
 	end
 end
 tallyfile.close
@@ -486,7 +490,7 @@ end # end migrate_lots_of_theses_with_content_url
 
 #version of migration that adds the content file url but does not ingest the content pdf into the thesis
 # on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
-# new signature: # rake migration_tasks:migrate_exam_paper[/home/dlib/testfiles/foxml/test/york_21369.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
+# new signature: # rake migration_tasks:migrate_exam_paper[/home/dlib/testfiles/foxml_ERXAM_PAPERS/test/york_93315.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt,ps552@york.ac.uk]
 def migrate_exam(path, content_server_url, collection_mapping_doc_path, user) 
 	result = 1 # default is fail
 	mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
@@ -524,10 +528,12 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	# find the max EXAM_PAPER version. no variants on this
 	exam_paper_nums = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion/@ID",ns)	
 	idstate = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/@STATE",ns)  
-	#if EXAM_PAPER state isnt active, stop processing and return error result code
+	#if EXAM_PAPER state isnt active, stop processing and return error result 
+	#ingest_note = ""
 	if !(idstate.to_s == "A")	
-		puts " EXAM_PAPER state not active"
-		return result  #default value is 1 until is changed after success
+		#ingest_note = " no active EXAM_PAPER"
+		result = 2
+		#return result  #in some cases there may be no active exam paper
 	end	
 	
 	exam_paper_all = exam_paper_nums.to_s
@@ -535,11 +541,10 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	currentExamPaperVersion = 'EXAM_PAPER.' + exam_paper_current
 	# GET CONTENT - get the location of the pdf as a string
 	pdf_loc = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion[@ID='#{currentExamPaperVersion}']/foxml:contentLocation/@REF",ns).to_s	
-	#if EXAM_PAPERlocation isnt found, stop processing and return error result code
-	if pdf_loc.length <= 0
-        puts 	"couldnt get the pdf location"
-		result = 1 
-	return result
+	#if EXAM_PAPERlocation isnt found, set result code accordingly
+	if pdf_loc.length <= 0        
+		result = 2 
+	#return result  #in this case we should process anyway
 	end	
 	#establish permissions from ACL datastream before setting in object. set a variable accordingly for easy reference 
 	#throughout class
@@ -556,15 +561,17 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	# reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
 	# needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 	#and the content_server_url is set in the parameters :-)
-	externalpdfurl = pdf_loc.sub 'http://local.fedora.server', content_server_url 
-    externalpdflabel = "EXAM_PAPER"  #default
-	# label needed for gui display
-	label = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion[@ID='#{currentExamPaperVersion}']/@LABEL",ns).to_s 
-	if label.length > 0
-		externalpdflabel = label #in all cases I can think of this will be the same as the default, but just to be sure
+	if pdf_loc.length > 0
+		externalpdfurl = pdf_loc.sub 'http://local.fedora.server', content_server_url 
+		externalpdflabel = "EXAM_PAPER"  #default
+		# label needed for gui display
+		label = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion[@ID='#{currentExamPaperVersion}']/@LABEL",ns).to_s 
+		if label.length > 0
+			externalpdflabel = label #in all cases I can think of this will be the same as the default, but just to be sure
+		end
+		#these wont have the same name.need to search for them. ri search?
+		# hash for any additional files that may emerge. may not be any. leave in for present. needs to be done here rather than later to ensure we obtain overridden version of FileSet class rather than CC as local version not namespaced
 	end
-	#these wont have the same name.need to search for them. ri search?
-	# hash for any additional files that may emerge. may not be any. leave in for present. needs to be done here rather than later to ensure we obtain overridden version of FileSet class rather than CC as local version not namespaced
     additional_filesets = {}
 	additional_file_set_number = 0
 	elems = doc.xpath("//foxml:datastream[@ID]",ns)
@@ -809,48 +816,49 @@ end
 		
 	# this is the section that keeps failing
 	users = Object::User.all #otherwise it will use one of the included modules
-	user = users[0]
-	begin
-		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
-		mfset.filetype = 'externalurl'
-		mfset.title = ["EXAM_PAPER"]	#needs to be same label as content file in foxml 
-		mfset.label = externalpdflabel
-		# add the external content URL
-		mfset.external_file_url = externalpdfurl
-		actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
-		actor.create_metadata(exam)
-		#Declare file as external resource
-        Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
-		if yorkaccess == 'DENY'
-			mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "admin", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-		else
-			mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-		end 
-		exam.depositor = user
-		mfset.depositor = user
-		mfset.save!
-		puts "fileset " + mfset.id + " saved"
-    
-	  # CHOSS this is here because the system tended to lock up during multiple uploads - suspect competition for resources or threading issue somewhere
-		sleep 5 				
-		 exam.mainfile << mfset
-		sleep 5  
-		 exam.save!
-		 
-	rescue
-	    puts "QUACK QUACK OOPS! addition of external file unsuccesful"
-		result = 1
-		return result
-		
-   end   
-     puts "all done for external content mainfile " + id  
+	user_object = users[0]
+	
+	#check we do have a main EXAM_PAPER before trying to add it
+	if pdf_loc.length >0
+		begin
+			# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
+			mfset.filetype = 'externalurl'
+			mfset.title = ["EXAM_PAPER"]	#needs to be same label as content file in foxml 
+			mfset.label = externalpdflabel
+			# add the external content URL
+			mfset.external_file_url = externalpdfurl
+			actor = CurationConcerns::Actors::FileSetActor.new(mfset, user_object)
+			actor.create_metadata(exam)
+			#Declare file as external resource
+			Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
+			if yorkaccess == 'DENY'
+				mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "admin", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+			else
+				mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+			end 
+			exam.depositor = user
+			mfset.depositor = user
+			mfset.save!
+			puts "fileset " + mfset.id + " saved"    
+			# CHOSS this is here because the system tended to lock up during multiple uploads - suspect competition for resources or threading issue somewhere
+			sleep 5 				
+			exam.mainfile << mfset
+			sleep 5  
+			exam.save!		 
+		rescue
+			puts "QUACK QUACK OOPS! addition of external file unsuccesful"
+			result = 1
+			return result		
+		end   
+		puts "all done for external content mainfile " + id  
+	end
 
 
 # process external EXAM_ADDITIONAL files (not edited for exams, just keeping for reference)
 for key in additional_filesets.keys() do		
 		additional_exam_file_fs = additional_filesets[key]		
 		#add metadata to make fileset appear as a child of the object
-        actor = CurationConcerns::Actors::FileSetActor.new(additional_exam_file_fs, user)
+        actor = CurationConcerns::Actors::FileSetActor.new(additional_exam_file_fs, user_object)
         actor.create_metadata(exam)
 		#Declare file as external resource
 		url = additional_exam_file_fs.external_file_url
@@ -865,7 +873,9 @@ end
     doc = nil
 	mapping_text = nil
 	collection_mappings = {}	
-   result = 0 #this needs to happen last
+	if result != 2
+		result = 0 #this needs to happen last
+	end
    return result   # give it  a return value
 end # end of migrate_thesis_with_content_url
 

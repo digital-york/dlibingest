@@ -19,10 +19,16 @@ end
 # this is defined in yaml
 # return standard term from approved authority list
 def get_qualification_level_term(searchterm)
+puts "search  term for degree level was " + searchterm
 masters = ['Masters','masters']
 bachelors = ['Bachelors','Bachelor','Batchelors', 'Batchelor']
 diplomas = ['Diploma','(Dip', '(Dip', 'Diploma (Dip)']
 doctoral = ['Phd','Doctor of Philosophy (PhD)']
+#prepare this for when we get the agreed mapping - certain terms are obviously similar
+cefr = ['CEFR'] #I reckon all the stuff including CEFR will be the same
+foundation = ['Foundation'] #I reckon all the stuff including foundation will be the same. quite a few of these, across a few disciplines eg electronics, no obvious level
+part_11_exam = ['Part IIA Examination', 'Part IIB Examination']#just a few, all dept of electronics.
+
 #standardterm="unfound"
 standardterms = []
 if masters.include? searchterm
@@ -33,12 +39,19 @@ elsif diplomas.include? searchterm
 	standardterms.push('Diplomas (Postgraduate)')
 elsif doctoral.include? searchterm
 	standardterms.push('Doctoral (Postgraduate)')
+elseif cefr.include? searchterm
+    puts "standard term for "+ searchterm + "not yet defined"
+elseif foundation.include? searchterm
+    puts "standard term for "+ searchterm + "not yet defined"
+elseif part_11_exam.include? searchterm
+    puts "standard term for "+ searchterm + "not yet defined"
 end
 
 approved_terms = []
 standardterms.each do |st|
 	#pass the id, get back the term. in this case both are currently identical
 	auth = Qa::Authorities::Local::FileBasedAuthority.new('qualification_levels')
+	puts "auth was " + auth.to_s
 	approved_terms.push(auth.find(st)['term'])
 end
 return approved_terms
@@ -126,31 +139,54 @@ University of York. Language for All
 Core Knowledge, Values and Engagement Skills  (this appears to be health sciences, did a search)
 University of York. Dept. of Biochemistry
 =end
-	loc = stringtomatch.downcase  #get ride of case inconsistencies
+	loc = stringtomatch.downcase  #get rid of case inconsistencies
 	if loc.include? "reconstruction"
 		preflabels.push("University of York. Post-war Reconstruction and Development Unit")
-	elsif loc.include? "for all" #at top so looks for single subjects later
+	elsif loc.include? "applied human rights" #at top so looks for single subjects later
+		preflabels.push("University of York. Centre for Applied Human Rights")
+	elsif loc.include? "health economics" #at top so looks for single subjects later
+		preflabels.push("University of York. Centre for Health Economics")
+	elsif loc.include? "lifelong learning" #at top so looks for single subjects later
+		preflabels.push("University of York. Centre for Lifelong Learning")
+	elsif loc.include? "medieval studies" #at top so looks for single subjects later
+		preflabels.push("University of York. Centre for Medieval Studies")
+	elsif loc.include? "renaissance" #at top so looks for single subjects later
+		preflabels.push("University of York. Centre for Renaissance and Early Modern Studies")
+	elsif loc.include? "reviews" #at top so looks for single subjects later
+		preflabels.push("University of York. Centre for Reviews and Disseminations")
+	elsif loc.include? "women" #at top so looks for single subjects later
+		preflabels.push("University of York. Centre for Women's Studies")
+	elsif loc.include? "languages for all" 
 		preflabels.push("University of York. Languages for All")
-	elsif loc.include? "electronics" #at top so looks for single subjects later
-		preflabels.push("University of York. Department of Electronics")
-	elsif loc.include? "theatre" #at top so looks for single subjects later
-		preflabels.push("University of York. Department of Theatre, Film and Television")
-	elsif loc.include? "physics" #at top so looks for single subjects later
-		preflabels.push("University of York. Department of Physics")
-	elsif loc.include? "computer" #at top so looks for single subjects later
-		preflabels.push("University of York. Department of Computer Science") 
+	elsif loc.include? "school of social and political science"#at top so looks for single subjects later
+	    preflabels.push("University of York. School of Social and Political Science")
+	elsif loc.include? "school of politics economics and philosophy" #at top so looks for single subjects later
+	    preflabels.push("University of York. School of Politics Economics and Philosophy")
+	elsif loc.include? "economics and related" #at top so looks for single subjects later
+	    preflabels.push( "University of York. Department of Economics and Related Studies")	
 	elsif loc.include? "economics and philosophy" #at top so looks for single subjects later
 		preflabels.push("University of York. School of Politics Economics and Philosophy") 
-	elsif loc.include? "law" #at top so looks for single subjects later
+	elsif loc.include? "departments of english and history of art"   #damn! two departments to return! MUST precede history of art
+	    preflabels.push( "University of York. Department of English and Related Literature")
+		preflabels.push("University of York. Department of History of Art")
+	elsif loc.include? "history of art" #at top so looks for history later. but below english and history of art!
+	    preflabels.push("University of York. Department of History of Art") 	
+	elsif loc.include? "electronic" 
+		preflabels.push("University of York. Department of Electronic Engineering")
+	elsif loc.include? "theatre" 
+		preflabels.push("University of York. Department of Theatre, Film and Television")
+	elsif loc.include? "physics" 
+		preflabels.push("University of York. Department of Physics")
+	elsif loc.include? "computer" 
+		preflabels.push("University of York. Department of Computer Science")	
+	elsif loc.include? "psychology" 
+		preflabels.push("University of York. Department of Psychology")
+	elsif loc.include? "law" 
 		preflabels.push("University of York. York Law School") 
 	elsif loc.include? "mathematics"
 		preflabels.push("University of York. Department of Mathematics") 
 	elsif loc.include? "advanced architectural"
-	    preflabels.push("University of York. Institute of Advanced Architectural Studies")
-	elsif loc.include? "medieval"
-	    preflabels.push("University of York. Centre for Medieval Studies")
-	elsif loc.include? "history of art"
-	    preflabels.push("University of York. Department of History of Art") 
+	    preflabels.push("University of York. Institute of Advanced Architectural Studies")		
 	elsif loc.include? "conservation"
 	    preflabels.push("University of York. Centre for Conservation Studies")
 	elsif loc.include? "eighteenth century"
@@ -162,9 +198,7 @@ University of York. Dept. of Biochemistry
 	elsif loc.include? "sociology"
 	    preflabels.push( "University of York. Department of Sociology")
 	elsif loc.include? "education"
-	    preflabels.push("University of York. Department of Education")
-	elsif loc.include? "economics and related"
-	    preflabels.push( "University of York. Department of Economics and Related Studies")
+	    preflabels.push("University of York. Department of Education")	
 	elsif loc.include? "music"
 	    preflabels.push( "University of York. Department of Music")
 	elsif loc.include? "archaeology"
@@ -185,12 +219,16 @@ University of York. Dept. of Biochemistry
 	    preflabels.push( "University of York. The York Management School")
 	elsif loc.include? "language and linguistic science"
 	    preflabels.push("University of York. Department of Language and Linguistic Science")
-	elsif loc.include? "languages"
-	puts "loc included languages"
-	    preflabels.push("University of York. Department of Language and Linguistic Science")
-	elsif loc.include? "departments of english and history of art"   #damn! two departments to return!
-	    preflabels.push( "University of York. Department of Department of English and Related Literature")
-		preflabels.push("University of York. Department of Department of Language and Linguistic Science")
+	elsif loc.include? "hull"
+	    preflabels.push("Hull York Medical School")
+	elsif loc.include? "international pathway"
+	    preflabels.push("University of York. International Pathway College")
+	elsif loc.include? "school of criminology"
+	    preflabels.push("University of York. School of Criminology")	
+	elsif loc.include? "natural sciences"
+	    preflabels.push("University of York. School of Natural Sciences")
+	elsif loc.include? "environment"
+	    preflabels.push("University of York. Environment")	
 	end
 	return preflabels
 end
@@ -241,6 +279,16 @@ philosophyDoctorates = ['Doctor of Philosophy (PhD)']
 pgMedicalCerts = ['Postgraduate Certificate in Medical Education (PGCert)']
 scienceDoctorates = ['Doctor of Science (ScD)']
 
+#prepare this for when we get the agreed mapping - certain terms are obviously similar
+cefrA1 = ['A1 of the CEFR', 'A1 of CEFR']
+cefrA1A2 = ['A1/A2 of the CEFR'] 
+cefrB2 = ['B2 of the CEFR']
+cefrB2C1 = ['B2/C1 of the CEFR'] 
+cefrC1C2 = ['C1/C2 of CEFR','C1/C2 of the CEFR'] 
+foundation = ['Foundation Year', 'Foundation Year Stage 0'] #I reckon all the stuff including foundation will be the same. quite a few of these, across a few disciplines eg electronics, no obvious level
+part_11A_exam = ['Part IIA Examination']
+part_11B_exam = [ 'Part IIB Examination']
+
 
 qualification_name_preflabels = [] 
 
@@ -280,13 +328,14 @@ type_array.each do |t,|	    #loop1
 		elsif envMasters.include? type_to_test
 		 qualification_name_preflabels.push("Master of Environmental Science (MEnv)")
 		elsif lawMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Laws (LLM)")
-		elsif pgDiplomas.include? type_to_test
-		 qualification_name_preflabels.push("Postgraduate Diploma (PGDip)")
+		 qualification_name_preflabels.push("Master of Laws (LLM)")		
 		elsif conservationDiplomas.include? type_to_test
 		 qualification_name_preflabels.push("Postgraduate Diploma in Conservation Studies (PGDip)")
 		elsif medievalDiplomas.include? type_to_test
 		 qualification_name_preflabels.push("Postgraduate Diploma in Medieval Studies (PGDip)")
+		#this is more general so crucial it is tested AFTER the more specific diplomas 
+		elsif pgDiplomas.include? type_to_test
+		 qualification_name_preflabels.push("Postgraduate Diploma (PGDip)")
 		elsif pgces.include? type_to_test
 		 qualification_name_preflabels.push("Postgraduate Certificate in Education (PGCE)")
 		elsif pgMedicalCerts.include? type_to_test
@@ -301,6 +350,24 @@ type_array.each do |t,|	    #loop1
 		 qualification_name_preflabels.push("Diploma of Higher Education (DipHE)")
 		elsif pgcerts.include? type_to_test
 		 qualification_name_preflabels.push("Postgraduate Certificate (PgCert)")
+		#preparation for  preflabel assignment when defined
+		#order importand, look for most precise first
+		elsif cefrA1A2.include? type_to_test
+		 puts "preflabel not yet defined for cefrA1A2"
+		elsif cefrA1.include? type_to_test
+		 puts "preflabel not yet defined for cefrA1"
+		elsif cefrB2C1.include? type_to_test
+		 puts "preflabel not yet defined for cefrB2C1"
+		elsif cefrC1C2.include? type_to_test
+		 puts "preflabel not yet defined for cefrC1C2"
+		elsif cefrB2.include? type_to_test
+		 puts "preflabel not yet defined for cefrB2"
+		elsif foundation.include? type_to_test
+		 puts "preflabel not yet defined for foundation"
+		elsif part_11A_exam.include? type_to_test
+		 puts "preflabel not yet defined for part_11A_exam"
+		elsif part_11B_exam.include? type_to_test
+		 puts "preflabel not yet defined for part_11B_exam"
 	end #end loop1
 		
 	#not found? check for plain research masters without arts or science specified (order of testing here is crucial) (required for theses)
@@ -333,7 +400,7 @@ end
 #utility method to list all the datastream IDs to a text file
 #by calling in the migration method we can then do search and replaces to output all unique DS IDs in a collection of fedora objects
 #the dslistfile param is the  filename to allow different lists for different collections if required
-#the idname should consist purely of the ID, without any  version number
+#the idname should consist purely of the ID, without any  version number. gets called by list_all_ds_in_set
 def write_to_ds_list(dslistfile,idname)
 listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ dslistfile, "a")
 	listfile.puts( idname)
@@ -343,7 +410,7 @@ end
 #utility method to list all the datastream LABELs to a text file
 #by calling in the migration method we can then do search and replaces to output all unique DS LABELs in a collection of fedora objects
 #the dslistfile param is the  filename to allow different lists for different collections if required
-#the labelname should consist purely of the LABEL, without any  version number
+#the labelname should consist purely of the LABEL, without any  version number. gets called by list_all_labels_in_set
 def write_to_labels_list(labellistfile,labelname)
 listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ labellistfile, "a")
 	listfile.puts( labelname)
@@ -351,7 +418,7 @@ listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ labellistfile, "a")
 	
 end
 
-
+#rake migration_tasks:list_datastream_labels,[/home/dlib/testfiles/foxml,labels_list.txt]
 def list_all_labels_in_set(foxmlpath,outputfilename)
 labelmap = []
 Dir.foreach(foxmlpath)do |item|
@@ -377,19 +444,21 @@ end
 end#end method
 
 
-
+#rake migration_tasks:list_datastreams[/home/dlib/testfiles/foxml,UG-ds_list.txt]
 def list_all_ds_in_set(foxmlpath,outputfilename)
+puts "listing all ds  in "+foxmlpath
 idmap = []
 Dir.foreach(foxmlpath)do |item|
 # we dont want to try and act on the current and parent directories
 next if item == '.' or item == '..'
     path = foxmlpath +"/" + item.to_s
-	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+	
+	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}	
 	# doesnt resolve nested namespaces, this fixes that
     ns = doc.collect_namespaces	
 	ds_ids = doc.xpath("//foxml:datastream[@ID]",ns)
 	ds_ids.each { |id| 
-		idname = id.attr('ID')
+		idname = id.attr('ID')		
 			if !idmap.include? idname
 				idmap.push(idname)			
 			end	 
@@ -399,6 +468,7 @@ end
 		write_to_ds_list(outputfilename,id) 
 	}
 	doc = nil
+	puts "all done"
 end#end method
 
 
@@ -577,6 +647,7 @@ valuemap= []
 end #end method
 
 #see how many exam papers dont have a main exam paper datastream!
+#rake migration_tasks:list_missing_exam_ds[/home/dlib/testfiles/foxml/test,noexampapers.txt]
 def check_has_main(foxmlpath,outputfilename)
 
 listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ outputfilename, "a")
@@ -609,4 +680,7 @@ end
 	doc = nil
 	puts "all done, written to /home/dlib/lists/uniqueDSlists/" + outputfilename
 end #end of check_has_main
+
+
+
 end # end of class

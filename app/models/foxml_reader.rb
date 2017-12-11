@@ -205,49 +205,6 @@ collection.rights=[coll_rights]
 return collection
 end  #end of populate_collection method
 
-=begin
-keep this for present as it is the only way of making a new child collection within the existing structure (the one on the interface does not allow 
-you to specify the correct parent to add to - only shows some, and no way to distinguish between groups of year collections
-call is like rake migration_tasks:make_collection_structure[/home/ubuntu/dlib/mapping_files/]
-so where the child being added has pid york:1234, is called 1999, and is a child of york:4567
-so to create the old english/
-new english id is m039k4882
-  old year collection title was 2015 
-  old year collection id was york:932220
- call is like rake migration_tasks:recreate_child_collection[york:932220,2015,m039k4882,/home/ubuntu/mapping_files/]
- rake migration_tasks:recreate_child_collection[york:932221,2016,m039k4882,/home/ubuntu/mapping_files/]
-=end
-def recreate_child_collection(old_pid, title, parent_id, mapping_path, user)
-#coll = Object::Collection.new
-mapping_file = mapping_path +"col_mapping.txt"
-puts "mapping file was " + mapping_file
-puts "old year pid was " + old_pid
-puts "old year title was " + title
-puts "parent id was " + parent_id
-mapping = []
-coll = Object::Collection.newpcoll 
-#coll.preflabel = "stuff I made"
-coll.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-coll.depositor = user
-coll.title = [title]
-
-coll.save!
-child_id = coll.id
-puts "collection id was " +child_id
-parent_col = Object::Collection.find(parent_id)	
-	puts " collection title was " + parent_col.title[0].to_s
-parent_col.members << coll	
-parent_col.save!   #saving this IS neccesary
-mapping_string = old_pid + "," +  + coll.title[0].to_s + "," + child_id #former pid of child +title of child plus new id of child
-mapping.push(mapping_string)
-#add to mapping file
-open(mapping_file, "a+")do |mapfile|
-	mapfile.puts(mapping)
-end
-
-end #end recreate_child_collection
-
-
 
 
 # bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt
@@ -332,7 +289,7 @@ end # end migrate_lots_of_theses_with_content_url
 # bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
 # bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847943.xml,/vagrant/files_to_test/col_mapping.txt]
 # on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/testfiles/content/,/home/ubuntu/mapping_files/col_mapping.txt]
-# new signature: # rake migration_tasks:migrate_thesis_embedded_only[/home/dlib/testfiles/foxml/york_xxxxx.xml,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
+# new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/york_xxxxx.xml,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
 def migrate_thesis(path, contentpath, collection_mapping_doc_path, user)
 # mfset = Dlibhydra::FileSet.new   # FILESET. # defin this at top because otherwise expects to find it in CurationConcerns module 
 result = 1 # default is fail
@@ -627,7 +584,7 @@ end # end of migrate thesis
 
 #version of migration that adds the content file url but does not ingest the content pdf into the thesis
 # on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
-# new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/mytest.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt]
+# new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/_TH_test.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt,ps552@york.ac.uk]
 def migrate_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path, user) 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
@@ -782,7 +739,7 @@ puts "migrating a thesis with content url"
 	# could really do with a file to list what its starting work on as a cleanup tool. doesnt matter if it doesnt get this far as there wont be anything to clean up
 	tname = "tracking.txt"
 	trackingfile = File.open(tname, "a")
-	trackingfile.puts( "am now working on " + former_id + " title:" + t )
+	trackingfile.puts( "am now working on " + former_id + " title:" + title )
 	trackingfile.close	
 	 creatorArray = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
 	 thesis.creator_string = [creatorArray.to_s]
@@ -943,7 +900,7 @@ end
 	
 	# this is the section that keeps failing
 	users = Object::User.all #otherwise it will use one of the included modules
-	user = users[0]
+	user_object = users[0]
 	begin
 		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 		mfset.filetype = 'externalurl'
@@ -951,7 +908,7 @@ end
 		mfset.label = externalpdflabel
 		# add the external content URL
 		mfset.external_file_url = externalpdfurl
-		actor = CurationConcerns::Actors::FileSetActor.new(mfset, user)
+		actor = CurationConcerns::Actors::FileSetActor.new(mfset, user_object)
 		actor.create_metadata(thesis)
 		#Declare file as external resource
         Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
@@ -978,7 +935,7 @@ end
 for key in additional_filesets.keys() do		
 		additional_thesis_file_fs = additional_filesets[key]		
 		#add metadata to make fileset appear as a child of the object
-        actor = CurationConcerns::Actors::FileSetActor.new(additional_thesis_file_fs, user)
+        actor = CurationConcerns::Actors::FileSetActor.new(additional_thesis_file_fs, user_object)
         actor.create_metadata(thesis)
 		#Declare file as external resource
 		url = additional_thesis_file_fs.external_file_url
