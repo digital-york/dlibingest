@@ -460,7 +460,7 @@ Dir.foreach(path_to_fox)do |item|
 	next if item == '.' or item == '..'
 	
 	itempath = path_to_fox + "/" + item
-	result = 5  # so this wont do the actions required if it isnt reset
+	result = 9  # so this wont do the actions required if it isnt reset
 	begin
 		result = migrate_exam(itempath,content_server_url,collection_mapping_doc_path,user)
 	rescue
@@ -478,6 +478,12 @@ Dir.foreach(path_to_fox)do |item|
 		tallyfile.puts("ingested metadata but NO EXAM_PAPER IN "+ itempath)
 		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  # move files once migrated
+	elsif result == 3   # couldnt identify parent collection in mappings
+		tallyfile.puts("FAILED TO INGEST " + itempath + " because couldnt identiy parent collection mapping")
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+	elsif result == 4   # this may well not work, as it may stop part way through before it ever gets here. 
+		tallyfile.puts("FAILED TO INGEST RESOURCE DOCUMENT IN"+ itempath)
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 	else
         tallyfile.puts(" didnt return expected value of 0 or 1 or 2")	
 	end
@@ -490,7 +496,7 @@ end # end migrate_lots_of_theses_with_content_url
 
 #version of migration that adds the content file url but does not ingest the content pdf into the thesis
 # on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
-# new signature: # rake migration_tasks:migrate_exam_paper[/home/dlib/testfiles/foxml_ERXAM_PAPERS/test/york_93315.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt,ps552@york.ac.uk]
+# new signature: # rake migration_tasks:migrate_exam_paper[/home/dlib/testfiles/foxml_EXAM_PAPERS/test/york_exam.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt,ps552@york.ac.uk]
 def migrate_exam(path, content_server_url, collection_mapping_doc_path, user) 
 	result = 1 # default is fail
 	mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
@@ -528,7 +534,7 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	# find the max EXAM_PAPER version. no variants on this
 	exam_paper_nums = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion/@ID",ns)	
 	idstate = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/@STATE",ns)  
-	#if EXAM_PAPER state isnt active, stop processing and return error result 
+	#note EXAM_PAPER state isnt active, but dont stop processing
 	#ingest_note = ""
 	if !(idstate.to_s == "A")	
 		#ingest_note = " no active EXAM_PAPER"
@@ -546,6 +552,7 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 		result = 2 
 	#return result  #in this case we should process anyway
 	end	
+	#this is because exam papers may exist in several locations
 	#establish permissions from ACL datastream before setting in object. set a variable accordingly for easy reference 
 	#throughout class
 	# find max ACL version
@@ -554,7 +561,7 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	acl_current = all.rpartition('.').last 
 	acl_currentVersion = 'ACL.' + current
 	#get access value for user 'york'
-	yorkaccess = doc.xpath("//foxml:datastream[@ID='ACL']/foxml:datastreamVersion[@ID='#{acl_currentVersion}']/foxml:xmlContent/acl:container/acl:role[@name='york']/text()",ns).to_s   
+	yorkaccess = doc.xpath("//foxml:datastream[@ID='ACL']/foxml:datastreamVersion[@ID='#{acl_currentVersion}']/foxml:xmlContent/acl:container/acl:role[@name='york']/text()",ns).to_s#get access value for user 'york'   
 	
 	# CONTENT FILES
 	# this has local.fedora.host, which will be wrong. need to replace this with whereever they will be sitting 
@@ -718,14 +725,27 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 			exam.qualification_name_resource_ids+=[qname_id]
 	end	
 	
-	# qualification levels (yml file). multiples possible? allow for this case - may be some common modules
-	typesToParse.each do |t|	  #CHOSS
+	# qualification levels (yml file). multiples possible? allow for this case - may be some common modules	
+	typesToParse.each do |t|	 
 	type_to_test = t.to_s
-	qual_levels = common.get_qualification_level_term(type_to_test)  
+	#qual_levels = common.get_qualification_level_term(type_to_test) 
+	qual_levels = []
+	levels = common.get_qualification_level_term(type_to_test)#returned as an array although in most cases there is just 1 or 0
+	levels.each do |level|
+		if !qual_levels.include? level
+			qual_levels.push(level)
+		end	
+	end
+	qual_levels.each do |ql|
+		exam.qualification_level += [ql]
+	end
+	
+#superceded
+=begin
 	qual_levels.each do |ql|	
 		exam.qualification_level += [ql]
 	end
-
+=end
 	# now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
 	# resource Types map to dc:subject. at present the only official value is Dissertations, Academic
 	#at present this should never return positive on the exam papers, the only type held is for theses dissertations (see \lib\assets\lists\subjects.csv
@@ -810,7 +830,8 @@ end
 		col.save!
 	else
 		puts "couldnt find collection " + parentcol.to_s
-		return
+		result = 3
+		return result
 	end
 	
 		
@@ -847,7 +868,7 @@ end
 			exam.save!		 
 		rescue
 			puts "QUACK QUACK OOPS! addition of external file unsuccesful"
-			result = 1
+			result = 4
 			return result		
 		end   
 		puts "all done for external content mainfile " + id  

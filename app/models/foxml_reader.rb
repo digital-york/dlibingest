@@ -257,7 +257,7 @@ Dir.foreach(path_to_fox)do |item|
 	next if item == '.' or item == '..'
 	# trackingfile.puts("now working on " + item)
 	itempath = path_to_fox + "/" + item
-	result = 2  # so this wont do the actions required if it isnt reset
+	result = 9  # so this wont do the actions required if it isnt reset
 	begin
 		result = migrate_thesis_with_content_url(itempath,content_server_url,collection_mapping_doc_path,user)
 	rescue
@@ -271,6 +271,16 @@ Dir.foreach(path_to_fox)do |item|
 	elsif result == 1   # this may well not work, as it may stop part way through before it ever gets here. rescue block might help?
 		tallyfile.puts("FAILED TO INGEST "+ itempath)
 		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+	elsif result == 2   # apparently some records may not have an actual resource paper of any id!
+		tallyfile.puts("ingested metadata but NO EXAM_PAPER IN "+ itempath)
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  # move files once migrated
+	elsif result == 3   # couldnt identify parent collection in mappings
+		tallyfile.puts("FAILED TO INGEST " + itempath + " because couldnt identiy parent collection mapping")
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+	elsif result == 4   # this may well not work, as it may stop part way through before it ever gets here. 
+		tallyfile.puts("FAILED TO INGEST RESOURCE DOCUMENT IN"+ itempath)
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 	else
         tallyfile.puts(" didnt return expected value of 0 or 1 ")	
 	end
@@ -283,12 +293,7 @@ end # end migrate_lots_of_theses_with_content_url
 # bundle exec rake migrate_thesis[/vagrant/files_to_test/york_847953.xml,9s1616164]
 # bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,9s1616164]
 # def migrate_thesis(path,collection)
-# bundle exec rake migrate_thesis[/vagrant/files_to_test/york_21031.xml,/vagrant/files_to_test/col_mapping.txt]
-# emotional world etc
-# bundle exec rake migrate_thesis[/vagrant/files_to_test/york_807119.xml,/vagrant/files_to_test/col_mapping.txt]   
-# bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847953.xml,/vagrant/files_to_test/col_mapping.txt]
-# bundle exec rake migration_tasks:migrate_thesis[/vagrant/files_to_test/york_847943.xml,/vagrant/files_to_test/col_mapping.txt]
-# on megastack: # rake migration_tasks:migrate_thesis[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/testfiles/content/,/home/ubuntu/mapping_files/col_mapping.txt]
+#
 # new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/york_xxxxx.xml,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
 def migrate_thesis(path, contentpath, collection_mapping_doc_path, user)
 # mfset = Dlibhydra::FileSet.new   # FILESET. # defin this at top because otherwise expects to find it in CurationConcerns module 
@@ -458,7 +463,12 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 	# qualification levels (yml file). there can only be one
 	typesToParse.each do |t|	
 	type_to_test = t.to_s
-	degree_levels = common.get_qualification_level_term(type_to_test)
+	#degree_levels = common.get_qualification_level_term(type_to_test)
+	degree_levels = []
+	level = common.get_qualification_level_term(type_to_test)
+	if !degree_levels.include? level
+		degree_levels.push(level)
+	end	
 	degree_levels.each do |dl|
 		thesis.qualification_level += [dl]
 	end
@@ -584,7 +594,7 @@ end # end of migrate thesis
 
 #version of migration that adds the content file url but does not ingest the content pdf into the thesis
 # on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
-# new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/_TH_test.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt,ps552@york.ac.uk]
+# new signature: # rake migration_tasks:migrate_thesis[/home/dlib/testfiles/foxml/york_806397.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/col_mapping.txt,ps552@york.ac.uk]
 def migrate_thesis_with_content_url(path, content_server_url, collection_mapping_doc_path, user) 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
@@ -625,10 +635,11 @@ puts "migrating a thesis with content url"
 	thesis_nums = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion/@ID",ns)	
 	#check the state is active
 	idstate = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/@STATE",ns)
-	#if THESIS_MAIN state isnt active, stop processing and return error result code
+	#note resource state isnt active, but dont stop processing
 	if !idstate.to_s=="A"
-		result = 1 #this needs to happen last
-		return result
+		#ingest_note = " no active EXAM_PAPER"
+		result = 2
+		#return result  #in some cases there may be no active resource paper
 	end	
 	thesis_all = thesis_nums.to_s
 	thesis_current = thesis_all.rpartition('.').last 
@@ -637,8 +648,8 @@ puts "migrating a thesis with content url"
 	pdf_loc = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion[@ID='#{currentThesisVersion}']/foxml:contentLocation/@REF",ns).to_s	
 	#if THESIS_MAIN location isnt found, stop processing and return error result code
 	if pdf_loc.length <= 0
-		result = 1 
-		return result
+		result = 2 
+		#return result #process anyway
 	end	
 	
 	# CONTENT FILES
@@ -647,41 +658,42 @@ puts "migrating a thesis with content url"
 	# needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 	# newpdfloc = pdf_loc.sub 'local.fedora.server', 'yodlapp3.york.ac.uk'  # CHOSS we dont need this any more as we cant download remotely
 	#and the content_server_url is set in the parameters :-)
-	externalpdfurl = pdf_loc.sub 'http://local.fedora.server', content_server_url #this will be added to below. once we have external urls can add in relevant url
-    externalpdflabel = "THESIS_MAIN"  #default
-	# label needed for gui display
+	if pdf_loc.length > 0
+		externalpdfurl = pdf_loc.sub 'http://local.fedora.server', content_server_url #this will be added to below. once we have external urls can add in relevant url
+		externalpdflabel = "THESIS_MAIN"  #default
+		# label needed for gui display
 			label = doc.xpath("//foxml:datastream[@ID='THESIS_MAIN']/foxml:datastreamVersion[@ID='#{currentThesisVersion}']/@LABEL",ns).to_s 
 			if label.length > 0
 			externalpdflabel = label #in all cases I can think of this will be the same as the default, but just to be sure
 			end
-	
-# hash for any THESIS_ADDITIONAL URLs. needs to be done here rather than later to ensure we obtain overridden version og FileSet class rather than CC as local version not namespaced
-    additional_filesets = {}	
+	end
+	# hash for any THESIS_ADDITIONAL URLs. needs to be done here rather than later to ensure we obtain overridden version og FileSet class rather than CC as local version not namespaced
+	additional_filesets = {}	
 	elems = doc.xpath("//foxml:datastream[@ID]",ns)
 	elems.each { |id| 
 		idname = id.attr('ID')		
 		if idname.start_with?('THESIS_ADDITIONAL')
-		#check its active
-		idstate = id.attr('STATE')
-		if idstate == "A"
-	#ok, now need to find the latest version 
-			version_nums = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion/@ID",ns)
-			current_version_num = version_nums.to_s.rpartition('.').last
-			current_version_name = idname + '.' + current_version_num
-			addit_file_loc = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/foxml:contentLocation/@REF",ns).to_s
-			addit_file_loc = addit_file_loc.sub 'http://local.fedora.server', content_server_url
-			fileset = Object::FileSet.new
-			fileset.filetype = 'externalurl'
-			fileset.external_file_url = addit_file_loc
-			fileset.title = [idname]
-			# may have a label - needed for display-  that is different to the datastream title
-			label = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/@LABEL",ns).to_s 
-			if label.length > 0
-			fileset.label = label
-			end
-			fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-			fileset.depositor = user
-			additional_filesets[idname] = fileset
+			#check its active
+			idstate = id.attr('STATE')
+			if idstate == "A"
+				#ok, now need to find the latest version 
+				version_nums = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion/@ID",ns)
+				current_version_num = version_nums.to_s.rpartition('.').last
+				current_version_name = idname + '.' + current_version_num
+				addit_file_loc = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/foxml:contentLocation/@REF",ns).to_s
+				addit_file_loc = addit_file_loc.sub 'http://local.fedora.server', content_server_url
+				fileset = Object::FileSet.new
+				fileset.filetype = 'externalurl'
+				fileset.external_file_url = addit_file_loc
+				fileset.title = [idname]
+				# may have a label - needed for display-  that is different to the datastream title
+				label = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/@LABEL",ns).to_s 
+				if label.length > 0
+					fileset.label = label
+				end
+				fileset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+				fileset.depositor = user
+				additional_filesets[idname] = fileset
 			end
 		end
 	}
@@ -820,9 +832,16 @@ puts "migrating a thesis with content url"
 	# qualification levels (yml file). 
 	typesToParse.each do |t|	
 	type_to_test = t.to_s
-	degree_levels = common.get_qualification_level_term(type_to_test)
-	degree_levels.each do |degree_level|
-		thesis.qualification_level += [degree_level]
+	qual_levels = []
+	levels = common.get_qualification_level_term(type_to_test)
+	levels.each do |level|
+		#thesis.qualification_level += [degree_level]
+		if !qual_levels.include? level #avoid duplication
+			qual_levels.push(level)
+		end	
+	end
+	qual_levels.each do |ql|
+		thesis.qualification_level += [ql]
 	end
 
 	# now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
@@ -892,7 +911,8 @@ end
 		col.save!
 	else
 		puts "couldnt find collection " + parentcol.to_s
-		return
+		result = 3
+		return result
 	end
 	
 	
@@ -901,35 +921,36 @@ end
 	# this is the section that keeps failing
 	users = Object::User.all #otherwise it will use one of the included modules
 	user_object = users[0]
-	begin
-		# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
-		mfset.filetype = 'externalurl'
-		mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
-		mfset.label = externalpdflabel
-		# add the external content URL
-		mfset.external_file_url = externalpdfurl
-		actor = CurationConcerns::Actors::FileSetActor.new(mfset, user_object)
-		actor.create_metadata(thesis)
-		#Declare file as external resource
-        Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
-		mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
-		mfset.depositor = user
-		mfset.save!
-		puts "fileset " + mfset.id + " saved"
+	#check we do have a main resource paper before trying to add it
+	if pdf_loc.length >0
+		begin
+			# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
+			mfset.filetype = 'externalurl'
+			mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
+			mfset.label = externalpdflabel
+			# add the external content URL
+			mfset.external_file_url = externalpdfurl
+			actor = CurationConcerns::Actors::FileSetActor.new(mfset, user_object)
+			actor.create_metadata(thesis)
+			#Declare file as external resource
+			Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
+			mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
+			mfset.depositor = user
+			mfset.save!
+			puts "fileset " + mfset.id + " saved"
     
-	  # CHOSS this is here because the system tended to lock up during multiple uploads - suspect competition for resources or threading issue somewhere
-		sleep 20 		
-		 thesis.mainfile << mfset
-		sleep 20  
-		 thesis.save!
-	rescue
-	    puts "QUACK QUACK OOPS! addition of external file unsuccesful"
-		result = 1
-		return result
-		
-   end   
+		# CHOSS this is here because the system tended to lock up during multiple uploads - suspect competition for resources or threading issue somewhere
+			sleep 20 		
+			thesis.mainfile << mfset
+			sleep 20  
+			thesis.save!
+		rescue
+			puts "QUACK QUACK OOPS! addition of external file unsuccesful"
+			result = 4
+			return result		
+		end   
      puts "all done for external content mainfile " + id  
-
+	end
 
 # process external THESIS_ADDITIONAL files
 for key in additional_filesets.keys() do		
@@ -950,7 +971,9 @@ end
     doc = nil
 	mapping_text = nil
 	collection_mappings = {}	
-   result = 0 #this needs to happen last
+	if result != 2
+		result = 0 #this needs to happen last
+	end
    return result   # give it  a return value
 end # end of migrate_thesis_with_content_url
 

@@ -219,7 +219,7 @@ Dir.foreach(path_to_fox)do |item|
 	# trackingfile.puts("now working on " + item)
 	puts "found" + item.to_s
 	itempath = path_to_fox + "/" + item
-	result = 2  # so this wont do the actions required if it isnt reset
+	result = 9  # so this wont do the actions required if it isnt reset
 	begin
 		result = migrate_undergraduate_paper(itempath, content_server_url, collection_mapping_doc_path, user)
 	rescue
@@ -233,9 +233,12 @@ Dir.foreach(path_to_fox)do |item|
 	elsif result == 1   # this may well not work, as it may stop part way through before it ever gets here. rescue block might help?
 		tallyfile.puts("FAILED TO INGEST "+ itempath)
 		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
-	elsif result == 3   # apparently some records may not have an actual exam paper of any id!
+	elsif result == 2   # apparently some records may not have an actual resource paper of any id!
 		tallyfile.puts("ingested metadata but NO MAIN RESOURCE DOCUMENT IN "+ itempath)
 		#sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+	elsif result == 3   # couldnt identify parent collection in mappings
+		tallyfile.puts("FAILED TO INGEST " + itempath + " because couldnt identiy parent collection mapping")
+		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 	elsif result == 4   # this may well not work, as it may stop part way through before it ever gets here. 
 		tallyfile.puts("FAILED TO INGEST RESOURCE DOCUMENT IN"+ itempath)
 		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
@@ -251,7 +254,7 @@ end # end migrate_lots_of_theses_with_content_url
 
 #
 # my inprogress method with most of the content gone
-# signature: # rake migration_tasks:migrate_undergrad_paper[/home/dlib/testfiles/foxml/mytest.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/ug_col_mapping.txt]
+# signature: # rake migration_tasks:migrate_undergrad_paper[/home/dlib/testfiles/foxml/mytest.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/ug_col_mapping.txt,ps552@york.ac.uk]
 def migrate_undergraduate_paper(path, content_server_url, collection_mapping_doc_path, user) 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
@@ -306,7 +309,7 @@ puts "migrating a ug_paper with content url"
 		paper_nums = doc.xpath("//foxml:datastream[@ID='EXAM_PAPER']/foxml:datastreamVersion/@ID",ns)
 	else
 	#do nothing. apparently there are some in the live system without any main file
-		#result = 3 # this will trigger putting a specific message into the tracking file
+		#result = 2 # this will trigger putting a specific message into the tracking file
 		#return 
 	end	
 	if mainDocFound.length > 0
@@ -488,6 +491,8 @@ puts "migrating a ug_paper with content url"
 	#degree then forcing it. may also need to try for other things
 	typesToParse.each do |t|	
 		type_to_test = t.to_s
+#superceded - will now extrapolate from qualification name as well as level
+=begin
 		if type_to_test.downcase.include? "bachelor" or type_to_test.downcase.include? "batchelor" or type_to_test.downcase.include? "ba" or type_to_test.downcase.include? "bsc" or type_to_test.downcase.include? "bed"
 			degree_levels = common.get_qualification_level_term("Bachelors")
 		else
@@ -496,6 +501,19 @@ puts "migrating a ug_paper with content url"
 		degree_levels.each do |degree_level|
 			ug_paper.qualification_level += [degree_level]
 		end	
+=end
+		
+		qual_levels = []
+		levels = common.get_qualification_level_term(type_to_test)
+		levels.each do |level|
+			if !qual_levels.include? level
+				qual_levels.push(level)
+			end	
+		end
+		qual_levels.each do |dl|
+			ug_paper.qualification_level += [dl]
+		end
+		
 		# now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
 		# resource Types map to dc:subject. at present the only official value is Dissertations, Academic
 		#should this still be here for UG essays and projects?
@@ -602,7 +620,7 @@ puts "migrating a ug_paper with content url"
 		puts "all done for external content mainfile " + id 
 		result = 0 		
 	 else
-		result = 3
+		result = 2
 	 end
 
 #uncomment and edit this if any additional resource files found in records

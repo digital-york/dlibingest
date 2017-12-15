@@ -19,23 +19,84 @@ end
 # this is defined in yaml
 # return standard term from approved authority list
 def get_qualification_level_term(searchterm)
+#gonna make this general to include where the existing record doesnt contain 'level' data. this might mean the same level gets added twice of course - cant really help that, the data is too variant. perhaps only add each one once?
+searchterm = searchterm.downcase
+
 puts "search  term for degree level was " + searchterm
-masters = ['Masters','masters']
-bachelors = ['Bachelors','Bachelor','Batchelors', 'Batchelor']
-diplomas = ['Diploma','(Dip', '(Dip', 'Diploma (Dip)']
-doctoral = ['Phd','Doctor of Philosophy (PhD)']
+
+#brackets essential to avoid false  positives
+masters = ['masters','(ma)','(msc)','(mres)','(mphil)','(meng)','(mphys)','(mchem)','(mmath)','(menv)','(llm)','(MNursing)'] 
+#bachelors = ['bachelors','bachelor','batchelors', 'batchelor','bsc','ba','bphil','beng','llb']
+bachelors = ['bachelor', 'batchelor','(bsc)','(ba)','(bphil)','(beng)','(llb)']
+diplomas = ['diploma','(dip', '(dip', 'diploma (dip)','(pgdip)']
+lower_diplomas = ['diphe'] #will have to cross check against this as some diplomas are post grad, some lower level
+doctoral = ['(phd)','doctor of philosophy (phd)','(scd)']
 #prepare this for when we get the agreed mapping - certain terms are obviously similar
-cefr = ['CEFR'] #I reckon all the stuff including CEFR will be the same
-foundation = ['Foundation'] #I reckon all the stuff including foundation will be the same. quite a few of these, across a few disciplines eg electronics, no obvious level
-part_11_exam = ['Part IIA Examination', 'Part IIB Examination']#just a few, all dept of electronics.
+cefr = ['cefr'] #I reckon all the stuff including CEFR will be the same
+foundation = ['foundation'] #I reckon all the stuff including foundation will be the same. quite a few of these, across a few disciplines eg electronics, no obvious level
+part_11_exam = ['part 11a examination', 'Part 11b examination']#just a few, all dept of electronics.
+
+standardterms = []
+
+#its possible there may be multiple matches of the same level for a single term, so make sure we only add it once per search term -eg diploma (dip)
+masters.each do |m|
+	if searchterm.include? m
+	puts "it  found masters for " + m
+		if !standardterms.include? 'Masters (Postgraduate)'
+			standardterms.push('Masters (Postgraduate)')
+		end	
+	end
+end
+bachelors.each do |b|
+	if searchterm.include? b
+	puts "it  found bachelor for " + b
+		if !standardterms.include? 'Bachelors (Undergraduate)'
+			standardterms.push('Bachelors (Undergraduate)')
+		end			
+	end
+end
+diplomas.each do |d|
+	if searchterm.include? d
+	puts "it  found diploma for " + d
+		#standardterms.push('Diplomas (Postgraduate)')
+		if !standardterms.include? 'Diplomas (Postgraduate)'
+			standardterms.push('Diplomas (Postgraduate)')
+		end	
+	end
+end
+doctoral.each do |dr|
+	if searchterm.include? dr
+		#standardterms.push('Doctoral (Postgraduate)')
+		if !standardterms.include? 'Doctoral (Postgraduate)'
+			standardterms.push('Doctoral (Postgraduate)')
+		end	
+	end
+end
+cefr.each do |c|
+	if searchterm.include? c
+		puts "standard term for "+ searchterm + "not yet defined"
+	end
+end
+foundation.each do |f|
+	if searchterm.include? f
+		puts "standard term for "+ searchterm + "not yet defined"
+	end
+end
+part_11_exam.each do |p|
+	if searchterm.include? p
+		puts "standard term for "+ searchterm + "not yet defined"
+	end
+end
 
 #standardterm="unfound"
+=begin
 standardterms = []
 if masters.include? searchterm
 	standardterms.push('Masters (Postgraduate)')
 elsif bachelors.include? searchterm
 	standardterms.push('Bachelors (Undergraduate)')
 elsif diplomas.include? searchterm
+puts "success with test for diploma"
 	standardterms.push('Diplomas (Postgraduate)')
 elsif doctoral.include? searchterm
 	standardterms.push('Doctoral (Postgraduate)')
@@ -46,14 +107,16 @@ elseif foundation.include? searchterm
 elseif part_11_exam.include? searchterm
     puts "standard term for "+ searchterm + "not yet defined"
 end
+=end
 
 approved_terms = []
 standardterms.each do |st|
 	#pass the id, get back the term. in this case both are currently identical
 	auth = Qa::Authorities::Local::FileBasedAuthority.new('qualification_levels')
-	puts "auth was " + auth.to_s
 	approved_terms.push(auth.find(st)['term'])
 end
+
+puts "size of returned level terms was " +  approved_terms.length.to_s
 return approved_terms
 end #end get_qualification_level_term
 
@@ -136,8 +199,8 @@ Oxford Brookes University    									#this is an awarding institution not a dep
 
 need to handle the following additional department string
 University of York. Language for All
-Core Knowledge, Values and Engagement Skills  (this appears to be health sciences, did a search)
-University of York. Dept. of Biochemistry
+Core Knowledge, Values and Engagement Skills  (this appears to be health sciences, did a search. confirmed with metadata team)
+University of York. Dept. of Biochemistry   #confirmed this should map to the biology department
 =end
 	loc = stringtomatch.downcase  #get rid of case inconsistencies
 	if loc.include? "reconstruction"
@@ -205,6 +268,8 @@ University of York. Dept. of Biochemistry
 	    preflabels.push( "University of York. Department of Archaeology")
 	elsif loc.include? "biology"
 	    preflabels.push( "University of York. Department of Biology")
+	elsif loc.include? "biochemistry"
+	    preflabels.push( "University of York. Department of Biology") #confirmed with metadata team
 	elsif loc.include? "english and related literature"
 	    preflabels.push( "University of York. Department of English and Related Literature")
 	elsif loc.include? "health sciences"
@@ -242,7 +307,7 @@ def get_qualification_name_preflabel(type_array)
 
 
 #Arrays of qualification name variants
-
+#grabbed nursing ma name from https://www.york.ac.uk/healthsciences/study/
 #Bachelor of Arts (MA) is a genuine variant that I assume to be a mistake (query sent to Ilka)
 artBachelors = ['Batchelor of Arts (BA)', '"Bachelor of Arts (BA),"', 'BA', 'Bachelor of Arts (BA)','Bachelor of Art (BA)', 'Bachelor of Arts', 'Bachelor of Arts (MA)']
 artsByResearch = ['Master of Arts by research (MRes)', '"Master of Arts, by research (MRes)"' ]
@@ -258,6 +323,7 @@ chemistryMasters = ['Master of Chemistry (MChem)']
 scienceMasters = ['Master of Science (MSc.)', '"Master of Science (MSc),"',"'Master of Science (MSc)",'Master of Science (MSc)','MSc', 'Master of Science']
 physicsMasters = ['Master of Physics (MPhys)']
 philosophyMasters = ['Master of Philosophy (MPhil)','MPhil']
+nursingMasters = ['Master of Nursing','Master of Nursing (MNursing)','(MNursing)' ]
 artMasters = ['Master of Arts (MA)', 'Master of Arts', 'Master of Art (MA)', 'MA (Master of Arts)','Masters of Arts (MA)', 'MA']
 lawMasters = ['Master of Laws (LLM)']
 engineeringMasters = ['Master of Engineering (BEng)', 'Master of Engineering (MEng']
@@ -268,9 +334,10 @@ researchMasters = ['Master of Research (Mres)','Master of Research (MRes)','Mres
 not_valid = "Postgraduate Diploma in ‘Conservation Studies’ (PGDip)"
 valid_now = not_valid.encode('UTF-8', :invalid => :replace, :undef => :replace)
 #pgDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
-pgDiplomas = ['PGDip', 'Diploma','(Dip', 'Dip', 'Diploma (Dip)']
+pgDiplomas = ['PGDip', 'Diploma','(Dip', 'Dip', 'Diploma (Dip)','(Dip']
 medievalDiplomas = ['Postgraduate Diploma in Medieval Studies (PGDip)']
-conservationDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
+#conservationDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
+conservationDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', valid_now] #this dealt with an encoding problem in certain records
 dipHEs = ['Diploma of Higher Education (DipHE)']
 cpds = ['Continuing Professional Development (CPD)']
 pgcerts = ['Postgraduate Certificate (PgCert)']
@@ -328,7 +395,9 @@ type_array.each do |t,|	    #loop1
 		elsif envMasters.include? type_to_test
 		 qualification_name_preflabels.push("Master of Environmental Science (MEnv)")
 		elsif lawMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Laws (LLM)")		
+		 qualification_name_preflabels.push("Master of Laws (LLM)")
+		elsif nursingwMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Nursing (MNursing)")
 		elsif conservationDiplomas.include? type_to_test
 		 qualification_name_preflabels.push("Postgraduate Diploma in Conservation Studies (PGDip)")
 		elsif medievalDiplomas.include? type_to_test
