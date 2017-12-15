@@ -396,7 +396,7 @@ type_array.each do |t,|	    #loop1
 		 qualification_name_preflabels.push("Master of Environmental Science (MEnv)")
 		elsif lawMasters.include? type_to_test
 		 qualification_name_preflabels.push("Master of Laws (LLM)")
-		elsif nursingwMasters.include? type_to_test
+		elsif nursingMasters.include? type_to_test
 		 qualification_name_preflabels.push("Master of Nursing (MNursing)")
 		elsif conservationDiplomas.include? type_to_test
 		 qualification_name_preflabels.push("Postgraduate Diploma in Conservation Studies (PGDip)")
