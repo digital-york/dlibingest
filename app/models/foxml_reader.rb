@@ -683,7 +683,8 @@ puts "migrating a thesis with content url"
 				addit_file_loc = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/foxml:contentLocation/@REF",ns).to_s
 				addit_file_loc = addit_file_loc.sub 'http://local.fedora.server', content_server_url
 				fileset = Object::FileSet.new
-				fileset.filetype = 'externalurl'
+				#fileset.filetype = 'externalurl'
+				fileset.filetype = 'managed'   #ie a file streamed from apache
 				fileset.external_file_url = addit_file_loc
 				fileset.title = [idname]
 				# may have a label - needed for display-  that is different to the datastream title
@@ -713,7 +714,8 @@ puts "migrating a thesis with content url"
 				addit_file_loc = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/foxml:contentLocation/@REF",ns).to_s
 				addit_file_loc = addit_file_loc.sub 'http://local.fedora.server', content_server_url
 				fileset = Object::FileSet.new
-				fileset.filetype = 'externalurl'
+				#fileset.filetype = 'externalurl'
+				fileset.filetype = 'managed'
 				fileset.external_file_url = addit_file_loc
 				fileset.title = [idname]
 				# may have a label - needed for display-  that is different to the datastream title
@@ -925,7 +927,7 @@ end
 	if pdf_loc.length >0
 		begin
 			# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
-			mfset.filetype = 'externalurl'
+			mfset.filetype = 'managed'
 			mfset.title = ["THESIS_MAIN"]	#needs to be same label as content file in foxml 
 			mfset.label = externalpdflabel
 			# add the external content URL

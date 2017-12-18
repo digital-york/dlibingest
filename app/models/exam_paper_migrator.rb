@@ -592,7 +592,8 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 			addit_file_loc = doc.xpath("//foxml:datastream[@ID='#{idname}']/foxml:datastreamVersion[@ID='#{current_version_name}']/foxml:contentLocation/@REF",ns).to_s
 			addit_file_loc = addit_file_loc.sub 'http://local.fedora.server', content_server_url
 			fileset = Object::FileSet.new
-			fileset.filetype = 'externalurl'
+			#fileset.filetype = 'externalurl'
+			fileset.filetype = 'managed' #ie streamed from apache
 			fileset.external_file_url = addit_file_loc
 			fileset.title = [idname]
 			# may have a label - needed for display-  that is different to the datastream title
@@ -725,14 +726,14 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 			exam.qualification_name_resource_ids+=[qname_id]
 	end	
 	
-	# qualification levels (yml file). multiples possible? allow for this case - may be some common modules	
+	# qualification levels (yml file). 
 	typesToParse.each do |t|	 
 	type_to_test = t.to_s
 	#qual_levels = common.get_qualification_level_term(type_to_test) 
 	qual_levels = []
 	levels = common.get_qualification_level_term(type_to_test)#returned as an array although in most cases there is just 1 or 0
 	levels.each do |level|
-		if !qual_levels.include? level
+		if !qual_levels.include? level #avoid duplication
 			qual_levels.push(level)
 		end	
 	end
@@ -843,7 +844,8 @@ end
 	if pdf_loc.length >0
 		begin
 			# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
-			mfset.filetype = 'externalurl'
+			#mfset.filetype = 'externalurl'
+			mfset.filetype = 'managed' #ie streamed from apache
 			mfset.title = ["EXAM_PAPER"]	#needs to be same label as content file in foxml 
 			mfset.label = externalpdflabel
 			# add the external content URL

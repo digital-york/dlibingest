@@ -405,10 +405,11 @@ puts "migrating a ug_paper with content url"
 	end
 	
 	
-	# I dont think date_of_award is neccesarily correct the date presumably applies to the essay or project submission date so use vanilla data
+	# use date_of_award for UG papers - metadata team have confirmed
 	paper_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s	
 	if paper_date.length > 0
-		ug_paper.date = [paper_date] 
+		#ug_paper.date = [paper_date] 
+		ug_paper.date_of_award = paper_date
 	end
 	# advisor 0... 1 so check if present
 	paper_advisor = []
@@ -487,22 +488,10 @@ puts "migrating a ug_paper with content url"
 			puts "no qualification nameid found"
 		end
 	end	
-	# qualification levels (yml file). this wont realy work as mapped for the other files, but can modify here by searching for anything in types including the term indicating a batchelors
+	# qualification levels (yml file). this wont really work as mapped for the other files, but can modify here by searching for anything in types including the term indicating a batchelors
 	#degree then forcing it. may also need to try for other things
 	typesToParse.each do |t|	
 		type_to_test = t.to_s
-#superceded - will now extrapolate from qualification name as well as level
-=begin
-		if type_to_test.downcase.include? "bachelor" or type_to_test.downcase.include? "batchelor" or type_to_test.downcase.include? "ba" or type_to_test.downcase.include? "bsc" or type_to_test.downcase.include? "bed"
-			degree_levels = common.get_qualification_level_term("Bachelors")
-		else
-			degree_levels = common.get_qualification_level_term(type_to_test)
-		end
-		degree_levels.each do |degree_level|
-			ug_paper.qualification_level += [degree_level]
-		end	
-=end
-		
 		qual_levels = []
 		levels = common.get_qualification_level_term(type_to_test)
 		levels.each do |level|
@@ -591,7 +580,8 @@ puts "migrating a ug_paper with content url"
 		puts "got the user"
 		begin
 			# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
-			mfset.filetype = 'externalurl'
+			#mfset.filetype = 'externalurl'
+			mfset.filetype = 'managed'
 			# make this the same as the label
 			mfset.title = [externalpdflabel]	#needs to be same label as content file label in foxml 
 			mfset.label = externalpdflabel
