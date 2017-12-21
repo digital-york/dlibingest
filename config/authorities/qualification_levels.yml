@@ -11,3 +11,12 @@ terms:
     - id: Bachelors (Undergraduate)
       term: Bachelors (Undergraduate)
       active: true
+    - id: Diplomas (other)
+      term: Diplomas (other)
+      active: true
+    - id: Foundation
+      term: Foundation
+      active: true
+    - id: CEFR Module
+      term: CEFR Module
+      active: true

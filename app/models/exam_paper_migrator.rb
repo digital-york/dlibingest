@@ -718,14 +718,23 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	# qualification names (object)
 	#this now needs to handle multiple qualifications   #KALE  TODO
 	#however it is also possible that there wil not be a qualification name given
-	qualification_name_preflabels = common.get_qualification_name_preflabel(typesToParse)
-	
+	qualification_name_preflabels = common.get_qualification_name_preflabel(typesToParse)	
 	 qualification_name_preflabels.each do |q|
-
 		qname_id = common.get_resource_id('qualification_name',q.to_s)
 			exam.qualification_name_resource_ids+=[qname_id]
+			
 	end	
 	
+	#additional step for CEFR exams and foundation exams, add full name listing to descriptions
+	typesToParse.each do |t|
+	t = t.to_s
+	td = t.downcase
+		if td.include? "cefr"
+			exam.description += [td]
+		elsif td.include? "foundation"
+			exam.description += [td] 
+		end
+	end
 	# qualification levels (yml file). 
 	typesToParse.each do |t|	 
 	type_to_test = t.to_s

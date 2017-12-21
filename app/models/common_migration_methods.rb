@@ -29,12 +29,11 @@ masters = ['masters','(ma)','(msc)','(mres)','(mphil)','(meng)','(mphys)','(mche
 #bachelors = ['bachelors','bachelor','batchelors', 'batchelor','bsc','ba','bphil','beng','llb']
 bachelors = ['bachelor', 'batchelor','(bsc)','(ba)','(bphil)','(beng)','(llb)']
 diplomas = ['diploma','(dip', '(dip', 'diploma (dip)','(pgdip)']
-lower_diplomas = ['diphe'] #will have to cross check against this as some diplomas are post grad, some lower level
+lower_diplomas = ['diphe'] 
 doctoral = ['(phd)','doctor of philosophy (phd)','(scd)']
-#prepare this for when we get the agreed mapping - certain terms are obviously similar
-cefr = ['cefr'] #I reckon all the stuff including CEFR will be the same
-foundation = ['foundation'] #I reckon all the stuff including foundation will be the same. quite a few of these, across a few disciplines eg electronics, no obvious level
-part_11_exam = ['part 11a examination', 'Part 11b examination']#just a few, all dept of electronics.
+cefr = ['cefr'] 
+foundation = ['foundation']
+
 
 standardterms = []
 
@@ -64,6 +63,13 @@ diplomas.each do |d|
 		end	
 	end
 end
+lower_diplomas.each do |ld|
+	if searchterm.include? ld
+		if !standardterms.include? 'Diplomas (other)'
+			standardterms.push('Diplomas (other)')
+		end	
+	end
+end
 doctoral.each do |dr|
 	if searchterm.include? dr
 		#standardterms.push('Doctoral (Postgraduate)')
@@ -74,19 +80,19 @@ doctoral.each do |dr|
 end
 cefr.each do |c|
 	if searchterm.include? c
-		puts "standard term for "+ searchterm + "not yet defined"
+		if !standardterms.include? 'CEFR Module'
+			standardterms.push('CEFR Module')
+		end	
 	end
 end
 foundation.each do |f|
 	if searchterm.include? f
-		puts "standard term for "+ searchterm + "not yet defined"
+		if !standardterms.include? 'Foundation'
+			standardterms.push('Foundation')
+		end	
 	end
 end
-part_11_exam.each do |p|
-	if searchterm.include? p
-		puts "standard term for "+ searchterm + "not yet defined"
-	end
-end
+
 
 #standardterm="unfound"
 =begin
@@ -302,34 +308,68 @@ end
 # its a separate method as multiple variants map to the same preflabel/object. it really can only have one return - anything else would be nonsense. its going to be quite complex as some cross checking accross the various types may be  needed
 # type_array will be an array consisting of all the types for an object!
 def get_qualification_name_preflabel(type_array)
+
 #how to handle? there may be multiple qualification names
 #have updated the unqueried qualifications, need to do the others. need to update qual authorities and also to update the mappings for the postgrad diplomas
 
 
 #Arrays of qualification name variants
-#grabbed nursing ma name from https://www.york.ac.uk/healthsciences/study/
-#Bachelor of Arts (MA) is a genuine variant that I assume to be a mistake (query sent to Ilka)
-artBachelors = ['Batchelor of Arts (BA)', '"Bachelor of Arts (BA),"', 'BA', 'Bachelor of Arts (BA)','Bachelor of Art (BA)', 'Bachelor of Arts', 'Bachelor of Arts (MA)']
-artsByResearch = ['Master of Arts by research (MRes)', '"Master of Arts, by research (MRes)"' ]
-scienceByResearch = ['Master of Science by research (MRes)', '"Master of Science, by research (MRes)"' ]
-#Bachelor of Science (MSc) is a genuine variant that I assume to be a mistake, as is Bachelor of Science (BA)
-scienceBachelors = ['Batchelor of science (BSc)', 'Bachelor of Science (BSc)', '"Bachelor of Science (BSc)"', 'BSc', 'Bachelor of Science (BA)','Bachelor of Science (BSc )','Bachelor of Science', 'Bachelor of Science (Bsc)','Bachelor of Science (MSc)']
-philosophyBachelors = ['Bachelor of Philosophy (BPhil)', 'BPhil']
-engineeringBachelors = ['Bachelor of Engineering (BEng)', 'Bachelor of Engineering']
-lawBachelors = ['Bachelor of Laws (LLB)']
-
-mathMasters = ['Master of Mathematics (MMath)','Master of Mathematics (MMAth)']
-chemistryMasters = ['Master of Chemistry (MChem)']
-scienceMasters = ['Master of Science (MSc.)', '"Master of Science (MSc),"',"'Master of Science (MSc)",'Master of Science (MSc)','MSc', 'Master of Science']
-physicsMasters = ['Master of Physics (MPhys)']
+#doctorates
+lettersDoctorates = ['Doctor of Letters (DLitt)','Doctor of Letters','DLitt']
+musicDoctorates = ['Doctor of Music (DMus)','Doctor of Music','DMus']
+scienceDoctorates = ['Doctor of Science (ScD)','Doctor of Science','ScD']
+engineeringDoctorates = ['Doctor of Engineering (EngD)','Doctor of Engineering','EngD']
+medicalDoctoratesbyPubs = ['Doctor of Medicine by publications (MD)','Doctor of Medicine by publications']
+medicalDoctorates = ['Doctor of Medicine (MD)','MD']
+philosophyDoctoratesbyPubs = ['Doctor of Philosophy by publications (PhD)','Doctor of Philosophy by publications']
+philosophyDoctorates = ['Doctor of Philosophy (PhD)','PhD'] 
+#masters
+philosophyMastersbyPubs = ['Master of Philosophy by publications (MPhil)','Master of Philosophy by publications']
 philosophyMasters = ['Master of Philosophy (MPhil)','MPhil']
-nursingMasters = ['Master of Nursing','Master of Nursing (MNursing)','(MNursing)' ]
+artMastersbyResearch = ['Master of Arts (by research) (MA (by research))','Master of Arts (by research)','(MA (by research)']
 artMasters = ['Master of Arts (MA)', 'Master of Arts', 'Master of Art (MA)', 'MA (Master of Arts)','Masters of Arts (MA)', 'MA']
-lawMasters = ['Master of Laws (LLM)']
-engineeringMasters = ['Master of Engineering (BEng)', 'Master of Engineering (MEng']
-envMasters = ['MEnv']
-publicAdminMasters = ['Master of Public Administration (MPA)']
-researchMasters = ['Master of Research (Mres)','Master of Research (MRes)','Mres','MRes']#this is the only problematic one
+scienceMastersbyResearch = ['Master of Science (by research) (MSc (by research))','Master of Science (by research)']
+scienceMastersbyThesis = ['Master of Science (by thesis) (MSc (by thesis))','Master of Science (by thesis)','MSc (by thesis)']
+scienceMasters = ['Master of Science (MSc.)', '"Master of Science (MSc),"',"'Master of Science (MSc)",'Master of Science (MSc)','MSc', 'Master of Science']
+lawsMasters = ['Master of Laws (LLM)','Master of Laws','LLM']
+lawMasters = ['Master of Law (MLaw)','Master of Law','MLaw'] #not an error!
+publicAdminMasters = ['Master of Public Administration (MPA)','Master of Public Administration','MPA']
+biologyMasters = ['Master of Biology (MBiol)','Master of Biology','MBiol']
+biochemMasters = ['Master of Biochemistry (MBiochem)','Master of Biochemistry','MBiochem']
+biomedMasters = ['Master of Biomedical Science (MBiomedsci)','Master of Biomedical Science','MBiomedsci']
+chemistryMasters = ['Master of Chemistry (MChem)','Master of Chemistry','MChem']
+engineeringMasters = ['Master of Engineering (MEng)', 'Master of Engineering (MEng','Master of Engineering','MEng']
+mathMasters = ['Master of Mathematics (MMath)','Master of Mathematics (MMAth)','Master of Mathematics','MMath']
+physicsMasters = ['Master of Physics (MPhys)','Master of Physics','MPhys']
+psychMasters = ['Master of Psychology (MPsych)','Master of Psychology','MPsych']
+envMasters = ['Master of Environment (MEnv)','Master of Environment','MEnv']
+nursingMasters = ['Master of Nursing','Master of Nursing (MNursing)','(MNursing)' ]
+publicHealthMasters = ['Master of Public Health (MPH)','Master of Public Health','MPH']
+socialworkMasters = ['Master of Social Work and Social Science (MSWSS)','Master of Social Work and Social Science','(MSWSS)']
+researchMasters = ['Master of Research (Mres)','Master of Research (MRes)','Mres','MRes']
+#the variant single quote character in  Conservation Studies is invalid and causes invalid multibyte char (UTF-8) error so  handled this in nokogiri open document call. however we also need to ensure the resulting string is included in the lookup array so the match will still be found. this means recreating it and inserting it into the array
+
+
+#bachelors
+
+medicineSurgeryBachelors = ['Bachelor of Medicine, Bachelor of Surgery (MBBS)','Bachelor of Medicine, Bachelor of Surgery','MBBS']
+medsciBachelors = ['Bachelor of Medical Science (BMedSci)','Bachelor of Medical Science','BMedSci']
+scienceBachelors = ['Batchelor of science (BSc)', 'Bachelor of Science (BSc)', '"Bachelor of Science (BSc)"', 'BSc', 'Bachelor of Science (BA)','Bachelor of Science (BSc )','Bachelor of Science', 'Bachelor of Science (Bsc)','Bachelor of Science (MSc)']
+artBachelors = ['Batchelor of Arts (BA)', '"Bachelor of Arts (BA),"', 'BA', 'Bachelor of Arts (BA)','Bachelor of Art (BA)', 'Bachelor of Arts', 'Bachelor of Arts (MA)']
+philosophyBachelors = ['Bachelor of Philosophy (BPhil)','Bachelor of Philosophy' ,'BPhil']
+engineeringBachelors = ['Bachelor of Engineering (BEng)', 'Bachelor of Engineering','BEng']
+lawBachelors = ['Bachelor of Laws (LLB)','Bachelor of Laws','LLB']
+
+#others
+foundationDegrees = ['Foundation Degree (FD)','Foundation Degree','FD']
+certHEs = ['Certificate of Higher Education (CertHE)','Certificate of Higher Education','CertHE']
+dipHEs = ['Diploma of Higher Education (DipHE)','Diploma of Higher Education','DipHE']
+gradCerts = ['Graduate Certificate (GradCert)','Graduate Certificate','GradCert']
+gradDiplomas = ['Graduate Diploma (GradDip)','Graduate Diploma','GradDip']
+uniCerts = ['University Certificate']
+foundationCerts = ['Foundation Certificate (F Cert)','Foundation Certificate','F Cert']
+foundation = ['Foundation Year', 'Foundation Year Stage 0'] #not neccesarily the same as above
+preMasters = ['Pre-Masters']
 #the variant single quote character in  Conservation Studies is invalid and causes invalid multibyte char (UTF-8) error so  handled this in nokogiri open document call. however we also need to ensure the resulting string is included in the lookup array so the match will still be found. this means recreating it and inserting it into the array
 not_valid = "Postgraduate Diploma in ‘Conservation Studies’ (PGDip)"
 valid_now = not_valid.encode('UTF-8', :invalid => :replace, :undef => :replace)
@@ -338,66 +378,115 @@ pgDiplomas = ['PGDip', 'Diploma','(Dip', 'Dip', 'Diploma (Dip)','(Dip']
 medievalDiplomas = ['Postgraduate Diploma in Medieval Studies (PGDip)']
 #conservationDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', 'Postgraduate Diploma in Medieval Studies (PGDip)','PGDip', 'Diploma','(Dip', '(Dip', 'Diploma (Dip)', valid_now] 
 conservationDiplomas = ['Diploma in Conservation Studies', 'Postgraduate Diploma in Conservation Studies ( PGDip)','Postgraduate Diploma in Conservation Studies(PGDip)', valid_now] #this dealt with an encoding problem in certain records
-dipHEs = ['Diploma of Higher Education (DipHE)']
-cpds = ['Continuing Professional Development (CPD)']
-pgcerts = ['Postgraduate Certificate (PgCert)']
+cpds = ['Continuing Professional Development (CPD)','Continuing Professional Development','CPD']
 pgces = ['Postgraduate Certificate in Education (PGCE)']
-philosophyDoctorates = ['Doctor of Philosophy (PhD)']
 pgMedicalCerts = ['Postgraduate Certificate in Medical Education (PGCert)']
-scienceDoctorates = ['Doctor of Science (ScD)']
+pgcerts = ['Postgraduate Certificate (PgCert)']
+cefrs = ['A1 of the CEFR', 'A1 of CEFR','A1/A2 of the CEFR','B2 of the CEFR','B2/C1 of the CEFR','C1/C2 of CEFR','C1/C2 of the CEFR']
 
-#prepare this for when we get the agreed mapping - certain terms are obviously similar
-cefrA1 = ['A1 of the CEFR', 'A1 of CEFR']
-cefrA1A2 = ['A1/A2 of the CEFR'] 
-cefrB2 = ['B2 of the CEFR']
-cefrB2C1 = ['B2/C1 of the CEFR'] 
-cefrC1C2 = ['C1/C2 of CEFR','C1/C2 of the CEFR'] 
-foundation = ['Foundation Year', 'Foundation Year Stage 0'] #I reckon all the stuff including foundation will be the same. quite a few of these, across a few disciplines eg electronics, no obvious level
-part_11A_exam = ['Part IIA Examination']
-part_11B_exam = [ 'Part IIB Examination']
-
+#all listed now need to do processing. add elsifs, but also CEFR and Foundations need stuff ading to as description, this will need doing in the specific migrator
 
 qualification_name_preflabels = [] 
 
 type_array.each do |t,|	    #loop1
 	type_to_test = t.to_s
+	puts "search  term for qualification_name_preflabel was " + type_to_test
 	#outer loop tests for creation of qualification_name_preflabel			 
-		if artBachelors.include? type_to_test #loop2a
+		if lettersDoctorates.include? type_to_test #loop2
+		 qualification_name_preflabels.push("Doctor of Letters (DLitt)")
+		elsif musicDoctorates.include? type_to_test 
+		 qualification_name_preflabels.push("Doctor of Music (DMus)")
+		elsif scienceDoctorates.include? type_to_test
+		 qualification_name_preflabels.push("Doctor of Science (ScD)")
+		elsif engineeringDoctorates.include? type_to_test
+		 qualification_name_preflabels.push("Doctor of Engineering (EngD)")
+		elsif medicalDoctoratesbyPubs.include? type_to_test
+		 qualification_name_preflabels.push("Doctor of Medicine by publications (MD)")
+		elsif medicalDoctorates.include? type_to_test
+		 qualification_name_preflabels.push("Doctor of Medicine (MD)")
+		elsif philosophyDoctoratesbyPubs.include? type_to_test
+		 qualification_name_preflabels.push("Doctor of Philosophy by publications (PhD)")
+		elsif philosophyDoctorates.include? type_to_test
+		 qualification_name_preflabels.push("Doctor of Philosophy (PhD)")
+		
+		elsif philosophyMastersbyPubs.include? type_to_test
+		 qualification_name_preflabels.push("Master of Philosophy by publications (MPhil)") 
+		elsif philosophyMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Philosophy (MPhil)")
+		elsif artMastersbyResearch.include? type_to_test
+		 qualification_name_preflabels.push("Master of Arts (by research) (MA (by research))")		
+		elsif artMasters.include? type_to_test 
+		 qualification_name_preflabels.push("Master of Arts (MA)")
+		elsif scienceMastersbyResearch.include? type_to_test
+		 qualification_name_preflabels.push("Master of Science (by research) (MSc (by research))")
+		elsif scienceMastersbyThesis.include? type_to_test
+		 qualification_name_preflabels.push("Master of Science (by thesis) (MSc (by thesis))")
+		elsif scienceMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Science (MSc)")		
+		elsif lawsMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Laws (LLM)") 
+		elsif lawMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Law (MLaw)")
+		elsif publicAdminMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Public Administration (MPA)")
+		elsif biologyMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Biology (MBiol)")
+		elsif biochemMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Biochemistry (MBiochem)")
+		elsif biomedMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Biomedical Science (MBiomedsci)")
+		elsif chemistryMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Chemistry (MChem)")
+		elsif engineeringMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Engineering (MEng)")
+		elsif mathMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Mathematics (MMath)")
+		elsif physicsMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Physics (MPhys)")
+		elsif psychMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Psychology (MPsych)")
+		elsif envMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Environment (MEnv)")
+		elsif nursingMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Nursing (MNursing)")
+		elsif publicHealthMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Public Health (MPH)")
+		elsif socialworkMasters.include? type_to_test
+		 qualification_name_preflabels.push("Master of Social Work and Social Science (MSWSS)")
+		
+		elsif medicineSurgeryBachelors.include? type_to_test 
+		 qualification_name_preflabels.push("Bachelor of Medicine, Bachelor of Surgery (MBBS)")
+		elsif medsciBachelors.include? type_to_test 
+		 qualification_name_preflabels.push("Bachelor of Medical Science (BMedSci)")
+		elsif scienceBachelors.include? type_to_test
+		 qualification_name_preflabels.push("Bachelor of Science (BSc)")
+		elsif artBachelors.include? type_to_test 
 		 qualification_name_preflabels.push("Bachelor of Arts (BA)")
 		elsif philosophyBachelors.include? type_to_test
-		 qualification_name_preflabels.push("Bachelor of Philosophy (BPhil)")
-		elsif scienceBachelors.include? type_to_test
-		 qualification_name_preflabels.push("Bachelor of Science (BSc)")	
+		 qualification_name_preflabels.push("Bachelor of Philosophy (BPhil)")		
 		elsif engineeringBachelors.include? type_to_test
 		 qualification_name_preflabels.push("Bachelor of Engineering (BEng)")
         elsif lawBachelors.include? type_to_test
 		 qualification_name_preflabels.push("Bachelor of Laws (LLB)")
-		elsif artMasters.include? type_to_test 
-		 qualification_name_preflabels.push("Master of Arts (MA)")
-		elsif artsByResearch.include? type_to_test
-		 qualification_name_preflabels.push("Master of Arts by Research (MRes)")
-		elsif philosophyMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Philosophy (MPhil)")
-		elsif scienceMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Science (MSc)")
-		elsif scienceByResearch.include? type_to_test
-		 qualification_name_preflabels.push("Master of Science by Research (MRes)")
-		elsif engineeringMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Engineering (MEng)")
-		elsif physicsMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Physics (MPhys)")
-		elsif publicAdminMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Public Administration (MPA)")
-		elsif chemistryMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Chemistry (MChem)")
-	    elsif mathMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Mathematics (MMath)")  
-		elsif envMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Environmental Science (MEnv)")
-		elsif lawMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Laws (LLM)")
-		elsif nursingMasters.include? type_to_test
-		 qualification_name_preflabels.push("Master of Nursing (MNursing)")
+		 
+		elsif foundationDegrees.include? type_to_test
+		 qualification_name_preflabels.push("Foundation Degree (FD)")
+		elsif certHEs.include? type_to_test
+		 qualification_name_preflabels.push("Certificate of Higher Education (CertHE)")
+		elsif dipHEs.include? type_to_test
+		 qualification_name_preflabels.push("Diploma of Higher Education (DipHE)")
+		elsif gradCerts.include? type_to_test
+		 qualification_name_preflabels.push("Graduate Certificate (GradCert)")
+		elsif gradDiplomas.include? type_to_test
+		 qualification_name_preflabels.push("Graduate Diploma (GradDip)")
+		elsif uniCerts.include? type_to_test
+		 qualification_name_preflabels.push("University Certificate")
+		elsif foundationCerts.include? type_to_test
+		 qualification_name_preflabels.push("Foundation Certificate (F Cert)")
+		elsif foundation.include? type_to_test
+		 qualification_name_preflabels.push("Foundation")
+		elsif preMasters.include? type_to_test
+		 qualification_name_preflabels.push("Pre-Masters")
 		elsif conservationDiplomas.include? type_to_test
 		 qualification_name_preflabels.push("Postgraduate Diploma in Conservation Studies (PGDip)")
 		elsif medievalDiplomas.include? type_to_test
@@ -409,42 +498,22 @@ type_array.each do |t,|	    #loop1
 		 qualification_name_preflabels.push("Postgraduate Certificate in Education (PGCE)")
 		elsif pgMedicalCerts.include? type_to_test
 		 qualification_name_preflabels.push("Postgraduate Certificate in Medical Education (PGCert)")
-		elsif philosophyDoctorates.include? type_to_test
-		 qualification_name_preflabels.push("Doctor of Philosophy (PhD)")
-		elsif scienceDoctorates.include? type_to_test
-		 qualification_name_preflabels.push("Doctor of Science (ScD)")
 		elsif cpds.include? type_to_test
-		 qualification_name_preflabels.push("Continuing Professional Development (CPD)")
-		elsif dipHEs.include? type_to_test
-		 qualification_name_preflabels.push("Diploma of Higher Education (DipHE)")
+		 qualification_name_preflabels.push("Continuing Professional Development (CPD)")		
 		elsif pgcerts.include? type_to_test
 		 qualification_name_preflabels.push("Postgraduate Certificate (PgCert)")
 		#preparation for  preflabel assignment when defined
 		#order importand, look for most precise first
-		elsif cefrA1A2.include? type_to_test
-		 puts "preflabel not yet defined for cefrA1A2"
-		elsif cefrA1.include? type_to_test
-		 puts "preflabel not yet defined for cefrA1"
-		elsif cefrB2C1.include? type_to_test
-		 puts "preflabel not yet defined for cefrB2C1"
-		elsif cefrC1C2.include? type_to_test
-		 puts "preflabel not yet defined for cefrC1C2"
-		elsif cefrB2.include? type_to_test
-		 puts "preflabel not yet defined for cefrB2"
-		elsif foundation.include? type_to_test
-		 puts "preflabel not yet defined for foundation"
-		elsif part_11A_exam.include? type_to_test
-		 puts "preflabel not yet defined for part_11A_exam"
-		elsif part_11B_exam.include? type_to_test
-		 puts "preflabel not yet defined for part_11B_exam"
-	end #end loop1
+		elsif cefrs.include? type_to_test
+		 qualification_name_preflabels.push("CEFR Module")		
+	end #end 2
 		
 	#not found? check for plain research masters without arts or science specified (order of testing here is crucial) (required for theses)
-	      if qualification_name_preflabels.length <= 0  #loop2
+	      if qualification_name_preflabels.length <= 0  #loop2a
 			if researchMasters.include? type_to_test #loop 3 not done with main list as "MRes" may be listed as separate type as well as a more specific type
 				qualification_name_preflabels.push("Master of Research (MRes)")
 			end#end loop3
-		end   #'end loop 2
+		end   #'end loop 2a
 	end #end loop1
 	return qualification_name_preflabels
 end  #end get_qualification_name_preflabel 
