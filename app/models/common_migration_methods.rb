@@ -382,7 +382,7 @@ cpds = ['Continuing Professional Development (CPD)','Continuing Professional Dev
 pgces = ['Postgraduate Certificate in Education (PGCE)']
 pgMedicalCerts = ['Postgraduate Certificate in Medical Education (PGCert)']
 pgcerts = ['Postgraduate Certificate (PgCert)']
-cefrs = ['A1 of the CEFR', 'A1 of CEFR','A1/A2 of the CEFR','B2 of the CEFR','B2/C1 of the CEFR','C1/C2 of CEFR','C1/C2 of the CEFR']
+cefrs = ['A1 of the CEFR', 'A1 of CEFR','A1/A2 of the CEFR','A2 of the CEFR','A2/B1 of the CEFR','B1/B2 of the CEFR','B2 of the CEFR','B2/C1 of the CEFR','C1 of the CEFR','C2 of the CEFR','C1/C2 of CEFR','C1/C2 of the CEFR']
 
 #all listed now need to do processing. add elsifs, but also CEFR and Foundations need stuff ading to as description, this will need doing in the specific migrator
 
