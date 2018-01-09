@@ -1,11 +1,10 @@
 # encoding: UTF-8
-#require 'nokogiri'
 require 'nokogiri'
 require 'open-uri'
 require 'dlibhydra'
 require 'csv'
 
-# methods to create the  collection structure and do migrations
+# some methods to create the  collection structure and do migrations
 class UndergraduatePaperMigrator
 include ::Dlibhydra
 include ::CurationConcerns
