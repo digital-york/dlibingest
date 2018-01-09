@@ -1,4 +1,5 @@
 # encoding: UTF-8
+#require 'nokogiri'
 require 'nokogiri'
 require 'open-uri'
 require 'dlibhydra'
@@ -203,10 +204,6 @@ end  #end of populate_collection method
 
 
 
-
-
-
-
 # devserver rake migration_tasks:migrate_undergrad_paper_batch[/home/dlib/testfiles/foxml/UGpapers/bulktest,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/ug_col_mapping.txt]
 def migrate_lots_of_ug_papers(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path, user)
 puts "doing a bulk migration from " + path_to_fox
@@ -254,7 +251,7 @@ end # end migrate_lots_of_theses_with_content_url
 
 #
 # my inprogress method with most of the content gone
-# signature: # rake migration_tasks:migrate_undergrad_paper[/home/dlib/testfiles/foxml/mytest.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/ug_col_mapping.txt,ps552@york.ac.uk]
+# signature: # rake migration_tasks:migrate_undergrad_paper[/home/dlib/testfiles/foxml/UGpapers/york_933437.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/ug_col_mapping.txt,ps552@york.ac.uk]
 def migrate_undergraduate_paper(path, content_server_url, collection_mapping_doc_path, user) 
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
