@@ -556,7 +556,8 @@ listfile = File.open( "/home/dlib/lists/uniqueDSlists/"+ labellistfile, "a")
 	
 end
 
-#rake migration_tasks:list_datastream_labels,[/home/dlib/testfiles/foxml,labels_list.txt]
+#rake migration_tasks:list_datastream_labels[/home/dlib/testfiles/foxml,labels_list.txt]
+#if need to include quotesor other such characters use excapes within quoted text thus "LABEL=\"Metadata"\"
 def list_all_labels_in_set(foxmlpath,outputfilename)
 labelmap = []
 Dir.foreach(foxmlpath)do |item|
@@ -698,6 +699,7 @@ end #end method
 
 #suspect this wont work as would actually fail at an early stage in nokogiri when it first tries to open it
 # check coding valid - run against file list before migration. 
+#rake migration_tasks:list_invalid_utf8[/home/dlib/testfiles/foxml,invalid_utf8.txt]
 def check_encoding(foxmlpath,outputfilename)
 #test it against just the likely elements
 #dc:description, dc:title, dc:subject, dc:creator,  dc:abstract

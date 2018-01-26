@@ -203,7 +203,7 @@ end  #end of populate_collection method
 
 
 
-# devserver rake migration_tasks:migrate_undergrad_paper_batch[/home/dlib/testfiles/foxml/UGpapers/bulktest,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/ug_col_mapping.txt]
+# devserver rake migration_tasks:bulk_migrate_undergrad_papers[/home/dlib/testfiles/foxml/UGpapers/bulktest,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/ug_col_mapping.txt]
 def migrate_lots_of_ug_papers(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path, user)
 puts "doing a bulk migration from " + path_to_fox
 

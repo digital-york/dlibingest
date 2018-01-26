@@ -1,4 +1,5 @@
 # encoding: UTF-8
+#require 'nokogiri'
 require 'nokogiri'
 require 'open-uri'
 require 'dlibhydra'
@@ -24,10 +25,10 @@ end
 *format is: old pid of collection,title of collection,old parent_pid
 *col_mapping.txt is output by the script and is the permanent mapping file. format:
 originalpid, title, newid 
-so call is like rake migration_tasks:make_collection_structure[/home/dlib/mapping_files/,/home/dlib/testfiles/foxml/]
+so call is like rake migration_tasks:make_thesis_collection_structure[/home/dlib/mapping_files/,/home/dlib/testfiles/foxml/]
 =end
 
-def make_collection_structure(mapping_path, foxpath, user)
+def make_thesis_collection_structure(mapping_path, foxpath, user)
 puts "running make_collection_structure"
 mapping_file = mapping_path +"col_mapping.txt"
 # make the top Theses level first, with a CurationConcerns (not dlibhydra) model.
@@ -209,7 +210,7 @@ end  #end of populate_collection method
 
 # bundle exec rake migration_tasks:migrate_lots_of_theses[/vagrant/files_to_test/app3fox,/vagrant/files_to_test/col_mapping.txt
 # MEGASTACK rake migration_tasks:migrate_lots_of_theses[/home/ubuntu/testfiles/foxml,/home/ubuntu/testfiles/foxdone,/home/ubuntu/mapping_files/col_mapping.txt]
-# devserver rake migration_tasks:migrate_lots_of_theses[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
+# devserver rake migration_tasks:bulk_migrate_theses[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,/home/dlib/testfiles/content/,/home/dlib/mapping_files/col_mapping.txt]
 def migrate_lots_of_theses(path_to_fox, path_to_foxdone, contentpath, collection_mapping_doc_path, user)
 puts "doing a bulk migration"
 fname = "tally.txt"
@@ -430,7 +431,7 @@ puts "migrating a thesis using path " + path +" and  contentPath " + contentpath
 		end
 				
 		# department
-		dept_preflabels = get_department_preflabel(loc)		 
+		dept_preflabels = common.get_department_preflabel(loc)		 
 		if dept_preflabels.empty?
 			puts "no department found"
 		end

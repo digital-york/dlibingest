@@ -74,6 +74,13 @@ puts "Args were: #{args}"
 	b.delete_works(args[:deletelist],args[:worktype])
 end
 
+#change_fileset_filetype_attribute
+task :change_fileset_filetype_attribute, [:idlist]  => :environment do|t, args|
+puts "Args were: #{args}"
+	b = BatchEdit.new
+	b.change_fileset_filetype_attribute(args[:idlist])
+end
+
 
 
 end #end of tasks

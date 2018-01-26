@@ -1,5 +1,5 @@
 # encoding: UTF-8
-#require 'nokogiri'
+require 'nokogiri'
 require 'open-uri'
 require 'dlibhydra'
 require 'csv'
@@ -75,6 +75,24 @@ work_ids = IO.readlines(id_list_path)
 					end
 				end
 			end
+	end
+end
+
+# change the filetype attribute for thesis filesets
+#(do a previous solr search on filetype_tesim:"externalurl" with fl of id, then copy find and replace as needed to get the list)
+#rake batch_edit_tasks:change_fileset_filetype_attribute[/home/dlib/lists/uniqueDSlists/fileset_idsTEST.txt]
+def change_fileset_filetype_attribute(id_list_path)
+puts "id_list_path: " + id_list_path
+fileset_ids = IO.readlines(id_list_path)  
+	fileset_ids.each do |i|
+	i = i.strip #trailing white space, line ends etc will cause a faulty uri error	
+		fs = Object::FileSet.find(i)  
+		puts "got fileset for " + i
+			if fs.filetype == "externalurl"
+					fs.filetype = "managed"
+					fs.save!
+			end				
+			
 	end
 end
 

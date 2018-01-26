@@ -21,6 +21,12 @@ puts "rake task says hi"
 	e.say_hello
 end
 
+#calls a test method, definable in foxml_reader
+task :test_theses => :environment do
+	r = FoxmlReader.new
+	r.test
+end
+
 task :test_undergrads => :environment do
 puts "rake task says hi"
 	e = UndergraduatePaperMigrator.new
@@ -33,23 +39,17 @@ u = UndergraduatePaperMigrator.new
 u.migrate_undergraduate_paper(args[:path],args[:serverurl],args[:collection_mapping],args[:user])
 end
 
-task :migrate_undergrad_paper_batch, [:path_to_fox,:path_to_foxdone,:content_server_url,:collection_mapping,:user] => :environment do|t, args|
+task :bulk_migrate_undergrad_papers, [:path_to_fox,:path_to_foxdone,:content_server_url,:collection_mapping,:user] => :environment do|t, args|
 puts "doing it.Args were: #{args}"
 u = UndergraduatePaperMigrator.new
 u.migrate_lots_of_ug_papers(args[:path_to_fox],args[:path_to_foxdone],args[:content_server_url],args[:collection_mapping],args[:user])
 end
 
 
-#calls a test method, definable in foxml_reader
-task :test_theses => :environment do
-	r = FoxmlReader.new
-	r.test
-end
-
-task :make_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
+task :make_thesis_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
 puts "Args were: #{args}"
 	r = FoxmlReader.new
-	r.make_exam_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
+	r.make_thesis_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
 task :make_restricted_exam_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
@@ -72,20 +72,25 @@ puts "Args were: #{args}"
 	e.make_undergraduate_paper_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
-task :migrate_lots_of_theses_with_content_url, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc,:user] => :environment  do|t, args|
+task :bulk_migrate_undergrad_papers, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
-puts "need to do sommat here"
 r = FoxmlReader.new
 r.migrate_lots_of_theses_with_content_url(args[:dirpath],args[:donedirpath],args[:contentserverurl],args[:collection_mapping_doc],args[:user])
 end
 
-task :migrate_lots_of_exams, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc,:user] => :environment  do|t, args|
+task :bulk_migrate_theses, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc,:user] => :environment  do|t, args|
+puts "Args were: #{args}"
+r = FoxmlReader.new
+r.migrate_lots_of_theses_with_content_url(args[:dirpath],args[:donedirpath],args[:contentserverurl],args[:collection_mapping_doc],args[:user])
+end
+
+task :bulk_migrate_exams, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
 e = ExamPaperMigrator.new
 e.migrate_lots_of_exams(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc],args[:user])
 end
 
-task :migrate_lots_of_theses, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc,:user] => :environment  do|t, args|
+task :OLDmigrate_lots_of_theses, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
 puts "need to do sommat here"
 r = FoxmlReader.new

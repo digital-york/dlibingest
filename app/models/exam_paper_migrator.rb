@@ -2,6 +2,7 @@
 require 'nokogiri'
 require 'open-uri'
 require 'dlibhydra'
+require 'nokogiri'
 require 'csv'
 
 # methods to create the  collection structure and do Exam Paper migrations
@@ -448,7 +449,7 @@ end  #end of populate_collection method
 
 #start working thru this for exams :-)
 
-# MEGASTACK rake migration_tasks:migrate_lots_of_exams[/home/dlib/testfiles/foxml/test,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
+# rake migration_tasks:bulk_migrate_exams[/home/dlib/testfiles/foxml_EXAM_PAPERS_less_test,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
 # devserver rake migration_tasks:migrate_lots_of_exams[/home/dlib/testfiles/foxml,/home/dlib/testfiles/foxdone,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt]
 def migrate_lots_of_exams(path_to_fox, path_to_foxdone, content_server_url, collection_mapping_doc_path, user)
 puts "doing a bulk migration of exams"
@@ -473,17 +474,17 @@ Dir.foreach(path_to_fox)do |item|
 		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  # move files once migrated
 	elsif result == 1   # this may well not work, as it may stop part way through before it ever gets here. rescue block might help?
 		tallyfile.puts("FAILED TO INGEST "+ itempath)
-		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+		#sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 	elsif result == 2   # apparently some records may not have an actual exam paper of any id!
 		tallyfile.puts("ingested metadata but NO EXAM_PAPER IN "+ itempath)
-		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+		#sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  # move files once migrated
 	elsif result == 3   # couldnt identify parent collection in mappings
 		tallyfile.puts("FAILED TO INGEST " + itempath + " because couldnt identiy parent collection mapping")
-		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+		#sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 	elsif result == 4   # this may well not work, as it may stop part way through before it ever gets here. 
 		tallyfile.puts("FAILED TO INGEST RESOURCE DOCUMENT IN"+ itempath)
-		sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
+		#sleep 10 # wait 10 seconds to try to resolve 'exception rentered (fatal)' (possible threading?) problems
 	else
         tallyfile.puts(" didnt return expected value of 0 or 1 or 2")	
 	end
@@ -494,9 +495,8 @@ end # end migrate_lots_of_theses_with_content_url
 
 
 
-#version of migration that adds the content file url but does not ingest the content pdf into the thesis
-# on megastack: # rake migration_tasks:migrate_thesis_with_content_url[/home/ubuntu/testfiles/foxml/york_xxxxx.xml,/home/ubuntu/mapping_files/col_mapping.txt]
-# new signature: # rake migration_tasks:migrate_exam_paper[/home/dlib/testfiles/foxml_EXAM_PAPERS/test/york_exam.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt,ps552@york.ac.uk]
+# adds the content file url, not embedded content 
+# rake migration_tasks:migrate_exam_paper[/home/dlib/testfiles/foxml_EXAM_PAPERS/test/york_807440.xml,https://dlib.york.ac.uk,/home/dlib/mapping_files/exam_col_mapping.txt,ps552@york.ac.uk]
 def migrate_exam(path, content_server_url, collection_mapping_doc_path, user) 
 	result = 1 # default is fail
 	mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
@@ -566,7 +566,7 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	# CONTENT FILES
 	# this has local.fedora.host, which will be wrong. need to replace this with whereever they will be sitting 
 	# reads http://local.fedora.server/digilibImages/HOA/current/X/20150204/xforms_upload_whatever.tmp.pdf
-	# needs to read (for development purposes on real machine) http://yodlapp3.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
+	# needs to read (for development purposes on real machine) http://dlib.york.ac.uk/digilibImages/HOA/current/X/20150204/xforms_upload_4whatever.tmp.pdf
 	#and the content_server_url is set in the parameters :-)
 	if pdf_loc.length > 0
 		externalpdfurl = pdf_loc.sub 'http://local.fedora.server', content_server_url 
@@ -576,8 +576,8 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 		if label.length > 0
 			externalpdflabel = label #in all cases I can think of this will be the same as the default, but just to be sure
 		end
-		#these wont have the same name.need to search for them. ri search?
-		# hash for any additional files that may emerge. may not be any. leave in for present. needs to be done here rather than later to ensure we obtain overridden version of FileSet class rather than CC as local version not namespaced
+		#these wont have the same name.need to search for them. utilty scripts available
+		# hash for any additional files that may emerge. may not be any. needs to be done here rather than later to ensure we obtain overridden version of FileSet class rather than CC as local version not namespaced
 	end
     additional_filesets = {}
 	additional_file_set_number = 0
@@ -612,18 +612,10 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 		
 	# create a new exam_paper implementing the dlibhydra models
 	exam = Object::ExamPaper.new
-	# trying to set the state but this doesnt seem to be the way - the format  #<ActiveTriples::Resource:0x3fbe8df94fa8(#<ActiveTriples::Resource:0x007f7d1bf29f50>)> obviuously referenes something in a dunamic away
-	# which is different for each object
-=begin
-	existing_state = "didnt find an active state" 
-	existing_state = doc.xpath("//foxml:objectProperties/foxml:property[@NAME='fedora-system:def/model#state']/@VALUE",ns)
-	if existing_state.to_s == "Active"
-	#pasted in from gui produced Thesis! not sure if required
-	 thesis.state = "http://fedora.info/definitions/1/0/access/ObjState#active"  
-	end
-=end
 	
 	# once depositor and permissions defined, object can be saved at any time
+	#there will be different permissions according to whether these are from the restricted exams
+	#or the general york availability exams. This is determined from the ACL datastream.
 	if yorkaccess == 'DENY'
 	exam.permissions = [Hydra::AccessControls::Permission.new({:name=> "admin", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 	else
@@ -644,10 +636,11 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	former_id = doc.xpath("//foxml:digitalObject/@PID",ns).to_s   
 	exam.former_id = [former_id]
 	# could really do with a file to list what its starting work on as a cleanup tool. doesnt matter if it doesnt get this far as there wont be anything to clean up
-	tname = "exam_tracking.txt"
+	stringtime = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
+	tname = "exam_tracking" + stringtime + ".txt"
 	trackingfile = File.open(tname, "a")
-	trackingfile.puts( "am now working on " + former_id + " title:" + title )
-	trackingfile.close	
+	trackingfile.puts( "am now working on " + former_id + " title:" + title + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+	#trackingfile.close	
 	#creator
 	#this needs to consult the authority list as it will be a department
 	 creator = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
@@ -667,13 +660,20 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 			creator.include? "Making Faces" 
 			creator = "history of art" #just keep it to the minimal searchterm
 		end
+		
+		
 		dept_preflabels = common.get_department_preflabel(creator)
 		if dept_preflabels.empty?
 			puts "no department found"
-		end
+		end		
+		#open tracking file again
+		trackingfile = File.open(tname, "a")
 		dept_preflabels.each do | preflabel|
+		    
 			id = common.get_resource_id('department', preflabel)
+			trackingfile.puts("got fedora id for department name"+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))			
 			exam.creator_resource_ids = [id]	 
+			
 		end
 	 end
 	
@@ -692,15 +692,6 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	
 	
 	
-	#FORMAT???? not in existingExamPaper model but listed as concept/lookup in data model. but actual concepts dont seem to be ready yet - cant see any csv or yml file present to generate these from or code in tasks to create objects so think have just been listed in models  as "like to haves"
-	#also looks as if ExamPaper model needs an attribute adding for dc:format (and presumably the solr indexing model too, plus html.erb, forms  etc
-	#format = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:format/text()",ns).to_s
-	#add to ExamPaper when attribute has been included
-	#confirmed with Ilka the format is no longer required to be migrated into the new records as in the case of exam papers this is always PDF/A
-    #if format.length > 0
-	#format = format.strip
-	#	exam.format = [format]
-	#end
 	#qualification_name and level
 	#not all records contain this data so test for presence
 	#is found in dc:type as there is no publisher elelement
@@ -722,7 +713,7 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 	 qualification_name_preflabels.each do |q|
 		qname_id = common.get_resource_id('qualification_name',q.to_s)
 			exam.qualification_name_resource_ids+=[qname_id]
-			
+			trackingfile.puts("got fedora id for the qualification name"+ " q.to_s, " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 	end	
 	
 	#additional step for CEFR exams and foundation exams, add full name listing to descriptions
@@ -746,16 +737,12 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 			qual_levels.push(level)
 		end	
 	end
+	
 	qual_levels.each do |ql|
 		exam.qualification_level += [ql]
 	end
 	
-#superceded
-=begin
-	qual_levels.each do |ql|	
-		exam.qualification_level += [ql]
-	end
-=end
+
 	# now check for certain award types, and if found map to subjects (dc:subject not dc:11 subject)
 	# resource Types map to dc:subject. at present the only official value is Dissertations, Academic
 	#at present this should never return positive on the exam papers, the only type held is for theses dissertations (see \lib\assets\lists\subjects.csv
@@ -766,7 +753,8 @@ def migrate_exam(path, content_server_url, collection_mapping_doc_path, user)
 		subject_id = get_resource_id('subject',"Dissertations, Academic")
 		exams.subject_resource_ids +=[subject_id]		 
 	end
-end	
+end
+
     # existing yodl exam records do not include any language data, but content team say safe to make the assumpion
 	#it will always be english
 	
@@ -797,7 +785,6 @@ end
 		exam.keyword+=[s]   
 	end	
 	
-	#date  (date of exam) [0,1]
 	date = []
 	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).each do |s|
 		date.push(s.to_s)
@@ -813,7 +800,6 @@ end
    if exam_rightsholder.length > 0
 	exam.rights_holder=[exam_rightsholder] 
    end
-   
 	# license  set a default which will be overwritten if one is found. its the url, not the statement. use licenses.yml not rights_statement.yml
 	# For full york list see https://dlib.york.ac.uk/yodl/app/home/licences. edit in rights.yml
 	defaultLicence = "http://dlib.york.ac.uk/licences#yorkrestricted"
@@ -825,11 +811,18 @@ end
 		exam_rights = newrights
 			exam.rights=[exam_rights]			
 		end	
-		
+	
 	#check the collection exists before saving and putting in collection
 	# save	
-	if Object::Collection.exists?(parentcol.to_s)
-		exam.save!
+	#NOTE TO SELF: it might be possible to simply check we have a value back for parentcol
+	trackingfile.puts("checking the parent collection is present in fedora mapping."+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+	#if Object::Collection.exists?(parentcol.to_s)
+	if defined?(parentcol.to_s)
+	trackingfile.puts("about to save the exam_paper object"+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+	puts "about to save the exam_paper object"  
+		exam.save!   #fails here
+		puts "finished saving the exam paper object"
+		trackingfile.puts("finished saving the exam paper object"+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 		id = exam.id
 		puts "exam id was " +id 
 		puts "parent col was " + parentcol.to_s
@@ -837,7 +830,7 @@ end
 		puts "id of col was:" +col.id
 		puts " collection title was " + col.title[0].to_s
 		col.members << exam  
-		col.save!
+		#col.save!   #CHOSS!
 	else
 		puts "couldnt find collection " + parentcol.to_s
 		result = 3
@@ -846,11 +839,12 @@ end
 	
 		
 	# this is the section that keeps failing
+	#NOTE TO SELF can we make this more efficient?
 	users = Object::User.all #otherwise it will use one of the included modules
 	user_object = users[0]
 	
 	#check we do have a main EXAM_PAPER before trying to add it
-	if pdf_loc.length >0
+	if pdf_loc.length > 0
 		begin
 			# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 			#mfset.filetype = 'externalurl'
@@ -859,30 +853,43 @@ end
 			mfset.label = externalpdflabel
 			# add the external content URL
 			mfset.external_file_url = externalpdfurl
+			trackingfile.puts("Getting FileSetActor"+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 			actor = CurationConcerns::Actors::FileSetActor.new(mfset, user_object)
+			trackingfile.puts(" FileSetActor now creating  metadata for fileset"+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 			actor.create_metadata(exam)
 			#Declare file as external resource
+			trackingfile.puts("Hydra::Works::AddExternalFileToFileSet adds url of external file to fileset metadata "+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+			#NOTE TO SELF should the url now rerad "managed" since the name has changed?
+			#this affects the fromt end so at present does not need changing to 'managed' to match the fileset urltype
 			Hydra::Works::AddExternalFileToFileSet.call(mfset, externalpdfurl, 'external_url')
 			if yorkaccess == 'DENY'
 				mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "admin", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 			else
 				mfset.permissions = [Hydra::AccessControls::Permission.new({:name=> "york", :type=>"group", :access=>"read"}), Hydra::AccessControls::Permission.new({:name=>"admin", :type=> "group", :access => "edit"})]
 			end 
+			
 			exam.depositor = user
 			mfset.depositor = user
+			trackingfile.puts(" saving fileset fileset"+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 			mfset.save!
-			puts "fileset " + mfset.id + " saved"    
+			puts "fileset " + mfset.id + " saved"  
+			trackingfile.puts(" now saved fileset "+ " " + Time.now)			
 			# CHOSS this is here because the system tended to lock up during multiple uploads - suspect competition for resources or threading issue somewhere
-			sleep 5 				
+			#sleep 5 				
+			trackingfile.puts(" setting fileset as exam mainfile "+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 			exam.mainfile << mfset
-			sleep 5  
+			trackingfile.puts(" now set fileset as exam mainfile "+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+			#sleep 5  
+			trackingfile.puts("  saving completed exam "+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 			exam.save!		 
+			trackingfile.puts(" finished saving completed exam "+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 		rescue
 			puts "QUACK QUACK OOPS! addition of external file unsuccesful"
 			result = 4
 			return result		
 		end   
-		puts "all done for external content mainfile " + id  
+		puts "all done for external content mainfile " + id
+        trackingfile.puts("all done for external content mainfile " + id+ " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))		
 	end
 
 
@@ -908,6 +915,9 @@ end
 	if result != 2
 		result = 0 #this needs to happen last
 	end
+	trackingfile.puts( "finished" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+	trackingfile.close
+	puts "finished"
    return result   # give it  a return value
 end # end of migrate_thesis_with_content_url
 
