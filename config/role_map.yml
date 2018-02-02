@@ -2,7 +2,10 @@ development:
   admin:
     - frank.feng@york.ac.uk
     - ps552@york.ac.uk
-
+    - sebastian.palucha@york.ac.uk
+    - jim.adamson@york.ac.uk
+    - yf508@york.ac.uk
+    - peri.stracchino@york.ac.uk
 test:
   archivist:
     - archivist1@example.com
