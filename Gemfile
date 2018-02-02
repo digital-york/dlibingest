@@ -6,6 +6,7 @@ gem 'dlibhydra', git: 'https://github.com/digital-york/dlibhydra.git', branch: '
 #update CC  its pinned to (this is the minimum required for new dlibhydra version)
 gem 'curation_concerns', '1.7.6'
 gem 'dotenv-rails', groups: [:development, :test, :production]
+gem 'hydra-role-management'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 5.0.0', '>= 5.0.0.1'
