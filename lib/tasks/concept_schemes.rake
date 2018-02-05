@@ -4,6 +4,7 @@ namespace :concept_schemes do
 
   solrconfig = YAML.load_file('config/solr.yml')
   SOLR = solrconfig[Rails.env]['url']
+  #SOLR = "http://dlibsolrprod0.york.ac.uk:8983/solr/hydra_peri"
 
   task a: :environment do
     solr = RSolr.connect :url => SOLR
@@ -25,7 +26,6 @@ namespace :concept_schemes do
     list.each do |i|
 
       print 'Searching the Concept Scheme: ' + i
-
       begin
         @scheme = ''
         solr = RSolr.connect :url => SOLR
@@ -133,7 +133,7 @@ namespace :concept_schemes do
 
       arr.each do |c|
         begin
-
+         
           # Query if the term has been created. If yes, bypass
           preflabel = c[0].strip
           response = solr.get 'select', :params => {

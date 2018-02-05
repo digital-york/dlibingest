@@ -1,10 +1,12 @@
 namespace :migration_tasks do
 
 
-require_relative '../../app/models/foxml_reader.rb'
-require_relative '../../app/models/exam_paper_migrator.rb'
-require_relative '../../app/models/common_migration_methods.rb'
-require_relative '../../app/models/undergraduate_paper_migrator.rb'
+
+require_relative '../../app/helpers/migration/thesis_migrator.rb'
+require_relative '../../app/helpers/migration/exam_paper_migrator.rb'
+require_relative '../../app/helpers/migration/common_migration_methods.rb'
+require_relative '../../app/helpers/migration/undergraduate_paper_migrator.rb'
+require_relative '../../app/helpers/migration/thesis_collection_migrator.rb'
 
 
 task :default do
@@ -21,10 +23,10 @@ puts "rake task says hi"
 	e.say_hello
 end
 
-#calls a test method, definable in foxml_reader
+#calls a thesis test method, definable in thesis_migrator
 task :test_theses => :environment do
-	r = FoxmlReader.new
-	r.test
+	t = ThesisMigrator.new
+	t.test
 end
 
 task :test_undergrads => :environment do
@@ -33,24 +35,28 @@ puts "rake task says hi"
 	e.test
 end
 
-task :migrate_undergrad_paper, [:path,:serverurl,:collection_mapping,:user] => :environment do|t, args|
-puts "doing it.Args were: #{args}"
-u = UndergraduatePaperMigrator.new
-u.migrate_undergraduate_paper(args[:path],args[:serverurl],args[:collection_mapping],args[:user])
-end
-
-task :bulk_migrate_undergrad_papers, [:path_to_fox,:path_to_foxdone,:content_server_url,:collection_mapping,:user] => :environment do|t, args|
-puts "doing it.Args were: #{args}"
-u = UndergraduatePaperMigrator.new
-u.migrate_lots_of_ug_papers(args[:path_to_fox],args[:path_to_foxdone],args[:content_server_url],args[:collection_mapping],args[:user])
-end
-
+########### THESES TASKS ##############
 
 task :make_thesis_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
 puts "Args were: #{args}"
-	r = FoxmlReader.new
-	r.make_thesis_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
+	tc = ThesisCollectionMigrator.new
+	tc.make_thesis_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
+
+task :bulk_migrate_theses, [:dirpath,:donedirpath,:contentserverurl,:user] => :environment  do|t, args|
+puts "Args were: #{args}"
+t = ThesisMigrator.new
+t.bulk_migrate_theses_with_content_url(args[:dirpath],args[:donedirpath],args[:contentserverurl],args[:user])
+end
+
+task :migrate_thesis, [:path,:contentserverurl,:user] => :environment  do|t, args|
+puts "Args were: #{args}"
+puts "hey there"
+	t = ThesisMigrator.new	
+	t.migrate_thesis_with_content_url(args[:path],args[:contentserverurl],args[:user])
+end
+
+########### EXAMS TASKS ##############
 
 task :make_restricted_exam_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
 puts "Args were: #{args}"
@@ -64,51 +70,10 @@ puts "Args were: #{args}"
 	e.make_exam_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
-
-
-task :make_undergraduate_paper_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
-puts "Args were: #{args}"
-	e = UndergraduatePaperMigrator.new
-	e.make_undergraduate_paper_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
-end
-
-task :bulk_migrate_undergrad_papers, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc,:user] => :environment  do|t, args|
-puts "Args were: #{args}"
-r = FoxmlReader.new
-r.migrate_lots_of_theses_with_content_url(args[:dirpath],args[:donedirpath],args[:contentserverurl],args[:collection_mapping_doc],args[:user])
-end
-
-task :bulk_migrate_theses, [:dirpath,:donedirpath,:contentserverurl,:collection_mapping_doc,:user] => :environment  do|t, args|
-puts "Args were: #{args}"
-r = FoxmlReader.new
-r.migrate_lots_of_theses_with_content_url(args[:dirpath],args[:donedirpath],args[:contentserverurl],args[:collection_mapping_doc],args[:user])
-end
-
 task :bulk_migrate_exams, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
 e = ExamPaperMigrator.new
 e.migrate_lots_of_exams(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc],args[:user])
-end
-
-task :OLDmigrate_lots_of_theses, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc,:user] => :environment  do|t, args|
-puts "Args were: #{args}"
-puts "need to do sommat here"
-r = FoxmlReader.new
-r.migrate_lots_of_theses(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc],args[:user])
-end
-
-task :migrate_thesis, [:path,:contentserverurl,:collection_mapping,:user] => :environment  do|t, args|
-puts "Args were: #{args}"
-puts "hey there"
-	r = FoxmlReader.new
-	r.migrate_thesis_with_content_url(args[:path],args[:contentserverurl],args[:collection_mapping],args[:user])
-end
-
-task :migrate_thesis_embedded_only, [:path,:contentpath,:collection_mapping,:user] => :environment  do|t, args|
-puts "Args were: #{args}"
-puts "hey there"
-	r = FoxmlReader.new
-	r.migrate_thesis(args[:path],args[:contentpath],args[:collection_mapping],args[:user])
 end
 
 task :migrate_exam_paper, [:path,:content_server_url,:collection_mapping,:user] => :environment  do|t, args|
@@ -117,6 +82,30 @@ puts "Hi there. Args were: #{args}"
 	e.migrate_exam(args[:path],args[:content_server_url],args[:collection_mapping],args[:user])
 end
 
+
+########### UNDERGRADUATE PAPER TASKS ##############
+
+task :make_undergraduate_paper_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
+puts "Args were: #{args}"
+	e = UndergraduatePaperMigrator.new
+	e.make_undergraduate_paper_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
+end
+
+task :bulk_migrate_undergrad_papers, [:path_to_fox,:path_to_foxdone,:content_server_url,:collection_mapping,:user] => :environment do|t, args|
+puts "doing it.Args were: #{args}"
+u = UndergraduatePaperMigrator.new
+u.migrate_lots_of_ug_papers(args[:path_to_fox],args[:path_to_foxdone],args[:content_server_url],args[:collection_mapping],args[:user])
+end
+
+task :migrate_undergrad_paper, [:path,:serverurl,:collection_mapping,:user] => :environment do|t, args|
+puts "doing it.Args were: #{args}"
+u = UndergraduatePaperMigrator.new
+u.migrate_undergraduate_paper(args[:path],args[:serverurl],args[:collection_mapping],args[:user])
+end
+
+
+
+##################UTILITY TASKS - useful for checks prior to migrations~~~~~~~~~~~~~ 
 
 #write list of every datastream in a folder of objects
 task :list_datastreams, [:foxmlfolderpath,:outputfilename] => :environment do|t, args|
@@ -144,7 +133,6 @@ puts "Args were: #{args}"
 	c = CommonMigrationMethods.new
 	c.list_dc_creator_values(args[:foxmlfolderpath],args[:outputfilename])
 end
-
 
 task :list_dc_type_values, [:foxmlfolderpath,:outputfilename] => :environment do|t, args|
 puts "Args were: #{args}"

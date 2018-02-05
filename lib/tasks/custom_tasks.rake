@@ -1,7 +1,7 @@
 namespace :custom_tasks do
 
 
-require_relative '../../app/models/custom_migrations.rb'
+require_relative '../../app/helpers/migration/custom_migrations.rb'
 
 
 task :default do

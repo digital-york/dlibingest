@@ -22,7 +22,7 @@ def get_qualification_level_term(searchterm)
 #gonna make this general to include where the existing record doesnt contain 'level' data. this might mean the same level gets added twice of course - cant really help that, the data is too variant. perhaps only add each one once?
 searchterm = searchterm.downcase
 
-puts "search  term for degree level was " + searchterm
+#puts "search  term for degree level was " + searchterm
 
 #brackets essential to avoid false  positives
 masters = ['masters','(ma)','(msc)','(mres)','(mphil)','(meng)','(mphys)','(mchem)','(mmath)','(menv)','(llm)','(MNursing)'] 
@@ -40,7 +40,7 @@ standardterms = []
 #its possible there may be multiple matches of the same level for a single term, so make sure we only add it once per search term -eg diploma (dip)
 masters.each do |m|
 	if searchterm.include? m
-	puts "it  found masters for " + m
+	#puts "it  found masters for " + m
 		if !standardterms.include? 'Masters (Postgraduate)'
 			standardterms.push('Masters (Postgraduate)')
 		end	
@@ -48,7 +48,7 @@ masters.each do |m|
 end
 bachelors.each do |b|
 	if searchterm.include? b
-	puts "it  found bachelor for " + b
+	#puts "it  found bachelor for " + b
 		if !standardterms.include? 'Bachelors (Undergraduate)'
 			standardterms.push('Bachelors (Undergraduate)')
 		end			
@@ -56,7 +56,7 @@ bachelors.each do |b|
 end
 diplomas.each do |d|
 	if searchterm.include? d
-	puts "it  found diploma for " + d
+	#puts "it  found diploma for " + d
 		#standardterms.push('Diplomas (Postgraduate)')
 		if !standardterms.include? 'Diplomas (Postgraduate)'
 			standardterms.push('Diplomas (Postgraduate)')
@@ -94,27 +94,6 @@ foundation.each do |f|
 end
 
 
-#standardterm="unfound"
-=begin
-standardterms = []
-if masters.include? searchterm
-	standardterms.push('Masters (Postgraduate)')
-elsif bachelors.include? searchterm
-	standardterms.push('Bachelors (Undergraduate)')
-elsif diplomas.include? searchterm
-puts "success with test for diploma"
-	standardterms.push('Diplomas (Postgraduate)')
-elsif doctoral.include? searchterm
-	standardterms.push('Doctoral (Postgraduate)')
-elseif cefr.include? searchterm
-    puts "standard term for "+ searchterm + "not yet defined"
-elseif foundation.include? searchterm
-    puts "standard term for "+ searchterm + "not yet defined"
-elseif part_11_exam.include? searchterm
-    puts "standard term for "+ searchterm + "not yet defined"
-end
-=end
-
 approved_terms = []
 standardterms.each do |st|
 	#pass the id, get back the term. in this case both are currently identical
@@ -122,7 +101,7 @@ standardterms.each do |st|
 	approved_terms.push(auth.find(st)['term'])
 end
 
-puts "size of returned level terms was " +  approved_terms.length.to_s
+
 return approved_terms
 end #end get_qualification_level_term
 
@@ -326,7 +305,7 @@ philosophyDoctorates = ['Doctor of Philosophy (PhD)','PhD']
 #masters
 philosophyMastersbyPubs = ['Master of Philosophy by publications (MPhil)','Master of Philosophy by publications']
 philosophyMasters = ['Master of Philosophy (MPhil)','MPhil']
-artMastersbyResearch = ['Master of Arts (by research) (MA (by research))','Master of Arts (by research)','(MA (by research)']
+artMastersbyResearch = ['Master of Arts (by research) (MA (by research))','Master of Arts (by research)','(MA (by research)','Master of Arts by research (MRes)']
 artMasters = ['Master of Arts (MA)', 'Master of Arts', 'Master of Art (MA)', 'MA (Master of Arts)','Masters of Arts (MA)', 'MA']
 scienceMastersbyResearch = ['Master of Science (by research) (MSc (by research))','Master of Science (by research)']
 scienceMastersbyThesis = ['Master of Science (by thesis) (MSc (by thesis))','Master of Science (by thesis)','MSc (by thesis)']
@@ -390,7 +369,7 @@ qualification_name_preflabels = []
 
 type_array.each do |t,|	    #loop1
 	type_to_test = t.to_s
-	puts "search  term for qualification_name_preflabel was " + type_to_test
+	#puts "search  term for qualification_name_preflabel was " + type_to_test
 	#outer loop tests for creation of qualification_name_preflabel			 
 		if lettersDoctorates.include? type_to_test #loop2
 		 qualification_name_preflabels.push("Doctor of Letters (DLitt)")

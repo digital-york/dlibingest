@@ -1,7 +1,7 @@
 namespace :batch_edit_tasks do
 
 
-require_relative '../../app/models/batch_edit.rb'
+require_relative '../../app/helpers/migration/batch_edit.rb'
 
 
 
@@ -67,11 +67,19 @@ task :add_former_pids_from_file => :environment do
 	b.add_former_pids_from_file
 end
 
-#batch deletion
+#batch deletion (works)
 task :delete_works, [:deletelist,:worktype]  => :environment do|t, args|
 puts "Args were: #{args}"
 	b = BatchEdit.new
 	b.delete_works(args[:deletelist],args[:worktype])
+end
+
+#batch deletion (collections)
+#can use notepad ++ pattern york:\d+,[0-9,a-z, A-Z, \S]+,  to find and replace from collection mapping lists to create deletion list file
+task :delete_collections, [:deletelist]  => :environment do|t, args|
+puts "Args were: #{args}"
+	b = BatchEdit.new
+	b.delete_collections(args[:deletelist])
 end
 
 #change_fileset_filetype_attribute
