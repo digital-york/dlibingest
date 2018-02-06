@@ -7,7 +7,7 @@ Devise.setup do |config|
   # Devise will use the `secret_key_base` as its `secret_key`
   # by default. You can change it below and use your own secret key.
   # config.secret_key = 'bb41a5905eb0612433e1876dfc4cdbfd29c1f1e0f085eede3058995412d193b54f7b9b74e135191a13d7c8659419d6f56b9dd4498534a6a5bf960c2c75d95236'
-
+config.secret_key = '21bb478e84dc64246743d32e00d851bb5b440adfcf06ef8a953ecf2a9880421f683c2bccdd164815ad05d8709349d2a3b8cf2d2663d41d393cfed60600c59dd0'
   # ==> Mailer Configuration
   # Configure the e-mail address which will be shown in Devise::Mailer,
   # note that it will be overwritten if you use your own mailer class
@@ -164,7 +164,7 @@ Devise.setup do |config|
   # ==> Configuration for :timeoutable
   # The time you want to timeout the user session without activity. After this
   # time the user will be asked for credentials again. Default is 30 minutes.
-  # config.timeout_in = 30.minutes
+  config.timeout_in = 30.minutes
 
   # ==> Configuration for :lockable
   # Defines which strategy will be used to lock an account.
