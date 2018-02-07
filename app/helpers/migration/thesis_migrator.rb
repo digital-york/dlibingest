@@ -16,7 +16,8 @@ puts "yup, foxml_reader still working"
 end
 
 #for the moment the parameter col_id_or_dummy is there to input the parent collection id (NOT the former pid) if using a flat collection structure. otherwise input the string DUMMY (the exact term doesnt matter, but this will do) in order to not break the method signature
-# dev server CLEAN rake migration_tasks:bulk_migrate_theses[/home/dlib/peri_clean/testfiles/foxml/thesis_records/all,/home/dlib/peri_clean/testfiles/foxdone/theses/all,https://dlib.york.ac.uk,ps552@york.ac.uk]]
+#command line call like 
+# dev server CLEAN > rake migration_tasks:bulk_migrate_theses[/home/dlib/peri_clean/testfiles/foxml/thesis_records/all,/home/dlib/peri_clean/testfiles/foxdone/theses/all,https://dlib.york.ac.uk,ps552@york.ac.uk]]
 def bulk_migrate_theses_with_content_url(path_to_fox, path_to_foxdone, content_server_url, user)
 puts "doing a bulk migration"
 fname = "/opt/york/digilib/peri_ingest_clean/tmp/tally.txt"
@@ -398,10 +399,8 @@ end
 			puts "fileset " + mfset.id + " saved"
     				
 			thesis.mainfile << mfset
-			metricsfile.puts( "ADDED the thesis mainfile metadata" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))			
-			#metricsfile.puts( "saving thesis" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
-			#thesis.save!
-			#metricsfile.puts( "thesis saved" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+			metricsfile.puts( "ADDED the thesis mainfile metadata" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))		
+			
 		rescue
 			puts "QUACK QUACK OOPS! addition of external file unsuccesful"
 			result = 4

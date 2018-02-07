@@ -7,6 +7,7 @@ require_relative '../../app/helpers/migration/exam_paper_migrator.rb'
 require_relative '../../app/helpers/migration/common_migration_methods.rb'
 require_relative '../../app/helpers/migration/undergraduate_paper_migrator.rb'
 require_relative '../../app/helpers/migration/thesis_collection_migrator.rb'
+require_relative '../../app/helpers/migration/exam_paper_collection_migrator.rb'
 
 
 task :default do
@@ -60,13 +61,13 @@ end
 
 task :make_restricted_exam_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
 puts "Args were: #{args}"
-	e = ExamPaperMigrator.new
+	e = ExamPaperCollectionMigrator.new
 	e.make_restricted_exam_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
 task :make_exam_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
 puts "Args were: #{args}"
-	e = ExamPaperMigrator.new
+	e = ExamPaperCollectionMigrator.new
 	e.make_exam_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
@@ -87,8 +88,8 @@ end
 
 task :make_undergraduate_paper_collection_structure, [:mapping_path,:foxpath,:user]  => :environment do|t, args|
 puts "Args were: #{args}"
-	e = UndergraduatePaperMigrator.new
-	e.make_undergraduate_paper_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
+	u = UndergraduatePaperCollectionMigrator.new
+	u.make_undergraduate_paper_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
 task :bulk_migrate_undergrad_papers, [:path_to_fox,:path_to_foxdone,:content_server_url,:collection_mapping,:user] => :environment do|t, args|

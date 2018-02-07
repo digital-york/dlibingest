@@ -17,7 +17,7 @@ include ::Hydra
 #rake batch_edit_tasks:delete_works[/opt/york/digilib/peri_ingest_clean/theses_for_deletion.txt,Thesis]
 #rake batch_edit_tasks:delete_works[/home/dlib/lists/deletelist.txt,Thesis]
 def delete_works(idlist, worktype)
-
+count  = 0
 work_ids = IO.readlines(idlist)
 work_ids.each do |i|
 puts "working on id" + i.to_s	
@@ -46,6 +46,8 @@ i = i.strip
 				fs.delete
 			end
 			record.delete
+			count = count + 1
+			puts count.to_s + "files now deleted" 
 		else
 			return
 		end
