@@ -19,7 +19,7 @@ end
 #command line call like 
 # dev server CLEAN > rake migration_tasks:bulk_migrate_theses[/home/dlib/peri_clean/testfiles/foxml/thesis_records/all,/home/dlib/peri_clean/testfiles/foxdone/theses/all,https://dlib.york.ac.uk,ps552@york.ac.uk]]
 def bulk_migrate_theses_with_content_url(path_to_fox, path_to_foxdone, content_server_url, user)
-puts "doing a bulk migration"
+puts "doing a bulk migration of theses"
 fname = "/opt/york/digilib/peri_ingest_clean/tmp/tally.txt"
 tallyfile = File.open(fname, "a")
 Dir.foreach(path_to_fox)do |item|
@@ -41,9 +41,7 @@ Dir.foreach(path_to_fox)do |item|
 		tallyfile.puts("FAILED TO INGEST "+ itempath)
 	elsif result == 2   # apparently some records may not have an actual resource paper of any id!
 		tallyfile.puts("ingested metadata but NO EXAM_PAPER IN "+ itempath)		
-		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  # move files once migrated
-	elsif result == 3   # couldnt identify parent collection in mappings
-		tallyfile.puts("FAILED TO INGEST " + itempath + " because couldnt identiy parent collection mapping")
+		FileUtils.mv(itempath, path_to_foxdone + "/" + item)  # move files once migrated	
 	elsif result == 4   # this may well not work, as it may stop part way through before it ever gets here. 
 		tallyfile.puts("FAILED TO INGEST RESOURCE DOCUMENT IN"+ itempath)
 	else
@@ -81,6 +79,12 @@ metricsfile = File.open(tname, "a")
 metricsfile.puts( "am now working on " + filename + "  "  + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 metricsfile = File.open(tname, "a")
 metricsfile.puts( "am now working on " + filename + "  "  + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+
+# could really do with a file to list what its starting work on as a cleanup tool. doesnt matter if it doesnt get this far as there wont be anything to clean up
+	#this is the main tracking text which lists what is done. keep this separate as the idea is it still writes even if things fail at a later stage
+	tname = "/opt/york/digilib/peri_ingest_clean/tmp/tracking.txt"
+	trackingfile = File.open(tname, "a")
+	
 
 result = 1 # default is fail
 
@@ -221,13 +225,9 @@ puts "migrating a thesis with content url"
 	if former_id.length > 0
 	thesis.former_id = [former_id]
 	end
-	
-	# could really do with a file to list what its starting work on as a cleanup tool. doesnt matter if it doesnt get this far as there wont be anything to clean up
-	#this is the main tracking text which lists what is done. keep this separate as the idea is it still writes even if things fail at a later stage
-	tname = "/opt/york/digilib/peri_ingest_clean/tmp/tracking.txt"
-	trackingfile = File.open(tname, "a")
 	trackingfile.puts( "am now working on " + former_id + " title:" + title )
-	trackingfile.close	
+	trackingfile.close	#we want to make sure this writes even if everything else now fails
+	
 	 creatorArray = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:creator/text()",ns).to_s
 	 thesis.creator_string = [creatorArray.to_s]
 	
