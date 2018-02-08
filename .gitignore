@@ -23,3 +23,7 @@
 .idea/
 cm.sh
 fits.log
+
+# Ignore installation dependent files
+/config/environments/development.rb
+/db/schema.rb
