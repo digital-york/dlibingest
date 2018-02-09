@@ -385,8 +385,15 @@ puts "migrating a ug_paper with content url"
 	
 	if mainDocFound.length > 0
 		users = Object::User.all #otherwise it will use one of the included modules
-		user_object = users[0]
-		puts "got the user"
+		#user_object = users[0]		
+		for user_obj in users do
+			email = user_obj.email
+			if email == user
+				user_object = user_obj
+			else
+				user_object = users[0]
+			end
+		end
 		begin
 			# see https://github.com/pulibrary/plum/blob/master/app/jobs/ingest_mets_job.rb#L54 and https://github.com/pulibrary/plum/blob/master/lib/tasks/ingest_mets.rake#L3-L4
 			#mfset.filetype = 'externalurl'

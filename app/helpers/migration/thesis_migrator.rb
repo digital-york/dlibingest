@@ -376,8 +376,17 @@ end
 		end	
 	
 	metricsfile.puts( "getting the user" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
-	users = Object::User.all #otherwise it will use one of the included modules
-	user_object = users[0]
+	#users = Object::User.all #otherwise it will use one of the included modules
+	#user_object = users[0]
+	users = Object::User.all #otherwise it will use one of the included modules	
+	for user_obj in users do
+		email = user_obj.email
+		if email == user
+			user_object = user_obj
+		else
+			user_object = users[0]
+		end
+	end
 	metricsfile.puts( "got the user" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 	#check we do have a main resource paper before trying to add it
 	metricsfile.puts( "now adding the thesis mainfile metadata" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
