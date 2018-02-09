@@ -71,16 +71,16 @@ puts "Args were: #{args}"
 	e.make_exam_collection_structure(args[:mapping_path],args[:foxpath],args[:user])
 end
 
-task :bulk_migrate_exams, [:dirpath,:donedirpath,:contentpath,:collection_mapping_doc,:user] => :environment  do|t, args|
+task :bulk_migrate_exams, [:dirpath,:donedirpath,:contentpath,:outputs_dir,:user] => :environment  do|t, args|
 puts "Args were: #{args}"
 e = ExamPaperMigrator.new
-e.migrate_lots_of_exams(args[:dirpath],args[:donedirpath],args[:contentpath],args[:collection_mapping_doc],args[:user])
+e.batch_migrate_exams(args[:dirpath],args[:donedirpath],args[:contentpath],args[:outputs_dir],args[:user])
 end
 
-task :migrate_exam_paper, [:path,:content_server_url,:collection_mapping,:user] => :environment  do|t, args|
+task :migrate_exam_paper, [:path,:content_server_url,:outputs_dir,:user] => :environment  do|t, args|
 puts "Hi there. Args were: #{args}"
-	e = ExamPaperMigrator.new
-	e.migrate_exam(args[:path],args[:content_server_url],args[:collection_mapping],args[:user])
+	e = ExamPaperMigrator.new	
+	e.migrate_exam(args[:path],args[:content_server_url],args[:outputs_dir],args[:user])
 end
 
 
