@@ -18,7 +18,7 @@ end
 # rake migration_tasks:bulk_migrate_exams[/home/dlib/exams_src_and_output_files/foxml,/home/dlib/exams_src_and_output_files/foxdone,https://dlib.york.ac.uk, /home/dlib/exams_src_and_output_files,user]
 def batch_migrate_exams(path_to_fox, path_to_foxdone, content_server_url, outputs_dir, user)
 puts "doing a bulk migration of exams"
-fname = outputs_dir + "/exam_tally.txt"
+fname = outputs_dir + "/exam_ingest.log"
 tallyfile = File.open(fname, "a")
 	
 Dir.foreach(path_to_fox)do |item|	
@@ -60,10 +60,30 @@ end # end batch_migrate_exams
 # adds the content file url, not embedded content 
 # rake migration_tasks:migrate_exam_paper[/home/dlib/exams_src_and_output_files/foxml/york_xxxx.xml,https://dlib.york.ac.uk,/home/dlib/exams_src_and_output_files,ps552@york.ac.uk]
 def migrate_exam(path, content_server_url, outputs_dir, user)
-    #metrics file for debugging and dev
+    start_time = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
+	
+	#tracking file. so long as we have this, we always know exactlywhat file was being worked on at the point of falling over, even if it crashes
+	#different from tally files as that is more of a log
+	tname = outputs_dir + "/exam_tracking_file.txt"
+	trackingfile = File.open(tname, "a")
+	file_in_progress = path.match(/york_\S+/) #will give  just the actual filename, so we can obtain this right at the start of processing!
+	trackingfile.puts( "now working on " + file_in_progress.to_s )
+	trackingfile.close
+	
+	#a simple id list to enable easy bulk deletion
+	fname = outputs_dir + "/exam_tally.txt"
+	id_list_filename = outputs_dir +"/new_exam_ids.txt"
+	id_list_file = File.open(id_list_filename, "a")
+	
+	#a mapping file to support crossmatching
+	pid_to_id_filename = outputs_dir + "/exam_pid_to_id_mappings.txt"
+	
+	
+
+	#metrics file for debugging and dev
 	filename = path.match(/york_\S+/) #will give  just the actual filename
 	filename = filename.to_s
-	tname = outputs_dir+"/exam_metrics.txt"
+	tname = outputs_dir + "/exam_metrics.csv"
 	metricsfile = File.open(tname, "a")
 	metricsfile.puts(  filename + ","  + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 	
@@ -422,7 +442,7 @@ end
 	exam.depositor = user
 	exam.save!
 	exam_id = exam.id
-	metricsfile.puts(exam_id+ ", " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))	
+	
 	#when done, explicity reset big things to empty to ensure resources not hung on to
 	additional_filesets = {} 
     doc = nil
@@ -433,6 +453,12 @@ end
 	end
 	#make this output the metrics info
 	#trackingfile.puts( "finished" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+	record_mapping_file = File.open(pid_to_id_filename, "a")
+	record_mapping_file.puts(" former pid " + exam.former_id[0].to_s + ", " + " new id " + exam_id.to_s)
+	record_mapping_file.close
+	metricsfile.puts(exam_id + "," + start_time +"," + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))	
+	id_list_file.puts(exam_id)	
+    id_list_file.close
 	metricsfile.close
 	puts "finished"
    return result   # make sure this happens last
