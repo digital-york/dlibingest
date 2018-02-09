@@ -356,9 +356,18 @@ end
 			exam.rights=[exam_rights]			
 		end	
 	
-	#NOTE TO SELF can we make this more efficient?
+	
 	users = Object::User.all #otherwise it will use one of the included modules
-	user_object = users[0]
+	#this only works when we always know who user[0] is, so rewrite
+	#user_object = users[0]	
+	for user_obj in users do
+		email = user_obj.email
+		if email == user
+			user_object = user_obj
+		else
+			user_object = users[0]
+		end
+	end
 	
 	#check we do have a main EXAM_PAPER before trying to add it
 	if pdf_loc.length > 0
@@ -386,9 +395,7 @@ end
 			mfset.save!
 			puts "fileset " + mfset.id + " saved" 
 			exam.mainfile << mfset
-			puts "mainfile ids in exam :" + exam.mainfile_ids[0].to_s
-			#exam.save!
-            	puts "exam pdf  added 	to fileset, fileset added to exam"	
+			puts "mainfile ids in exam :" + exam.mainfile_ids[0].to_s			
 		rescue
 			puts "QUACK QUACK OOPS! addition of external file unsuccesful"
 			result = 4
