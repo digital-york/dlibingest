@@ -17,17 +17,16 @@ end
 
 #this element is not found in every existing exam paper record
 # this is defined in yaml
-# return standard term from approved authority list
+# return standard term from approved authority list. NOTE searchterms are all down cased.
 def get_qualification_level_term(searchterm)
 #gonna make this general to include where the existing record doesnt contain 'level' data. this might mean the same level gets added twice of course - cant really help that, the data is too variant. perhaps only add each one once?
 searchterm = searchterm.downcase
 #puts "search  term for degree level was " + searchterm
 #brackets essential to avoid false  positives
-masters = ['masters','(ma)','(msc)','(mres)','(mphil)','(meng)','(mphys)','(mchem)','(mmath)','(menv)','(llm)','(MNursing)'] 
-#bachelors = ['bachelors','bachelor','batchelors', 'batchelor','bsc','ba','bphil','beng','llb']
+masters = ['masters','(ma)','(msc)','(mres)','(mphil)','(meng)','(mphys)','(mchem)','(mmath)','(menv)','(llm)','(mnursing)'] 
 bachelors = ['bachelor', 'batchelor','(bsc)','(ba)','(bphil)','(beng)','(llb)']
 diplomas = ['diploma','(dip', '(dip', 'diploma (dip)','(pgdip)']
-lower_diplomas = ['diphe'] 
+lower_diplomas = ['diphe', 'diploma of higher education (diphe)'] 
 doctoral = ['(phd)','doctor of philosophy (phd)','(scd)']
 cefr = ['cefr'] 
 foundation = ['foundation']
@@ -37,7 +36,6 @@ standardterms = []
 #its possible there may be multiple occurences of the same level for a single term, so make sure we only add it once per search term -eg diploma (dip)
 masters.each do |m|
 	if searchterm.include? m
-	#puts "it  found masters for " + m
 		if !standardterms.include? 'Masters (Postgraduate)'
 			standardterms.push('Masters (Postgraduate)')
 		end	
@@ -45,7 +43,6 @@ masters.each do |m|
 end
 bachelors.each do |b|
 	if searchterm.include? b
-	#puts "it  found bachelor for " + b
 		if !standardterms.include? 'Bachelors (Undergraduate)'
 			standardterms.push('Bachelors (Undergraduate)')
 		end			
@@ -53,33 +50,21 @@ bachelors.each do |b|
 end
 lower_diplomas.each do |ld|
 	if searchterm.include? ld
-		if !standardterms.include? 'Diplomas (other)'
+		if !standardterms.include? 'Diplomas (other)'		
 			standardterms.push('Diplomas (other)')
 		end
     else
         #only look for the higher diploma if you dont find the lower diploma	
 		diplomas.each do |d|
-	if searchterm.include? d
-	#puts "it  found diploma for " + d
-		#standardterms.push('Diplomas (Postgraduate)')
-		if !standardterms.include? 'Diplomas (Postgraduate)'
-			standardterms.push('Diplomas (Postgraduate)')
-		end	
+		if searchterm.include? d
+			if !standardterms.include? 'Diplomas (Postgraduate)'
+				standardterms.push('Diplomas (Postgraduate)')
+			end	
+		end
+	end
 	end
 end
-	end
-end
-=begin
-diplomas.each do |d|
-	if searchterm.include? d
-	#puts "it  found diploma for " + d
-		#standardterms.push('Diplomas (Postgraduate)')
-		if !standardterms.include? 'Diplomas (Postgraduate)'
-			standardterms.push('Diplomas (Postgraduate)')
-		end	
-	end
-end
-=end
+
 
 doctoral.each do |dr|
 	if searchterm.include? dr

@@ -5,9 +5,19 @@ terms:
     - id: Diplomas (Postgraduate)
       term: Diplomas (Postgraduate)
       active: true
+    - id: Diplomas 
     - id: Doctoral (Postgraduate)
       term: Doctoral (Postgraduate)
       active: true
     - id: Bachelors (Undergraduate)
       term: Bachelors (Undergraduate)
+      active: true
+    - id: Diplomas (other)
+      term: Diplomas (other)
+      active: true
+    - id: Foundation
+      term: Foundation
+      active: true
+    - id: CEFR Module
+      term: CEFR Module
       active: true

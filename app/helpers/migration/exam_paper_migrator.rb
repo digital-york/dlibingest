@@ -85,7 +85,7 @@ def migrate_exam(path, content_server_url, outputs_dir, user)
 	filename = filename.to_s
 	tname = outputs_dir + "/exam_metrics.csv"
 	metricsfile = File.open(tname, "a")
-	metricsfile.puts(  filename + ","  + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
+	#metricsfile.puts(  filename + ","  + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 	
 
  
@@ -303,7 +303,8 @@ def migrate_exam(path, content_server_url, outputs_dir, user)
 	end
 	
 	qual_levels.each do |ql|
-		exam.qualification_level += [ql]
+	level = ql.to_s
+		exam.qualification_level += [level]
 	end
 	
 
