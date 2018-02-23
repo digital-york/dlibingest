@@ -28,7 +28,7 @@ Dir.foreach(path_to_fox)do |item|
 	itempath = path_to_fox + "/" + item
 	result = 9  # so this wont do the actions required if it isnt reset
 	begin
-		result = migrate_exam(itempath,content_server_url,collection_mapping_doc_path,user)
+		result = migrate_exam(itempath,content_server_url,outputs_dir,user)
 	rescue
 		result = 1	
 		tallyfile.puts("rescue says FAILED TO INGEST "+ itempath)  
@@ -95,7 +95,14 @@ def migrate_exam(path, content_server_url, outputs_dir, user)
 	puts "migrating  exam with content url"	
 	foxmlpath = path.to_s		
 	# enforce  UTF-8 compliance when opening foxml file
-	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}
+	# maybe try the following syntax instead, as at https://stackoverflow.com/questions/15149325/ruby-ensuring-files-are-closed-when-reference-is-held-by-a-different-object
+	# looks essentially similar but worth a shot. try it on a single file before doing the next tranche?
+	# doc = ''
+	# File.open(path){ |f| 
+	#	doc = Nokogiri::XML(f, Encoding::UTF_8.to_s)
+	# }
+	#actually think this is ok. the file is closed at the end of the block, all its data has been read into doc
+	doc = File.open(path){ |f| Nokogiri::XML(f, Encoding::UTF_8.to_s)}   #CHOSS
 	# doesnt resolve nested namespaces, this fixes that
     ns = doc.collect_namespaces	
 	
@@ -285,9 +292,9 @@ def migrate_exam(path, content_server_url, outputs_dir, user)
 	t = t.to_s
 	td = t.downcase
 		if td.include? "cefr"
-			exam.description += [td]
+			exam.description += [t] #keep the original case
 		elsif td.include? "foundation"
-			exam.description += [td] 
+			exam.description += [t]  #keep the original case
 		end
 	end
 	# qualification levels (yml file). 
@@ -446,7 +453,7 @@ end
 	
 	#when done, explicity reset big things to empty to ensure resources not hung on to
 	additional_filesets = {} 
-    doc = nil
+    # doc = nil  #let ruby garbage collect it after process finishes
 	mapping_text = nil
 	collection_mappings = {}	
 	if result != 2
