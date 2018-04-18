@@ -274,7 +274,7 @@ University of York. Dept. of Biochemistry   #confirmed this should map to the bi
 	elsif loc.include? "natural sciences"
 	    preflabels.push("University of York. School of Natural Sciences")
 	elsif loc.include? "environment"
-	    preflabels.push("University of York. Environment")	
+	    preflabels.push("University of York. Environment Department")	
 	end
 	return preflabels
 end
