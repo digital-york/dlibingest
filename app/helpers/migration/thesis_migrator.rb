@@ -240,7 +240,8 @@ puts "migrating a thesis with content url"
 	
 	# date_of_award (dateAccepted in the dc created by the model) 1 only
 	thesis_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s
-	thesis.date_of_award = thesis_date
+	thesis_date = common.normalise_date(thesis_date)
+	thesis.date_of_award = thesis_date.strip
 	# advisor 0... 1 so check if present
 	thesis_advisor = []
 	   doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:contributor/text()",ns).each do |i|

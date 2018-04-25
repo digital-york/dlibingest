@@ -218,7 +218,8 @@ puts "migrating a ug_paper with content url"
 	paper_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s	
 	if paper_date.length > 0
 		#ug_paper.date = [paper_date] 
-		ug_paper.date_of_award = paper_date
+		paper_date = common.normalise_date(paper_date)
+		ug_paper.date_of_award = paper_date.strip
 	end
 	# advisor 0... 1 so check if present
 	paper_advisor = []

@@ -265,15 +265,17 @@ def migrate_exam(path, content_server_url, outputs_dir, user)
 	
 	
 	#qualification_name and level
-	#not all records contain this data so test for presence
+	#not all records contain this data so test for presence. LFA & similar, for instance, often missing this
 	#is found in dc:type as there is no publisher elelement
 	# qualification level, name, resource type
 	typesToParse = []  #
-	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:type/text()",ns).each do |t|	
+	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:type/text()",ns).each do |t|		   
 		if t.to_s.strip == "Master of Science (MSc), Master of Mathematics (MMath)"
+			#this is handdled specificaly in order to treat it as two entries
 			typesToParse.push("Master of Science (MSc)")
 			typesToParse.push("Master of Mathematics (MMath)")
 		else
+			#rest are just passed in 'as is'
 			typesToParse.push(t)
 		end
 	end
@@ -358,10 +360,11 @@ end
 	end	
 	
 	date = []
-	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).each do |s|
+	doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).each do |s|		
 		date.push(s.to_s)
 	end
 	date.each do |d|
+	    d = common.normalise_date(d.strip)
 		exam.date+=[d]
 	end	
 	
