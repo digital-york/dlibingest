@@ -68,7 +68,7 @@ end
     listfile.close
 	doc = nil
 	puts "all done, written to /home/dlib/lists/uniqueDSlists/" + outputfilename
-end #end of check_has_main
+end 
 
 
 end # end of class

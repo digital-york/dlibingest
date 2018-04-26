@@ -1,0 +1,25 @@
+"object","title"
+info:fedora/policy:public-york_11049-advanced,XACML policy public-york:11049-advanced
+info:fedora/policy:public-york_19181-advanced,XACML policy public-york:19181-advanced
+info:fedora/policy:libarchStaff-york_18175,XACML policy libarchStaff-york:18175
+info:fedora/policy:york-york_18175,XACML policy york-york:18175
+info:fedora/policy:public-york_809081-advanced,XACML policy public-york:809081-advanced
+info:fedora/fedora-policy:access-student,XACML policy fedora-policy:access-student
+info:fedora/policy:libarchStaff-york_818148,XACML policy libarchStaff-york:818148
+info:fedora/policy:public-york_807997-advanced,XACML policy public-york:807997-advanced
+info:fedora/york:1018,"Melk Abbey, Abbey church, Nave fresco"
+info:fedora/york:10184,"Packwood House, Warwickshire, the hall"
+
+
+(select  $object $title $date
+from <#ri>
+where  (
+$object <dc:title> $title
+and
+$object <dc:date> $date
+) 
+minus ( $object <fedora-rels-ext:isCollection> 'true' or
+  $object <info:fedora/fedora-system:def/model#hasModel> <fedora:york:CModel-Iris>
+  or $object <http://dlib.york.ac.uk/rel-int#hasDatastreamLabel> 'FESLPOLICY'
+)
+)
