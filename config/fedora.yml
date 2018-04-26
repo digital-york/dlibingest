@@ -3,7 +3,7 @@ development:
   password: fedoraAdmin
   #url: http://127.0.0.1:<%= ENV['FCREPO_DEVELOPMENT_PORT'] || 8984 %>/rest
   #url: http://127.0.0.1:8080/fedora/rest
-  url: http://dlibfedprod0.york.ac.uk:8080/fedora/rest
+  url: http://dlibfeddev0.york.ac.uk:8080/fedora/rest
   # base_path: <%= ENV['FCREPO_DEV_BASE'] %>
   base_path: /peri_dev
 test:
