@@ -1,6 +1,6 @@
 # encoding: UTF-8
 require 'nokogiri'
-require 'open-uri'19
+require 'open-uri'
 require 'dlibhydra'
 require 'csv'
 
@@ -12,34 +12,6 @@ include ::Hydra
 
 def say_hi
 puts "hi"
-end
-
-#method to ensure date is formatted as a single year yyyy
-def normalise_date(unnormalised_date)
-#known variants to normalise
-# yyyy
-#yyyy-mm
-#mm-yyyy
-#yyyy-yyyy
-#dd-mm-yyyy
-#yyyy-mm-dd */
-normalised = "no match"
- if  /^[0-9]{4}\Z/.match  #already in correct form.  
-	normalised = unnormalised_date
- elsif /^[0-9]{4}-[0-9]{2}\Z/.match #yyyy-mm
-	normalised = unnormalised_date[0-4]
- elsif /^[0-9]{2}-[0-9]{4}\Z/.match #mm-yyyy
-	normalised = unnormalised_date[3-8]
- elsif /^[0-9]{4}-[0-9]{4}\Z/.match  #yyyy-yyyy 
-	normalised = unnormalised_date[5-8]	
- elsif 	/^[0-9]{4}-[0-9]{2}-[0-9]{2}\Z/ #yyyy-mm-dd  (actual order of month/day unimportant)
-    normalised = unnormalised_date[0-4]
- elsif 	/^[0-9]{2}-[0-9]{2}-[0-9]{4}\Z/ #mm-dd-yyyy  (actual order of month/day unimportant)	
-	normalised = unnormalised_date[6-9]
- else
-     #do nothing
- end
-    return normalised
 end
 
 

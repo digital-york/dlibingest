@@ -91,6 +91,7 @@ result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
 	metricsfile.puts( "created the initial empty pdf fileset" + " " + Time.now.strftime('%Y-%m-%d_%H-%M-%S'))
 common = CommonMigrationMethods.new
+date_manip = DateManipulation.new
 puts "migrating a thesis with content url"	
 	foxmlpath = path	
 	# enforce  UTF-8 compliance when opening foxml file
@@ -240,7 +241,7 @@ puts "migrating a thesis with content url"
 	
 	# date_of_award (dateAccepted in the dc created by the model) 1 only
 	thesis_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s
-	thesis_date = common.normalise_date(thesis_date)
+	thesis_date = date_manip.normalise_date(thesis_date)
 	thesis.date_of_award = thesis_date.strip
 	# advisor 0... 1 so check if present
 	thesis_advisor = []

@@ -92,6 +92,7 @@ def migrate_exam(path, content_server_url, outputs_dir, user)
 	result = 1 # default is fail
 	mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
 	common = CommonMigrationMethods.new
+	date_manip = DateManipulation.new
 	puts "migrating  exam with content url"	
 	foxmlpath = path.to_s		
 	# enforce  UTF-8 compliance when opening foxml file
@@ -364,7 +365,7 @@ end
 		date.push(s.to_s)
 	end
 	date.each do |d|
-	    d = common.normalise_date(d.strip)
+	    d = date_manip.normalise_date(d.strip)
 		exam.date+=[d]
 	end	
 	

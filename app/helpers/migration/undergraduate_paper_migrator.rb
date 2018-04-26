@@ -68,6 +68,7 @@ def migrate_undergraduate_paper(path, content_server_url, collection_mapping_doc
 result = 1 # default is fail
 mfset = Object::FileSet.new   # FILESET. # define this at top because otherwise expects to find it in CurationConcerns module . (app one is not namespaced)
 common = CommonMigrationMethods.new
+date_manip = DateManipulation.new
 puts "migrating a ug_paper with content url"	
 	foxmlpath = path	
 	# enforce  UTF-8 compliance when opening foxml file
@@ -218,7 +219,7 @@ puts "migrating a ug_paper with content url"
 	paper_date = doc.xpath("//foxml:datastream[@ID='DC']/foxml:datastreamVersion[@ID='#{currentVersion}']/foxml:xmlContent/oai_dc:dc/dc:date/text()",ns).to_s	
 	if paper_date.length > 0
 		#ug_paper.date = [paper_date] 
-		paper_date = common.normalise_date(paper_date)
+		paper_date = date_manipulation.normalise_date(paper_date)
 		ug_paper.date_of_award = paper_date.strip
 	end
 	# advisor 0... 1 so check if present
