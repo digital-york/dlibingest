@@ -56,9 +56,6 @@ normalised = ""
      #return whatever we've found - its better than nothing
 	 normalised = unnormalised_date
 	 puts "found variant unknown"
- end 
- if (normalised.length != 4)
- puts "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + unnormalised_date +"!!!!!!!!!!!!!!!!!!!!!!!!!"
  end
     return normalised
 end

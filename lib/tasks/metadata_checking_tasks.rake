@@ -1,7 +1,7 @@
 namespace :metadata_checking_tasks do
 
 
-require_relative '../../app/helpers/migration/common_migration_methods.rb'
+require_relative '../../app/helpers/migration/date_manipulation.rb'
 require_relative '../../app/helpers/migration/metadata_checks.rb'
 
 
@@ -9,16 +9,16 @@ task :greet do
 	puts "greetings from the test tasks"
 end
 
+##################UTILITY TASKS - useful for checks prior to migrations##################
 
 #test the date normalisation
-task :check_date_normalisation, [:datelist]  => :environment do|t, args|
+task :check_date_normalisation, [:input_file_path,:output_file_path]  => :environment do|t, args|
 puts "Args were: #{args}"
 	d = DateManipulation.new
-	d.change_fileset_filetype_attribute(args[:datelist])
+	d.run_normalisation_check(args[:input_file_path],args[:output_file_path])
 end
 
 
-##################UTILITY TASKS - useful for checks prior to migrations~~~~~~~~~~~~~ 
 
 #write list of every datastream in a folder of objects
 task :list_datastreams, [:foxmlfolderpath,:outputfilename] => :environment do|t, args|
